@@ -105,7 +105,7 @@ const signin = async () => {
 
         <div class="auth_link">
           <span>계정이 없으신가요?</span>
-          <router-link :to="state.form.role === 'OWNER' ? '/signup/owner' : '/signup/customer'">
+          <router-link :to="'/signup'">
             회원가입
           </router-link>
         </div>

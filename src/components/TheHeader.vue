@@ -53,7 +53,7 @@ const goMypage   = () => router.push('/mypage')
         <!-- 비로그인 -->
         <template v-if="!isSignedIn">
           <button class="nav_text_btn" @click="goSignin">로그인</button>
-          <router-link to="/signup/customer" class="nav_text_btn">회원가입</router-link>
+          <router-link to="/signup" class="nav_text_btn">회원가입</router-link>
         </template>
 
         <!-- 로그인 상태 -->

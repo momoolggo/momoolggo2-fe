@@ -6,9 +6,8 @@ const router = createRouter({
 
     // ── 인증
     { path: '/signin',          component: () => import('@/views/SigninView.vue') },
-    { path: '/signup/customer', component: () => import('@/views/SignupCustomerView.vue') },
-    { path: '/signup/owner',    component: () => import('@/views/SignupOwnerView.vue') },
-
+    { path: '/signup',          component: () => import('@/views/SignupView.vue') },
+    
     // ── 고객 메인 (추후 구현)
     { path: '/',                component: () => import('@/views/HomeView.vue') },
 

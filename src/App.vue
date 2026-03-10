@@ -8,7 +8,7 @@ const route  = useRoute()
 const router = useRouter()
 
 // 헤더를 숨길 페이지
-const noHeaderPages = ['/signin', '/signup/customer', '/signup/owner']
+const noHeaderPages = []
 const showHeader = computed(() => !noHeaderPages.includes(route.path))
 
 // 로그인 상태

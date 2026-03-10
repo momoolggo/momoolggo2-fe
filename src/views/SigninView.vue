@@ -51,7 +51,7 @@ const signin = async () => {
     <!-- 중앙 — 로그인 카드 -->
     <div class="signin_card">
       <div class="logo_wrap">
-        <img src="@/assets/뭐물꼬_로고.png" alt="뭐물꼬" class="signin_logo" />
+        <img src="@/assets/뭐물꼬_로고2.png" alt="뭐물꼬" class="signin_logo" />
       </div>
 
       <div class="role_tabs">
@@ -120,14 +120,15 @@ const signin = async () => {
   background: #ffffff;
   border-radius: 20px;
   box-shadow: 0 4px 32px rgba(0, 0, 0, 0.10);
-  padding: 48px 40px 40px;
+  padding: 10px 40px 40px;
   display: flex;
   flex-direction: column;
   gap: 16px;
   z-index: 1;
 }
 .logo_wrap { text-align: center; }
-.signin_logo { height: 64px; }
+.signin_logo { height: 150px; 
+  width:150px;}
 
 /* 역할 탭 */
 .role_tabs {

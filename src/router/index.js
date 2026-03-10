@@ -11,6 +11,9 @@ const router = createRouter({
     // ── 고객 메인 (추후 구현)
     { path: '/',                component: () => import('@/views/HomeView.vue') },
 
+    // ── 매장 목록
+    { path: '/storelist',         component: () => import('@/views/StoreListView.vue') },
+
     // ── 사장 (추후 구현)
     { path: '/owner',           component: () => import('@/views/owner/OwnerHomeView.vue') },
 

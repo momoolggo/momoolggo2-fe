@@ -5,7 +5,7 @@
 
 /* ── CSS 변수 (색상/사이즈 등 공통값) ── */
 :root {
-  --primary:       #C8191A;   /* 메인 빨간색 */
+  --primary:       #A40C0B;   /* 메인 빨간색 */
   --primary-dark:  #A81415;   /* 호버용 */
   --primary-light: #FFF4F4;   /* 연한 빨간 배경 */
   --black:         #1A1A1A;

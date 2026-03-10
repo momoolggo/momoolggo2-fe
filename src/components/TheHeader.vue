@@ -20,6 +20,12 @@ const goFavorite = () => router.push('/favorite')
 const goCart     = () => router.push('/cart')
 const goSignin   = () => router.push('/signin')
 const goMypage   = () => router.push('/mypage')
+const goSearchstore = () => router.push('/searchstore');
+const goRiderservice = () => router.push('/riderservice');
+const goOwnerservice = () => router.push('/ownerservice');
+const goEvent = () => router.push('/event');
+const goCustomerservice = () => router.push('/customerservice');
+
 </script>
 
 <template>
@@ -65,6 +71,18 @@ const goMypage   = () => router.push('/mypage')
       </nav>
 
     </div>
+
+    <!--상단바 하단-->
+    <div class="nav_bottom">
+      <div class="nav_bottom_inner">
+        <button class="nav_bottom_btn" @click="goSearchstore">주변 맛집찾기</button>
+      <button class="nav_bottom_btn" @click="goRiderservice">라이더 서비스</button>
+      <button class="nav_bottom_btn" @click="goOwnerservice">사장님 서비스</button>
+      <button class="nav_bottom_btn" @click="goEvent">이벤트</button>
+      <button class="nav_bottom_btn" @click="goCustomerservice">고객 센터</button>
+    </div>
+      </div>
+
   </header>
 </template>
 
@@ -78,6 +96,7 @@ const goMypage   = () => router.push('/mypage')
   background-color: #FEFAEE;
   border-bottom: 1px solid var(--border);
   box-shadow: var(--shadow-header);
+  align-items: center;
 }
 
 .header_inner {
@@ -86,16 +105,18 @@ const goMypage   = () => router.push('/mypage')
   padding: 0 24px;
   height: 60px;
   display: flex;
-  align-items: center;
   justify-content: space-between;
+  align-items: center;
   gap: 16px;
 }
-.logo_link { flex-shrink: 0; }
+.logo_link { flex-shrink: 0;}
 .header_logo { 
-  height: 60px;
-  display: block;}
+  display: flex;
+  align-items: flex-start;
+  height: 120px;
+  }
 
-.header_address {
+  .header_address {
   flex: 1;
   display: flex;
   align-items: center;
@@ -106,18 +127,19 @@ const goMypage   = () => router.push('/mypage')
   padding: 8px 14px;
   border: 1.5px solid var(--border);
   border-radius: 20px;
-  max-width: 400px;
+  max-width: 530px;
   transition: border-color 0.15s;
 }
+
 .header_address:hover { border-color: var(--primary); }
 .address_icon { font-size: 14px; }
-.address_text { font-size: 13px; color: var(--gray); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}
+.address_text { font-size: 13px; color: var(--gray); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; justify-content: center;}
 
 .header_nav {
   display: flex;
   align-items: center;
   gap: 4px;
-  flex-shrink: 0;
+
 }
 .nav_icon_btn {
   display: flex;
@@ -140,6 +162,40 @@ const goMypage   = () => router.push('/mypage')
   background: var(--border);
   margin: 0 6px;
 }
+
+.nav_bottom{
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  width: 100%;
+  background: var(--white);
+  background-color: #FEFAEE;
+  border-bottom: 1px solid var(--border);
+}
+.nav_bottom_inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 8px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+}
+
+.nav_bottom_btn{
+  padding: 6px 10px;
+  background: none;
+  border: none;
+  font-size: 10px;
+  font-weight: 600;
+  color: #555;
+  border-radius: var(--radius-sm);
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+}
+
+.nav_bottom_btn:hover { color: var(--primary);}
 
 .nav_username {
   font-size: 13px;

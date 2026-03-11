@@ -2,7 +2,8 @@
 import { computed, reactive, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import StoreCard from '@/components/StoreCard.vue';
-import axios from 'axios';
+import storeService from '@/services/storeService'; 
+
 
 const router = useRouter();
 const storeList = reactive({
@@ -11,12 +12,14 @@ const storeList = reactive({
         searchText: '',
         size: 50,
         currentPage: 1,
+        categoryId: 0,
         maxPage: 0 // 이 값은 API 응답에서 받아와야 합니다.
     },
     relatedSearchList: []
 });
 
-// --- [추가] 페이징 그룹 계산 로직 ---
+
+// --- 페이징 그룹 계산 ---
 const PAGE_GROUP_SIZE = 5; // 한 번에 보여줄 페이지 번호 개수
 
 const pageRange = computed(() => {
@@ -36,29 +39,43 @@ const pageRange = computed(() => {
     return pages;
 });
 
+const getBoardMaxPage = async () => {
+    const params = {
+        size: storeList.find.size ,
+        categoryId: storeList.find.categoryId
+    };
+    if(storeList.find.searchText) {
+        params.searchText = storeList.find.searchText;
+    }
+    const result = await storeService.getmaxpage( params );
+    storeList.find.maxPage = result.data;
+}
+
+
 // API로부터 가게 배열 데이터 가져오기
 const getStores = async () => {
+    // getBoardMaxPage();
     const params = {
         searchText: storeList.find.searchText,
         size: storeList.find.size,
-        currentPage: storeList.find.currentPage
+        currentPage: storeList.find.currentPage,
+        categoryId: storeList.find.categoryId
     };
     try {
-        const result = await axios.get('/api/stores', { params });
+        const result = await storeService.getstorelist(params);
         if (result.data) {
-            // 백엔드 응답 구조에 따라 수정 필요 (예: result.data.list)
             storeList.list = result.data; 
-            // storeList.find.maxPage = result.data.maxPage; // 백엔드에서 넘겨주는 전체 페이지 수
         }
     } catch (error) {
-        console.error("데이터 로딩 실패:", error);
+        console.error("가게 목록 조회 실패");
         storeList.list = [
             { id: 1, name: '뭐물꼬 치킨', rating: 4.9, distance: 1.2, minOrderPrice: 15000, deliveryTip: 2000, thumbnail: '' },
             { id: 2, name: '대구 떡볶이', rating: 4.5, distance: 0.8, minOrderPrice: 12000, deliveryTip: 1000, thumbnail: '' }
         ];
-        storeList.find.maxPage = 15; // 테스트용 임시 값
+        storeList.find.maxPage = 15; // 테스트용 임시 값   
     }
 };
+onMounted(getStores);
 
 // 페이지 변경 시 호출할 함수
 const changePage = (page) => {
@@ -67,7 +84,7 @@ const changePage = (page) => {
     window.scrollTo(0, 0);
 };
 
-onMounted(getStores);
+
 
 const goToDetail = (id) => {
     router.push(`/store/${id}`);
@@ -77,10 +94,10 @@ const goToDetail = (id) => {
 <template>
 <div class="store-list-view">
     <header class="header">
-        <h2>(카테고리 이름)</h2>ㅇ
+        <h2>(카테고리 이름)</h2>
     </header>
 
-    <div class="list-container">
+    <div class="list-container">   <!-- 가게 컴포넌트 -->
         <StoreCard 
             v-for="store in storeList.list" 
             :key="store.id" 
@@ -88,19 +105,22 @@ const goToDetail = (id) => {
             @click="goToDetail(store.id)"
         />
     </div>
+    <div v-if="storeList.list.length === 0" class="empty-msg">
+        등록된 가게가 없습니다.
+    </div>
 
+
+    <!-- 페이징 바 -->    
     <div class="pagination" v-if="storeList.find.maxPage > 0">
         <button 
             :disabled="storeList.find.currentPage <= PAGE_GROUP_SIZE" 
             @click="changePage(pageRange[0] - 1)"
         >이전</button>
-
         <button 
             v-for="page in pageRange" 
             :key="page"
             :class="{ active: storeList.find.currentPage === page }"
-            @click="changePage(page)"
-        >
+            @click="changePage(page)">
             {{ page }}
         </button>
 
@@ -110,9 +130,7 @@ const goToDetail = (id) => {
         >다음</button>
     </div>
 
-    <div v-if="storeList.list.length === 0" class="empty-msg">
-        등록된 가게가 없습니다.
-    </div>
+    
 </div>
 </template>
 

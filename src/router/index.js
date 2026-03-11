@@ -1,4 +1,11 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import MyPageView         from '@/views/mypage/MyPageView.vue'
+import MyPageProfileView  from '@/views/mypage/MyPageProfileView.vue'
+import MyPageAddressView  from '@/views/mypage/MyPageAddressView.vue'
+import MyPageOrdersView   from '@/views/mypage/MyPageOrdersView.vue'
+import MyPageReviewView   from '@/views/mypage/MyPageReviewView.vue'
+import MyPageCouponView   from '@/views/mypage/MyPageCouponView.vue'
+import MyPageCsView       from '@/views/mypage/MyPageCsView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -25,6 +32,15 @@ const router = createRouter({
 
     // ── 존재하지 않는 경로는 로그인으로
     { path: '/:pathMatch(.*)*', redirect: '/signin' },
+
+    // 마이페이지
+    { path: '/mypage',          component: MyPageView        },
+    { path: '/mypage/profile',  component: MyPageProfileView },
+    { path: '/mypage/address',  component: MyPageAddressView },
+    { path: '/mypage/orders',   component: MyPageOrdersView  },
+    { path: '/mypage/review',   component: MyPageReviewView  },
+    { path: '/mypage/coupon',   component: MyPageCouponView  },
+    { path: '/mypage/cs',       component: MyPageCsView      },
   ],
 })
 

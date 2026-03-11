@@ -5,7 +5,7 @@ class storeService{
 
     async getstorelist(params) {// 가게 목록 조회
         const res = await axios.get(this.#url, {params});
-        return res.resultData;
+        return res.data;
     }
 
     async getmaxpage(params) {// 가게 목록의 최대 페이지 수

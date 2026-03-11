@@ -60,6 +60,8 @@ const handleAddCart = () => {
   </div>
 </template>
 
+
+
 <style scoped>
 .modal-overlay {
   position: fixed;

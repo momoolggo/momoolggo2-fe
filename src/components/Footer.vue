@@ -69,15 +69,18 @@ const goNotice     = () => router.push('/notice')
 
 <style scoped>
 .footer {
+    max-height: none;
+    min-height: 200px;
     padding-top: 1px;
     padding-bottom: 1px;
-    background-color: #f3f0e9;
+    background-color: #FEFAEE;
 }
 
 .footercontent{
     display: flex;
     align-items: center;
-    padding: 4px 0 4px 40px;
+    padding: 7px 0 4px 40px;
+    gap: 100px;
     
 }
 
@@ -95,10 +98,11 @@ const goNotice     = () => router.push('/notice')
 }
 
 .toptext span {
-  cursor: pointer;
+    cursor: pointer;
+    margin: 0 10px;
 }
 .toptext span:hover {
-  color: var(--primary);
+    color: var(--primary);
 }
 
 .middletext{
@@ -110,7 +114,7 @@ const goNotice     = () => router.push('/notice')
     font-size: 13px;
     font-family: 'NanumSquare_ac', 'Pretendard', 'Noto Sans KR';
     color: #888888;
-    line-height: 1.4;
+    line-height: 1.8;
 }
 .footerbottom{
     padding-top: 4px;
@@ -125,15 +129,17 @@ const goNotice     = () => router.push('/notice')
     width: 100%;
     height: 1px;
     background-color: #d3d3d3;
+    
 }
 
 .logo_link{
     display: block;
     padding-left: -20px;
+
 }
 .footerlogo { 
-    width: 70px;
-    height: 60px
+    width: 150px;
+    height: 150px;
 }
 
 

@@ -21,10 +21,10 @@ const goCart     = () => router.push('/cart')
 const goSignin   = () => router.push('/signin')
 const goMypage   = () => router.push('/mypage')
 const goSearchstore = () => router.push('/searchstore');
-const goRiderservice = () => router.push('/riderservice');
+const goRiderservice = () => router.push('/rider');
 const goOwnerservice = () => router.push('/ownerservice');
 const goEvent = () => router.push('/event');
-const goCustomerservice = () => router.push('/customerservice');
+const goCustomerservice = () => router.push('/mypage/cs');
 
 </script>
 

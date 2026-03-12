@@ -239,7 +239,9 @@ onMounted(async () => {
         <label class="label">비밀번호 <span class="required">*</span></label>
         <div class="input_wrap">
           <input v-model="state.form.userPw" :type="state.showPw ? 'text' : 'password'" class="inp" placeholder="비밀번호를 입력하세요" />
-          <button class="pw_toggle" @click="state.showPw = !state.showPw">{{ state.showPw ? '🙈' : '👁️' }}</button>
+          <button class="pw_toggle" @click="state.showPw = !state.showPw">
+          <i :class="state.showPw ? 'bi bi-eye' : 'bi bi-eye-slash'"></i>
+          </button>
         </div>
       </div>
 
@@ -248,7 +250,9 @@ onMounted(async () => {
         <label class="label">비밀번호 확인 <span class="required">*</span></label>
         <div class="input_wrap">
           <input v-model="state.form.userPwConfirm" :type="state.showPwConfirm ? 'text' : 'password'" class="inp" placeholder="비밀번호를 한번 더 입력하세요" />
-          <button class="pw_toggle" @click="state.showPwConfirm = !state.showPwConfirm">{{ state.showPwConfirm ? '🙈' : '👁️' }}</button>
+          <button class="pw_toggle" @click="state.showPwConfirm = !state.showPwConfirm">
+            <i :class="state.showPwConfirm ? 'bi bi-eye' : 'bi bi-eye-slash'"></i>
+          </button>
         </div>
       </div>
 

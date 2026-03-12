@@ -1,68 +1,83 @@
-<template>
-    <div class="list-container">
-      <div class="title-area">
-        <h2 class="main-title">신규 주문</h2>
-      </div>
-  
-      <div class="table-header">
-        <span class="col-no">NO.</span>
-        <span class="col-time">주문시간</span>
-        <span class="col-duration">소요시간</span>
-        <span class="col-addr">주소</span>
-        <span class="col-menu">메뉴</span>
-        <span class="col-price">결제금액</span>
-        <span class="col-status">상태</span>
-      </div>
-  
-      <div v-for="(order, index) in orders" :key="index" class="order-item">
-        <span class="col-no">{{ order.no }}</span>
-        <span class="col-time">{{ order.time }}</span>
-        <span class="col-duration">{{ order.duration }}</span>
-        <span class="col-addr">{{ order.address }}</span>
-        <span class="col-menu">{{ order.menu }}</span>
-        <span class="col-price">{{ order.price }}</span>
-        <span class="col-status">
-          <button class="status-btn" :class="getStatusInfo(order.status).class">
-            {{ getStatusInfo(order.status).text }}
-          </button>
-        </span>
-      </div>
-  
-      <div v-if="orders.length === 0" class="no-data">
-        현재 들어온 신규 주문이 없습니다.
-      </div>
-    </div>
-  </template>
-  
-  <script setup>
-  import { defineProps } from 'vue';
-  
-  // 1. 나중에 부모 컴포넌트(OwnerHomeView 등)에서 실제 데이터를 내려줄 수 있도록 props 설정
-  const props = defineProps({
-    orders: {
-      type: Array,
-      default: () => [
-        // 예시용 데이터 (실제 API 연결 전까지 보임)
-        { no: '005', time: '10:26', duration: '7분', address: '대구 광역시 범어동 123-45 101호', menu: '참돔 오차즈케 외 1건', price: '17,000원', status: 'WAITING' },
-        { no: '004', time: '10:26', duration: '7분', address: '대구 광역시 범어동 123-45 101호', menu: '참돔 오차즈케 외 1건', price: '17,000원', status: 'PROGRESS' },
-        { no: '003', time: '10:26', duration: '7분', address: '대구 광역시 범어동 123-45 101호', menu: '참돔 오차즈케 외 1건', price: '17,000원', status: 'PROGRESS' },
-        { no: '002', time: '10:26', duration: '7분', address: '대구 광역시 범어동 123-45 101호', menu: '참돔 오차즈케 외 1건', price: '17,000원', status: 'SHIPPING' },
-        { no: '001', time: '10:26', duration: '7분', address: '대구 광역시 범어동 123-45 101호', menu: '참돔 오차즈케 외 1건', price: '17,000원', status: 'CANCEL' },
-      ]
-    }
-  });
-  
-  // 2. 백엔드에서 주는 상태값(status)을 화면용 텍스트와 클래스로 변환하는 함수
-  const getStatusInfo = (status) => {
-    const statusMap = {
-      'WAITING': { text: '주문 수락 대기', class: 'waiting' },
-      'PROGRESS': { text: '주문 진행 중', class: 'progress' },
-      'SHIPPING': { text: '배달 중', class: 'shipping' },
-      'CANCEL': { text: '주문취소', class: 'cancel' }
-    };
-    return statusMap[status] || { text: '알 수 없음', class: 'waiting' };
+<script setup>
+import { ref, onMounted } from 'vue';
+import axios from 'axios';
+import OrderDetailModal from './OrderDetailModal.vue'; // 모달 파일 경로 확인 필수
+
+const orders = ref([]);
+const isModalOpen = ref(false);
+const selectedOrder = ref(null);
+
+// API로 주문 리스트 조회 (스토어 ID는 실제 환경에 맞게 조정)
+const fetchOrders = async () => {
+  try {
+    const response = await axios.get('http://localhost:8080/api/owner/order', {
+      params: { store_id: 1 } // 실제 store_id로 변경하세요
+    });
+    orders.value = response.data.data; 
+  } catch (error) {
+    console.error("주문 조회 실패:", error);
+  }
+};
+
+const openModal = (order) => {
+  selectedOrder.value = order;
+  isModalOpen.value = true;
+};
+
+const getStatusInfo = (status) => {
+  const statusMap = {
+    'WAITING': { text: '주문 수락 대기', class: 'waiting' },
+    'PROGRESS': { text: '주문 진행 중', class: 'progress' },
+    'SHIPPING': { text: '배달 중', class: 'shipping' },
+    'CANCEL': { text: '주문취소', class: 'cancel' }
   };
-  </script>
+  return statusMap[status] || { text: '알 수 없음', class: 'waiting' };
+};
+
+onMounted(fetchOrders);
+</script>
+
+<template>
+  <div class="list-container">
+    <div class="title-area">
+      <h2 class="main-title">신규 주문</h2>
+    </div>
+
+    <div class="table-header">
+      <span class="col-no">NO.</span>
+      <span class="col-time">주문시간</span>
+      <span class="col-duration">소요시간</span>
+      <span class="col-addr">주소</span>
+      <span class="col-menu">메뉴</span>
+      <span class="col-price">결제금액</span>
+      <span class="col-status">상태</span>
+    </div>
+
+    <div v-for="(order, index) in orders" :key="index" class="order-item" @click="openModal(order)">
+      <span class="col-no">{{ order.no }}</span>
+      <span class="col-time">{{ order.time }}</span>
+      <span class="col-duration">{{ order.duration }}</span>
+      <span class="col-addr">{{ order.address }}</span>
+      <span class="col-menu">{{ order.menu }}</span>
+      <span class="col-price">{{ order.price }}</span>
+      <span class="col-status">
+        <button class="status-btn" :class="getStatusInfo(order.status).class">
+          {{ getStatusInfo(order.status).text }}
+        </button>
+      </span>
+    </div>
+
+    <div v-if="orders.length === 0" class="no-data">
+      현재 들어온 신규 주문이 없습니다.
+    </div>
+
+    <OrderDetailModal 
+      v-if="isModalOpen" 
+      :order="selectedOrder" 
+      @close="isModalOpen = false" 
+    />
+  </div>
+</template>
   
   <style scoped>
   /* 타이틀 영역 */

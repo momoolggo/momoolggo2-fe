@@ -2,6 +2,7 @@
 <script setup>
 import { reactive } from 'vue';
 import { useRouter } from 'vue-router';
+import Footer from '@/components/Footer.vue';
 
 const router = useRouter();
 
@@ -55,6 +56,7 @@ const goCategory = (label) => {
   </div>
   </div>
 </main>
+<Footer></Footer>
 </template>
 
 <style scoped>
@@ -62,9 +64,10 @@ const goCategory = (label) => {
   position: relative;;
   background-color: #A40C0B;
   width: 100vw;
-  min-height: 100vh;
+  min-height: 600px;
   padding-top: 1px;
-  overflow-x: auto;   /* 화면 줄면 가로스크롤 */
+  padding-bottom: 10px;
+  overflow-x: hidden;   /* 화면 줄면 가로스크롤 */
   overflow-y: auto;
 }
 
@@ -74,8 +77,8 @@ const goCategory = (label) => {
   grid-template-columns: repeat(4, 180px); /* 1fr 말고 고정값 */
   gap: 50px;
   width: max-content; /* 내용 크기만큼만 */
-  margin: 100px auto 0;
-  padding: 0 40px 80px;
+  margin: 50px auto 0;
+  padding: 0 40px 40px;
 }
 
 .item{
@@ -86,7 +89,7 @@ const goCategory = (label) => {
   font-size: 30px;
   font-family: 'NanumSquare_acEB', 'Pretendard', 'Noto Sans KR';
   color: #A40C0B;
-  padding: 36px 16px;
+  padding: 24px 16px;
   border: 1px solid #FEFAEE;
   border-radius: 28px;
   height: 200px;

@@ -164,7 +164,6 @@ const goCustomerservice = () => router.push('/mypage/cs');
 }
 
 .nav_bottom{
-  position: sticky;
   top: 0;
   z-index: 100;
   width: 100%;

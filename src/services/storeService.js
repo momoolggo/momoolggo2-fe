@@ -19,7 +19,7 @@ class storeService{
     }
 
     async getMenuList(storeId) { // 가게 메뉴 목록 조회
-        const res = await axios.get(`${this.#url}/menu`);
+        const res = await axios.get(`${this.#url}/menu/${storeId}`);
         return res.data;
     }
 

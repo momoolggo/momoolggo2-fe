@@ -10,18 +10,23 @@ defineProps({
 // 메뉴 클릭 시 장바구니 팝업 등을 띄우기 위한 이벤트
 defineEmits(['click-menu'])
 </script>
+
 <template>
   <div class="menu-item-card" @click="$emit('click-menu', menu)">
     <div class="menu-info">
-      <h3 class="menu-name">{{ menu.name }}</h3>
-      <p class="menu-desc">{{ menu.desc }}</p>
+      <h3 class="menu-name">{{ menu.menuName }}</h3>
+
+      <p class="menu-desc">{{ menu.menuInfo }}</p>
+
       <div class="menu-price-row">
-        <span class="menu-price">{{ menu.price.toLocaleString() }}원</span>
+        <span class="menu-price">{{ menu.price?.toLocaleString() }}원</span>
+
+        <span v-if="menu.soldout === 1" class="soldout-badge">품절</span>
       </div>
     </div>
 
-    <div class="menu-img-wrapper" v-if="menu.pic">
-      <img :src="menu.pic" class="menu-img" alt="메뉴 이미지" />
+    <div class="menu-img-wrapper" v-if="menu.menuPic">
+      <img :src="menu.menuPic" class="menu-img" alt="메뉴 이미지" />
     </div>
     <div class="menu-img-wrapper" v-else>
       <div class="menu-img-placeholder">No Image</div>
@@ -33,39 +38,39 @@ defineEmits(['click-menu'])
 .menu-item-card {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
-  padding: 24px;
-  margin-bottom: 12px;
+  align-items: center;
+  padding: 20px;
+  margin: 10px 20px;
   background-color: #fff;
   border: 1px solid #f0f0f0;
-  border-radius: 16px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.03);
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
   cursor: pointer;
-  transition: transform 0.1s ease;
+  transition: all 0.2s ease;
 }
 
-.menu-item-card:active {
-  transform: scale(0.98); /* 클릭 시 살짝 눌리는 효과 */
+.menu-item-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
 }
 
 .menu-info {
   flex: 1;
-  padding-right: 20px;
+  padding-right: 15px;
 }
 
 .menu-name {
-  margin: 0 0 8px 0;
-  font-size: 1.25rem;
+  margin: 0 0 6px 0;
+  font-size: 1.15rem;
   font-weight: 700;
   color: #222;
 }
 
 .menu-desc {
-  font-size: 0.9rem;
+  font-size: 0.88rem;
   color: #888;
   line-height: 1.5;
-  margin-bottom: 16px;
-  /* 설명이 너무 길면 2줄까지만 노출 */
+  margin-bottom: 12px;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -73,9 +78,18 @@ defineEmits(['click-menu'])
 }
 
 .menu-price {
-  font-size: 1.15rem;
+  font-size: 1.05rem;
   font-weight: 700;
   color: #333;
+}
+
+.soldout-badge {
+  margin-left: 10px;
+  font-size: 0.75rem;
+  color: #ff4d4f;
+  border: 1px solid #ff4d4f;
+  padding: 2px 6px;
+  border-radius: 4px;
 }
 
 .menu-img-wrapper {
@@ -83,21 +97,21 @@ defineEmits(['click-menu'])
 }
 
 .menu-img {
-  width: 120px;
-  height: 120px;
-  border-radius: 12px;
+  width: 100px;
+  height: 100px;
+  border-radius: 8px;
   object-fit: cover;
 }
 
 .menu-img-placeholder {
-  width: 120px;
-  height: 120px;
-  background-color: #f8f8f8;
-  border-radius: 12px;
+  width: 100px;
+  height: 100px;
+  background-color: #f5f5f5;
+  color: #ccc;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #ccc;
+  border-radius: 8px;
   font-size: 0.8rem;
 }
 </style>

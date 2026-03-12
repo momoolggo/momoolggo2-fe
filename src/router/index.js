@@ -19,15 +19,17 @@ const router = createRouter({
     // ── 인증
     { path: '/signin',          component: () => import('@/views/SigninView.vue') },
     { path: '/signup',          component: () => import('@/views/SignupView.vue') },
-    
+
     // ── 고객 메인 (추후 구현)
     { path: '/',                component: () => import('@/views/HomeView.vue') },
 
     // ── 매장 목록
-    { path: '/storelist',         component: () => import('@/views/StoreListView.vue') },
-    
-    { path: '/store/:id', 
-      component: () => import('@/views/StoreDetailView.vue')},
+    { path: '/storelist',         component: () => import('@/views/store/StoreListView.vue') },
+
+    { path: '/store/:id',           component: () => import('@/views/store/StoreDetailView.vue')},
+
+    // 장바구니
+    { path: '/cart',           component: () => import('@/views/service/CartView.vue') },
 
     // ── 사장 (추후 구현)
     { path: '/ownerservice',     component: () => import('@/views/owner/OwnerOrderView.vue') },

@@ -2,47 +2,42 @@
 
 
 
-
 // import { reactive, computed } from 'vue'
 // import { defineStore } from 'pinia'
 // import router from '@/router'
 
 // export const useAuthenticationStore = defineStore(
-//     "authentication", 
+//     "authentication",
 //     () => {
-//         const state = reactive({            
+//         const state = reactive({
 //             signedUser: {
 //                 userId: 0,
-//                 nickName: '',
-//                 pic: null
-//             },            
+//                 userName: '',
+//
+//             },
 //             isSigned: false
 //         });
 // .3
 //         const setSignedUser = signedUser => {
 //             console.log('auth: ', signedUser)
 //             state.isSigned = true;
-//             //state.signedUser = signedUser            
+//             //state.signedUser = signedUser
 //             const user = {
 //                 userId: signedUser.signedUserId,
-//                 nickName: signedUser.nm,
-//                 pic: signedUser.pic
+//                 userName: signedUser.nm,
 //             }
 //             state.signedUser = user;
 //         }
 
-//         const setSigndUserPic = pic => {
-//             state.signedUser.pic = pic;
-//         }
 
 //         const signOut = async () => {
 //             console.log('signOut 처리')
 //             state.isSigned = false;
-//             state.signedUser = null;            
+//             state.signedUser = null;
 //             await router.push('/sign-in')
 //         }
 
 //         return { state, setSignedUser, setSigndUserPic, signOut };
-//     }, 
+//     },
 //     { persist: true }
 // );

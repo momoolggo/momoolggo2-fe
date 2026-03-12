@@ -25,8 +25,7 @@ defineEmits(['click'])
         <span class="review">리뷰 {{ store.sum }}</span>
         <span class="divider">|</span>
         <span class="order"
-          >총 <span class="highlight">'{{ store.count }}'</span> 번 주문 했어요</span
-        >
+          >주문 <span class="highlight">{{ store.count }}</span></span>
       </div>
 
       <div class="delivery-info">
@@ -112,4 +111,5 @@ defineEmits(['click'])
   color: #eee;
   font-size: 0.8rem;
 }
+
 </style>

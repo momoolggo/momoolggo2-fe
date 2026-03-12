@@ -1,7 +1,9 @@
 <script setup>
-import { reactive, onMounted } from 'vue';
+import { reactive, onMounted, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import MenuItem from '@/components/MenuCard.vue';
+// 컴포넌트 등록
+import MenuCategory from '@/components/MenuCategory.vue'; // 파일명 확인 필요
+import StoreInfo from '@/components/StoreInfo.vue';
 import MenuDetailModal from '@/components/MenuModal.vue';
 import storeService from '@/services/storeService';
 
@@ -9,46 +11,74 @@ const route = useRoute();
 const router = useRouter();
 
 const state = reactive({
-    storeInfo: {
-        name: '',
-        avg: 0,
-        sum: 0,
-        min: 0,
-        pic: '',
-    },
+    storeInfo: {},
     menuList: [],
     activeTab: 'menu',
     selectedMenu: {},
+    review: [],
     isModalOpen: false,
 });
 
+//  가게 상세 정보 가져오기
 const getStoreDetail = async () => {
     const storeId = route.params.id;
     try {
         const res = await storeService.getStore(storeId);
-        state.storeInfo = { ...state.storeInfo, ...res.resultData };
-        const menuRes = await storeService.getMenuList(storeId);
-        state.menuList = menuRes.data;
+        state.storeInfo = res.resultData;
     } catch (error) {
-        console.error("데이터 로드 실패:", error);
-        // 이미지 예시 데이터
-        state.storeInfo = { name: '코이보타루', avg: 5.0, sum: 1253, min: 15000, pic: '' };
-        state.menuList = [
-            { id: 1, name: '참돔 오차즈케', price: 21000, desc: '밥 + 국산 참돔 + 녹차 + 후리카게 + 김 + 장국 구성입니다 (1인분)', pic: '' }
-            , { id: 1, name: '참돔 오차즈케', price: 21000, desc: '밥 + 국산 참돔 + 녹차 + 후리카게 + 김 + 장국 구성입니다 (1인분)', pic: '' }, { id: 1, name: '참돔 오차즈케', price: 21000, desc: '밥 + 국산 참돔 + 녹차 + 후리카게 + 김 + 장국 구성입니다 (1인분)', pic: '' },
-            { id: 1, name: '참돔 오차즈케', price: 21000, desc: '밥 + 국산 참돔 + 녹차 + 후리카게 + 김 + 장국 구성입니다 (1인분)', pic: '' }, { id: 1, name: '참돔 오차즈케', price: 21000, desc: '밥 + 국산 참돔 + 녹차 + 후리카게 + 김 + 장국 구성입니다 (1인분)', pic: '' }
-        ];
+        console.error("가게데이터 로드 실패:", error);
     }
 };
 
-onMounted(getStoreDetail);
+// 가게 메뉴 리스트 가져오기
+const getMenuList = async () => {
+    const storeId = route.params.id;
+    try {
+        const res = await storeService.getMenuList(storeId);
+        state.menuList = res.resultData || [];
+    } catch (error) {
+        console.error("메뉴 데이터 로드 실패:", error);
+    }
+};
 
+// 카테고리 그룹화 로직
+const groupedMenu = computed(() => {
+    const result = [];
+    state.menuList.forEach(menu => {
+        const categoryName = menu.categoryName || '기타 메뉴';
+
+        let group = result.find(g => g.name === categoryName);
+        if (!group) {
+            group = { name: categoryName, items: [] };
+            result.push(group);
+        }
+        group.items.push(menu);
+    });
+    return result;
+});
+
+//  가게 리뷰 상세 가져오기
+const getReviewList = async () => {
+    const storeId = route.params.id;
+    try {
+        const res = await storeService.getReviewList(storeId);
+        state.review = res.resultData || [];
+    } catch (error) {
+        console.error("리뷰 데이터 로드 실패:", error);
+    }
+};
+
+onMounted(() => {
+    getStoreDetail();
+    getMenuList();
+    getReviewList();
+});
+
+// 모달 열기 (MenuCategory -> MenuItem을 거쳐 올라온 이벤트)
 const openMenuModal = (menu) => {
     state.selectedMenu = menu;
     state.isModalOpen = true;
 };
-
-const closeDetail = () => router.back();
 
 const handleAddToCart = (item) => {
     console.log("장바구니 담기:", item);
@@ -61,22 +91,22 @@ const handleAddToCart = (item) => {
     <section class="store-header">
         <div class="info-container">
             <div class="info-visual">
-                <img :src="state.storeInfo.pic || '/images/default-store.png'" class="store-img" />
+                <img :src="state.storeInfo.storePic || '/images/default-store.png'" class="store-img" />
             </div>
 
             <div class="info-content">
                 <div class="title-row">
-                    <h1>{{ state.storeInfo.name }}</h1>
+                    <h1>{{ state.storeInfo.storeName }}</h1>
                     <button class="wish-heart">🤍</button>
                 </div>
                 <div class="rating-row">
-                    <span class="star">⭐ {{ state.storeInfo.avg }}</span>
-                    <span class="review-count">({{ state.storeInfo.sum.toLocaleString() }})</span>
+                    <span class="star">⭐ {{ state.storeInfo.ratingAvg }}</span>
+                    <span class="review-count">({{ state.storeInfo.ratingCount }})</span>
                 </div>
                 <div class="delivery-spec">
                     <div class="spec-item">
                         <span class="label">최소 주문 금액</span>
-                        <span class="val">{{ state.storeInfo.min?.toLocaleString() }}원</span>
+                        <span class="val">{{ state.storeInfo.minPrice?.toLocaleString() }}원</span>
                     </div>
                     <div class="spec-item">
                         <span class="label">예상 배달 시간</span>
@@ -84,42 +114,44 @@ const handleAddToCart = (item) => {
                     </div>
                     <div class="spec-item">
                         <span class="label">배달 팁</span>
-                        <span class="val">1500원</span>
+                        <span class="val">1,500원</span>
                     </div>
                 </div>
             </div>
 
             <div class="info-character">
-                <img src="/public/favicon.png" alt="character" /> 얘 이미지 어떻게 할지 생각좀해봐야함
+                <img src="/favicon.png" alt="character" />
             </div>
         </div>
     </section>
 
-    <nav class="detail-tabs"> <!--탭 네비게이션-->
+    <nav class="detail-tabs">
         <button :class="{ active: state.activeTab === 'menu' }" @click="state.activeTab = 'menu'">메뉴</button>
         <button :class="{ active: state.activeTab === 'info' }" @click="state.activeTab = 'info'">가게정보</button>
         <button :class="{ active: state.activeTab === 'review' }" @click="state.activeTab = 'review'">리뷰</button>
     </nav>
 
-    <!-- 메뉴 탭 내용 -->
-    <div v-if="state.activeTab === 'menu'" class="menu-container">
-        <MenuItem
-            v-for="menu in state.menuList"
-            :key="menu.id"
-            :menu="menu"
+    <div v-if="state.activeTab === 'menu'" class="menu-tab-content">
+        <MenuCategory
+            v-for="group in groupedMenu"
+            :key="group.name"
+            :category-name="group.name"
+            :items="group.items"
             @click-menu="openMenuModal"
         />
     </div>
-    <!-- 가게정보 탭 내용 -->
-    <div v-if="state.activeTab === 'info'" class="info-container">
-        <p>가게 상세 정보와 설명이 여기에 표시됩니다. 컴포넌트 미완성</p>
-    </div>
-    <!-- 리뷰 탭 내용 -->
-    <div v-if="state.activeTab === 'review'" class="review-container">
-        <p>사용자 리뷰와 평점이 여기에 표시됩니다. 컴포넌트 만들어야ㅐ됨</p>
+
+    <div v-if="state.activeTab === 'info'" class="info-tab-wrapper">
+        <StoreInfo :state="state.storeInfo" />
     </div>
 
-    <!-- 메뉴 상세 모달 -->
+    <div v-if="state.activeTab === 'review'" class="review-container">
+        <p v-if="state.review.length === 0">아직 작성된 리뷰가 없습니다.</p>
+        <div v-else>
+            <p>총 {{ state.review.length }}개의 리뷰가 있습니다.</p>
+        </div>
+    </div>
+
     <MenuDetailModal
         :menu="state.selectedMenu"
         :is-open="state.isModalOpen"
@@ -132,12 +164,6 @@ const handleAddToCart = (item) => {
 <style scoped>
 .store-detail-view { max-width: 1100px; margin: 0 auto; background: #fff; }
 
-/* 상단 내비게이션 */
-.top-nav { display: flex; justify-content: space-between; align-items: center; padding: 10px 20px; border-bottom: 1px solid #eee; background: #fff; }
-.nav-center { flex: 1; text-align: center; color: #888; font-size: 0.9rem; }
-.nav-right button { background: none; border: none; font-size: 0.85rem; margin-left: 15px; cursor: pointer; color: #333; }
-
-/* 가게 정보 섹션 (PC 가로형) */
 .store-header { padding: 40px; border-bottom: 8px solid #f5f5f5; }
 .info-container { display: flex; gap: 40px; align-items: flex-start; position: relative; }
 
@@ -159,10 +185,10 @@ const handleAddToCart = (item) => {
 .info-character { width: 150px; align-self: flex-end; }
 .info-character img { width: 100%; object-fit: contain; }
 
-/* 탭 스타일 */
 .detail-tabs { display: flex; border-bottom: 1px solid #eee; justify-content: center; }
 .detail-tabs button { padding: 15px 60px; border: none; background: none; color: #999; font-size: 1.1rem; cursor: pointer; }
 .detail-tabs button.active { color: #333; font-weight: bold; border-bottom: 4px solid #333; }
 
-.menu-container { padding: 20px; display: flex; flex-direction: column; gap: 15px; }
+.info-tab-wrapper {width: 100%;}
+.menu-tab-content { width: 100%; }
 </style>

@@ -96,7 +96,7 @@ const update = async () => {
       </div>
 
       <!-- 비밀번호 확인 -->
-      <div class="field" v-if="state.form.userPw">
+      <div class="field">
         <label class="label">비밀번호 확인</label>
         <div class="input_wrap">
           <input
@@ -187,4 +187,5 @@ const update = async () => {
   align-items: center;
   gap: 4px;
 }
+
 </style>

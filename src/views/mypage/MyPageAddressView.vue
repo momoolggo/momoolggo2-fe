@@ -267,21 +267,40 @@ const setDefault = async (addressId) => {
 </template>
 
 <style scoped>
-.address_wrap { max-width: 640px; margin: 40px auto; padding: 0 16px; }
-.page_header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+.address_wrap { max-width: 860px; margin: 40px auto; padding: 0 16px; }
+.page_header { 
+  display: flex; 
+  align-items: center; 
+  justify-content: space-between; 
+  margin-bottom: 20px; 
+}
 .page_title { font-size: 20px; font-weight: 700; }
-.btn_sm { padding: 8px 18px; font-size: 14px; }
+.btn_sm { 
+  padding: 8px 18px; 
+  font-size: 14px; 
+  width: auto;
+  white-space: nowrap; 
+}
 
-.address_list { display: flex; flex-direction: column; gap: 12px; }
+.address_list { 
+  display: flex; 
+  flex-direction: column; 
+  gap: 14px;
+  max-height: none;
+  overflow: visible;
+}
+
 .address_item {
   background: #fff;
   border: 1.5px solid var(--border);
   border-radius: var(--radius-md);
-  padding: 16px 20px;
+  padding: 20px 24px;
   display: flex;
+  flex-direction: row;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 16px;
+  min-height: 72px;
 }
 .addr_left { display: flex; align-items: center; gap: 12px; }
 .default_badge {
@@ -293,11 +312,23 @@ const setDefault = async (addressId) => {
   border-radius: 20px;
   white-space: nowrap;
 }
-.addr_main { font-size: 14px; font-weight: 600; color: var(--black); }
-.addr_detail { font-size: 13px; color: var(--gray); margin-top: 2px; }
+.addr_main { font-size: 15px; font-weight: 600; color: var(--black); }
+.addr_detail { font-size: 14px; color: var(--gray); margin-top: 4px; }
 .addr_actions { display: flex; gap: 6px; }
-.btn_xs { padding: 5px 10px; font-size: 12px; border-radius: 6px; cursor: pointer; background: #fff; border: 1.5px solid var(--border); }
+.btn_xs {
+  padding: 6px 12px;
+  font-size: 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  background: #fff;
+  border: 1.5px solid var(--border);
+  color: var(--gray-dark);
+  font-weight: 600;
+  transition: all 0.15s;
+}
+.btn_xs:hover { border-color: var(--primary); color: var(--primary); }
 .btn_danger { border-color: var(--primary) !important; color: var(--primary) !important; }
+.btn_danger:hover { background: var(--primary) !important; color: #fff !important; }
 .empty_msg { text-align: center; color: var(--gray); padding: 40px 0; }
 
 /* 모달 */
@@ -321,7 +352,31 @@ const setDefault = async (addressId) => {
 .modal_header { display: flex; align-items: center; justify-content: space-between; }
 .modal_header h3 { font-size: 17px; font-weight: 700; }
 .modal_close { background: none; border: none; font-size: 18px; cursor: pointer; color: var(--gray); }
-.modal_footer { display: flex; gap: 10px; justify-content: flex-end; }
+.modal_footer { 
+  display: flex; 
+  gap: 10px; 
+  justify-content: flex-end;
+  align-items: center;
+}
+.modal_footer .btn_outline {
+  padding: 12px 20px;
+  background: #fff;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--gray-dark);
+  white-space: nowrap;
+  width: auto;
+  cursor: pointer;
+}
+.modal_footer .btn_outline:hover {
+  border-color: var(--gray);
+}
+.modal_footer .btn_primary {
+  width: auto;
+  padding: 12px 28px;
+}
 
 .map_wrap { display: flex; flex-direction: column; gap: 4px; margin-top: 8px; }
 .map_box { width: 100%; height: 220px; border-radius: var(--radius-md); border: 1.5px solid var(--border); overflow: hidden; }

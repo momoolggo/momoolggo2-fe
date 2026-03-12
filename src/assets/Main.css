@@ -32,6 +32,10 @@
   padding: 0;
 }
 
+i {
+  font-style: normal;
+}
+
 body {
   font-family: 'Noto Sans KR', 'Apple SD Gothic Neo', sans-serif;
   font-size: 14px;
@@ -168,6 +172,19 @@ button {
   border: none;
   cursor: pointer;
   font-size: 16px;
+  font-style: normal;  /* ← 이거 추가 */
+}
+
+/* 브라우저 기본 비밀번호 토글 숨기기 */
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear {
+  display: none;   /* Edge */
+}
+
+input[type="password"]::-webkit-credentials-auto-fill-button,
+input[type="password"]::-webkit-textfield-decoration-container {
+  display: none;   /* Chrome */
+  -webkit-appearance: none;
 }
 
 /* ── 로그인/회원가입 하단 링크 ── */

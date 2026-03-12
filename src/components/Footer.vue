@@ -73,7 +73,7 @@ const goNotice     = () => router.push('/notice')
     min-height: 200px;
     padding-top: 1px;
     padding-bottom: 1px;
-    background-color: #FEFAEE;
+    background-color: #f3f0e9;
 }
 
 .footercontent{

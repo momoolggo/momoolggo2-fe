@@ -26,7 +26,7 @@ const router = createRouter({
 
     // ── 사장 (추후 구현)
 
-    { path: '/owner/order',     component: () => import('@/views/owner/OwnerOrderView.vue') },
+    { path: '/ownerservice',     component: () => import('@/views/owner/OwnerOrderView.vue') },
     { path: '/owner/addstore',     component: () => import('@/views/owner/AddStoreView.vue') },
 
 

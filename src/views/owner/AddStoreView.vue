@@ -2,7 +2,8 @@
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import Sidebar from '@/components/Sidebar.vue'; 
-import { useStore } from '@/stores/useStore'; 
+import { useStore } from '@/stores/useStore';
+import axios from 'axios';
 
 const router = useRouter();
 const store = useStore();
@@ -21,14 +22,31 @@ const handleCancel = () => {
   router.back();
 };
 
-const handleSubmit = () => {
+const handleSubmit = async () => {
   if (!storeData.value.name) {
     alert("가게 상호명을 입력해주세요.");
     return;
   }
-  store.addStore(storeData.value.name);
-  alert("가게 등록이 완료되었습니다.");
-  router.push('/owner/order');
+
+  try {
+    await axios.post('/api/owner/store', {
+      userId: 3,  // 로그인된 사용자 ID
+      storeName: storeData.value.name,
+      businessNumber: storeData.value.businessNumber,
+      businessName: storeData.value.businessOwner,
+      location: storeData.value.address + ' ' + storeData.value.addressDetail,
+      storeTel: storeData.value.phone,
+      storeInfo: storeData.value.description,
+      storePic: ''
+    }, { withCredentials: true });
+
+    store.addStore(storeData.value.name);
+    alert("가게 등록이 완료되었습니다.");
+    router.push('/owner/order');
+  } catch (err) {
+    console.error(err);
+    alert("가게 등록에 실패했습니다.");
+  }
 };
 </script>
 

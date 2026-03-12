@@ -3,6 +3,7 @@ import { computed } from 'vue';
 import OrderCard from '@/components/OrderCard.vue';
 import OrderList from '@/components/OrderList.vue';
 import Sidebar from '@/components/Sidebar.vue';
+import axios from 'axios';
 
 // 1. 현재 날짜를 "YYYY / MM / DD" 형식으로 생성하는 계산 속성
 const formattedDate = computed(() => {

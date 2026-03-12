@@ -1,34 +1,56 @@
 <script setup>
-import { ref } from 'vue';
+import { reactive } from 'vue'; // reactive 임포트
 import { useRouter } from 'vue-router';
-import Sidebar from '@/components/Sidebar.vue'; 
-import { useStore } from '@/stores/useStore'; 
+import Sidebar from '@/components/Sidebar.vue';
+import { useStore } from '@/stores/useStore';
+import axios from 'axios';
 
 const router = useRouter();
 const store = useStore();
 
-const storeData = ref({
-  name: '',
-  address: '',
-  addressDetail: '',
-  phone: '',
-  businessOwner: '',
-  businessNumber: '',
-  description: ''
+const state = reactive({
+  form: {
+    storeName: '',      // name -> storeName으로 변경
+    location: '',       // 그대로 사용 (기본 주소)
+    addressDetail: '',  // (XML에 없지만 나중에 합쳐서 보내야 함)
+    storeTel: '',       // 그대로 사용
+    businessName: '',   // 그대로 사용
+    businessNumber: '', // 그대로 사용
+    storeInfo: ''       // 그대로 사용
+  }
 });
 
-const handleCancel = () => {
-  router.back();
-};
+const handleCancel = () => router.back();
 
-const handleSubmit = () => {
-  if (!storeData.value.name) {
+const handleSubmit = async () => {
+  // 1. 필수값 체크
+  if (!state.form.storeName) {
     alert("가게 상호명을 입력해주세요.");
     return;
   }
-  store.addStore(storeData.value.name);
-  alert("가게 등록이 완료되었습니다.");
-  router.push('/owner/order');
+
+  // 2. 백엔드로 보낼 데이터 준비
+  // state.form의 데이터를 복사하고, 누락된 필드를 채워 넣습니다.
+  const payload = {
+    ...state.form,
+    // 사진 로직이 아직 없다면 임시로 빈 문자열이나 기본값을 넣습니다.
+    storePic: state.form.storePic || 'default.jpg',
+    // userId는 보통 프론트에서 보내지 않고 백엔드 토큰에서 가져오지만, 
+    // 백엔드 DTO에 필수라면 일단 0으로라도 넣어보거나 
+    // 필요 없다면 백엔드에서 @AuthenticationPrincipal 등으로 처리해야 합니다.
+    userId: 0 
+  };
+
+  try {
+    // 3. 서버로 전송
+    const response = await axios.post('http://localhost:8080/api/owner/store', payload);
+    
+    alert("가게 등록이 완료되었습니다.");
+    router.push('/ownerservice');
+  } catch (error) {
+    console.error("등록 실패:", error);
+    alert("서버 연결에 실패했습니다.");
+  }
 };
 </script>
 
@@ -46,8 +68,8 @@ const handleSubmit = () => {
           <div class="form-group">
             <label>가게 상호명</label>
             <div class="input-wrapper">
-              <input v-model="storeData.name" type="text" placeholder="가게 이름을 입력하세요" maxlength="24" />
-              <span class="char-count">{{ storeData.name.length }}/24</span>
+              <input v-model="state.form.storeName" type="text" placeholder="가게 이름을 입력하세요" maxlength="24" />
+              <span class="char-count">{{ state.form.storeName.length }}/24</span>
             </div>
           </div>
 
@@ -55,27 +77,27 @@ const handleSubmit = () => {
             <label>가게 주소</label>
             <div class="address-input">
               <div class="zipcode-row">
-                <input v-model="storeData.address" type="text" placeholder="우편번호" readonly />
+                <input v-model="state.form.location" type="text" placeholder="우편번호" readonly />
                 <button class="search-btn" type="button">우편번호 검색</button>
               </div>
               <input type="text" class="full-input" placeholder="기본 주소" readonly />
-              <input v-model="storeData.addressDetail" type="text" placeholder="상세주소를 입력하세요" class="full-input" />
+              <input v-model="state.form.addressDetail" type="text" placeholder="상세주소를 입력하세요" class="full-input" />
             </div>
           </div>
 
           <div class="form-group">
             <label>가게 전화번호</label>
-            <input v-model="storeData.phone" type="text" class="full-input" placeholder="010 - 0000 - 0000" />
+            <input v-model="state.form.storeTel" type="text" class="full-input" placeholder="010 - 0000 - 0000" />
           </div>
 
           <div class="form-group">
             <label>사업자 명</label>
-            <input v-model="storeData.businessOwner" type="text" class="full-input" placeholder="이름을 입력하세요" />
+            <input v-model="state.form.businessName" type="text" class="full-input" placeholder="이름을 입력하세요" />
           </div>
 
           <div class="form-group">
             <label>사업자 번호</label>
-            <input v-model="storeData.businessNumber" type="text" class="full-input" placeholder="사업자 번호를 입력하세요" />
+            <input v-model="state.form.businessNumber" type="text" class="full-input" placeholder="사업자 번호를 입력하세요" />
           </div>
         </div>
 
@@ -93,8 +115,8 @@ const handleSubmit = () => {
           <div class="form-group">
             <label>가게 소개글</label>
             <div class="textarea-wrapper">
-              <textarea v-model="storeData.description" maxlength="100" placeholder="가게 소개를 입력하세요"></textarea>
-              <span class="char-count">{{ storeData.description.length }}/100</span>
+              <textarea v-model="state.form.storeInfo" maxlength="100" placeholder="가게 소개를 입력하세요"></textarea>
+              <span class="char-count">{{ state.form.storeInfo.length }}/100</span>
             </div>
           </div>
         </div>
@@ -109,6 +131,7 @@ const handleSubmit = () => {
 </template>
 
 <style scoped>
+/* 기존 스타일을 그대로 유지합니다 */
 .container { display: flex; background-color: #f9f9f9; min-height: 100vh; }
 .main-content { flex: 1; padding: 60px 80px; }
 .content-header { border-bottom: 1px solid #eee; margin-bottom: 40px; padding-bottom: 15px; }
@@ -130,5 +153,5 @@ textarea { height: 120px; resize: none; }
 .btn-cancel { background: #e0e0e0; border: none; padding: 10px 30px; border-radius: 8px; cursor: pointer; }
 .btn-submit { background: #4A5FF2; color: #fff; border: none; padding: 10px 30px; border-radius: 8px; cursor: pointer; }
 .address-input { display: flex; flex-direction: column; gap: 12px; }
-.full-input { width: 100%; padding: 12px 15px; border: 1.5px solid #ddd; border-radius: 12px; }
-</style>
+.full-input { width: 100%; padding: 12px 15px; border: 1.5px solid #ddd; border-radius: 12}
+  </style>

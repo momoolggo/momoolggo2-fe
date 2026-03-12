@@ -20,7 +20,6 @@ const state = reactive({
     activeTab: 'menu',
     selectedMenu: {},
     isModalOpen: false,
-    storedetail:{}
 });
 
 const getStoreDetail = async () => {

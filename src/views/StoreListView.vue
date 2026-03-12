@@ -2,7 +2,7 @@
 import { computed, reactive, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import StoreCard from '@/components/StoreCard.vue';
-import storeService from '@/services/storeService'; 
+import storeService from '@/services/storeService';
 
 const router = useRouter();
 const scrollContainer = ref(null); // 화살표 스크롤용 ref
@@ -31,7 +31,7 @@ const storeList = reactive({
         size: 50,
         currentPage: 1,
         categoryId: 0,
-        maxPage: 0 
+        maxPage: 0
     },
     relatedSearchList: []
 });
@@ -46,7 +46,7 @@ const changeCategory = (id) => {
 // --- 화살표 스크롤 함수 ---
 const scroll = (direction) => {
     if (scrollContainer.value) {
-        const scrollAmount = 250; 
+        const scrollAmount = 1000;
         scrollContainer.value.scrollBy({
             left: direction === 'left' ? -scrollAmount : scrollAmount,
             behavior: 'smooth'
@@ -79,7 +79,7 @@ const getStores = async () => {
     try {
         const result = await storeService.getstorelist(params);
         if (result.resultData) {
-            storeList.list = result.resultData; 
+            storeList.list = result.resultData;
         }
     } catch (error) {
         console.error("가게 목록 조회 실패", error);
@@ -106,12 +106,14 @@ const currentCategoryName = computed(() => {
 
 <template>
 <div class="store-list-view">
+
+  <!-- 카테고리 네비게이션 -->
     <nav class="category-nav">
         <button class="nav-btn left" @click="scroll('left')">〈</button>
         <div class="category-scroll-wrapper" ref="scrollContainer">
-            <div 
-                v-for="cat in categories" 
-                :key="cat.id" 
+            <div
+                v-for="cat in categories"
+                :key="cat.id"
                 class="category-item"
                 :class="{ active: storeList.find.categoryId === cat.id }"
                 @click="changeCategory(cat.id)"
@@ -127,11 +129,12 @@ const currentCategoryName = computed(() => {
         <h2>{{ currentCategoryName }}</h2>
     </header>
 
+    
     <div class="list-container">
-        <StoreCard 
-            v-for="store in storeList.list" 
-            :key="store.id" 
-            :store="store" 
+        <StoreCard
+            v-for="store in storeList.list"
+            :key="store.id"
+            :store="store"
             @click="goToDetail(store.id)"
         />
     </div>
@@ -141,19 +144,19 @@ const currentCategoryName = computed(() => {
     </div>
 
     <div class="pagination" v-if="storeList.find.maxPage > 0">
-        <button 
-            :disabled="storeList.find.currentPage <= PAGE_GROUP_SIZE" 
+        <button
+            :disabled="storeList.find.currentPage <= PAGE_GROUP_SIZE"
             @click="changePage(pageRange[0] - 1)"
         >이전</button>
-        <button 
-            v-for="page in pageRange" 
+        <button
+            v-for="page in pageRange"
             :key="page"
             :class="{ active: storeList.find.currentPage === page }"
             @click="changePage(page)">
             {{ page }}
         </button>
-        <button 
-            :disabled="pageRange[pageRange.length - 1] >= storeList.find.maxPage" 
+        <button
+            :disabled="pageRange[pageRange.length - 1] >= storeList.find.maxPage"
             @click="changePage(pageRange[pageRange.length - 1] + 1)"
         >다음</button>
     </div>

@@ -14,7 +14,7 @@ class storeService{
     }
 
     async getStore(storeId) { // 가게 상세 정보 조회
-        const res = await axios.get(`${this.#url}/:id` , {params: {id: storeId}});
+        const res = await axios.get(`${this.#url}/${storeId}` );
         return res.data;
     }
 

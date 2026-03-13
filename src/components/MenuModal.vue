@@ -1,13 +1,15 @@
 <script setup>
 import { ref } from 'vue'
+import { useAuthStore } from '@/stores/authStore'  // ✅ 추가
+import cartService from '@/services/cartService'   // ✅ 추가
 
 const props = defineProps({
-  menu: Object, // 클릭한 메뉴 데이터
-  isOpen: Boolean, // 모달 열림 상태
+  menu: Object,
+  isOpen: Boolean,
 })
 
 const emit = defineEmits(['close', 'add-to-cart'])
-
+const authStore = useAuthStore()  // ✅ 추가
 const quantity = ref(1)
 
 const updateQuantity = (val) => {
@@ -15,13 +17,42 @@ const updateQuantity = (val) => {
   quantity.value += val
 }
 
-const handleAddCart = () => {
-  emit('add-to-cart', {
-    ...props.menu,
-    quantity: quantity.value,
-  })
-  quantity.value = 1 // 수량 초기화
+//장바구니 담기
+const handleAddCart = async () => {
+  try {
+    const cartData = {
+      userNo: authStore.state.userNo,
+      menuId: props.menu.menuId,
+      quantity: quantity.value,
+    }
+
+    const res = await cartService.addToCart(cartData)
+
+    alert('장바구니에 담겼습니다! 🛒')
+    quantity.value = 1
+    emit('close')
+
+  } catch (error) {
+    // 409: 다른 매장 메뉴 존재
+    if (error.response?.status === 409) {
+      const confirmed = confirm('다른 매장의 메뉴가 장바구니에 있습니다.\n기존 장바구니를 비우고 담을까요?')
+
+      if (confirmed) {
+        await cartService.clearAndAdd({
+          userNo: authStore.state.userNo,
+          menuId: props.menu.menuId,
+          quantity: quantity.value,
+        })
+        alert('장바구니에 담겼습니다! 🛒')
+        quantity.value = 1
+        emit('close')
+      }
+    } else {
+      alert('장바구니 담기에 실패했습니다.')
+    }
+  }
 }
+
 </script>
 
 <template>

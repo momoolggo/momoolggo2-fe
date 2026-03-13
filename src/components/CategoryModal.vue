@@ -1,6 +1,6 @@
 <script setup>
 import { ref } from 'vue';
-import draggable from 'vuedraggable';
+// import draggable from 'vuedraggable';
 
 const props = defineProps({
   initialCategories: { type: Array, default: () => [] },
@@ -48,8 +48,8 @@ const removeSelected = (index) => { selectedCategories.value.splice(index, 1); }
         <div class="column">
           <h3>메뉴 카테고리</h3>
           <div class="list-box">
-            <div v-for="cat in categories" :key="cat.id" 
-                 class="item" 
+            <div v-for="cat in categories" :key="cat.id"
+                 class="item"
                  :class="{ active: selectedId === cat.id }"
                  @click="selectedId = cat.id">
               <input v-if="editingId === cat.id" v-model="tempName" @blur="saveEdit(cat)" @keyup.enter="saveEdit(cat)" />

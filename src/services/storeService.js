@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios from './httpRequester';
 
 class storeService{
     #url = '/store';
@@ -23,6 +23,15 @@ class storeService{
         return res.data;
     }
 
+    async getFavorite(params) { // 가게 찜 조회
+        const res = await axios.get(`${this.#url}/favorite`, {params});
+        return res.data;
+    }
+
+    async toggleFavorite(storeId) { // 가게 찜 토글
+        const res = await axios.post(`${this.#url}/favorite/${storeId}`);
+        return res.data;
+    }
 
 
 }

@@ -2,7 +2,7 @@
 import { reactive, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import storeService from '@/services/storeService';
-
+import { useAuthStore } from '@/stores/authStore';
 const router = useRouter();
 
 const state = reactive({

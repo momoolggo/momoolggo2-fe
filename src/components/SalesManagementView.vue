@@ -10,7 +10,7 @@ const tabs = ['일간', '주간', '월간', '연간'];
 
 <template>
   <div class="owner-layout">
-    <Sidebar />
+  
 
     <main class="main-content">
       <header class="content-header">

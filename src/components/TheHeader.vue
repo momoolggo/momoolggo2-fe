@@ -104,11 +104,12 @@ const goCustomerservice = () => router.push('/mypage/cs');
   border-bottom: 1px solid var(--border);
   box-shadow: var(--shadow-header);
   align-items: center;
+  overflow: hidden;
 }
 
 .header_inner {
   display: grid;
-  grid-template-columns: 200px 1fr 220px;
+  grid-template-columns: 200px 1fr auto;
   align-items: center;
   gap: 16px;
   height: 60px;
@@ -154,7 +155,6 @@ const goCustomerservice = () => router.push('/mypage/cs');
   align-items: center;
   justify-self: end;
   width: 500px;
-  flex-wrap: nowrap;
   gap: 4px;
 
 }

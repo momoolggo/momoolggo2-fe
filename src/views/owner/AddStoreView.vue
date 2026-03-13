@@ -1,7 +1,6 @@
 <script setup>
 import { reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
-// Sidebar 임포트 제거
 import { useStore } from '@/stores/useStore';
 import axios from 'axios';
 
@@ -11,7 +10,7 @@ const store = useStore();
 const fileInput = ref(null);
 const previewImage = ref(null);
 
-const state = reactive({
+const state = reactive({ //가게정보 
   form: {
     storeName: '',      
     location: '',       
@@ -24,29 +23,28 @@ const state = reactive({
   }
 });
 
-const handleCancel = () => router.back();
+const cancel = () => router.back(); //'취소' 누르면 이전페이지로 가게함
 
 const triggerFileUpload = () => {
   fileInput.value.click();
 };
 
-const onFileChange = (e) => {
-  const file = e.target.files[0];
-  if (file) {
-    state.form.storePic = file;
-    previewImage.value = URL.createObjectURL(file);
+const onFileChange = (e) => { //사진파일 선택하면 화면에 미리 보여줌
+  const file = e.target.files[0]; //내가 선택한 사진파일하나 가져옴
+  if (file) { //사진이 잘 선택되었다면,
+    state.form.storePic = file; //그 사진을 state(보관함)에 잘 보관하고
+    previewImage.value = URL.createObjectURL(file); //브라우저에만 쓸수있는 임시 주소를 만들어서 화면에 띄움(사진선택시 보이는 실선 화면)
   }
 };
 
-const handleSubmit = async () => {
-  if (!state.form.storeName) {
-    alert("가게 상호명을 입력해주세요.");
-    return;
+const submit = async () => { //추가 버튼 누르면 정보를 서버로 보냄. 사진글자 묶어서 formdata보냄
+  if (!state.form.storeName) { //가게 이름 비었나 확인
+    alert("가게 상호명을 입력해주세요."); 
+    return; //이름없으면 멈춤.
   }
-
-  try {
+  try { //브라우저로 보낼 시도
     const formData = new FormData();
-    formData.append('userId', 3);
+    formData.append('userId', 3); //뒷번호는 userId임. ⭐이건 나중에 진짜로그이한 번호가 자동으로 들어가게 고쳐야함.
     formData.append('storeName', state.form.storeName);
     formData.append('businessNumber', state.form.businessNumber);
     formData.append('businessName', state.form.businessName);
@@ -54,20 +52,20 @@ const handleSubmit = async () => {
     formData.append('storeTel', state.form.storeTel);
     formData.append('storeInfo', state.form.storeInfo);
     
-    if (state.form.storePic) {
+    if (state.form.storePic) { //만약에 사진도 골랐으면 보관함에 넣음
       formData.append('storePic', state.form.storePic);
     }
 
-    await axios.post('/api/owner/store', formData, { 
+    await axios.post('/api/owner/store', formData, { //서버 주소로 보관함을 보냄.
       withCredentials: true 
     });
 
-    store.setStore(state.form.storeName); // addStore에서 setStore로 변경된 스토어 반영
+    store.setStore(state.form.storeName); // 등록 성공 가게이름을 앱에 기억시킴.
     alert("가게 등록이 완료되었습니다.");
-    router.push('/owner/order');
-  } catch (err) {
+    router.push('/owner/order'); //이제 주문 관리 화면으로 감.
+  } catch (err) { // 보관함을 보내다가 오류가 나면
     console.error(err);
-    alert("가게 등록에 실패했습니다.");
+    alert("가게 등록에 실패했습니다."); //알림
   }
 };
 </script>
@@ -141,8 +139,8 @@ const handleSubmit = async () => {
       </div>
 
       <div class="action-buttons">
-        <button class="btn-cancel" type="button" @click="handleCancel">취소</button>
-        <button class="btn-submit" type="button" @click="handleSubmit">추가</button>
+        <button class="btn-cancel" type="button" @click="cancel">취소</button>
+        <button class="btn-submit" type="button" @click="submit">추가</button>
       </div>
     </main>
   </div>

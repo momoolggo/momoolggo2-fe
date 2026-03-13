@@ -64,7 +64,7 @@ const goCategory = (label) => {
   position: relative;;
   background-color: #A40C0B;
   width: 100vw;
-  min-height: 600px;
+  min-height: 500px;
   padding-top: 1px;
   padding-bottom: 10px;
   overflow-x: hidden;   /* 화면 줄면 가로스크롤 */
@@ -113,7 +113,7 @@ const goCategory = (label) => {
 
 .mascot_img {
   position: absolute;
-  top: -10px;
+  top: -50px;
   right: -100px;
   width: 600px;
   object-fit: contain;

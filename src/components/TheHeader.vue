@@ -16,6 +16,7 @@ defineProps({
 
 const emit = defineEmits(['signout'])
 
+const goLocation = () => router.push('/location')
 const goFavorite = () => router.push('/favorite')
 const goCart     = () => router.push('/cart')
 const goSignin   = () => router.push('/signin')
@@ -39,12 +40,18 @@ const goCustomerservice = () => router.push('/mypage/cs');
 
       <!-- 가운데 — 주소 -->
       <div class="header_address">
-        <i class="bi bi-geo-alt-fill address_icon"></i>
-        <span class="address_text">배달 받을 주소를 입력하세요</span>
+        <span class="address_text">가게·메뉴 검색</span>
+        <button class="address_icon">
+          <i class="bi bi-search"></i>
+        </button>
       </div>
 
       <!-- 오른쪽 — 네비 -->
       <nav class="header_nav">
+        <button class="nav_icon_btn" @click="goLocation">
+          <i class="bi bi-geo-alt-fill nav_icon"></i>
+          <span class="nav_label">배달 주소</span>
+        </button>
         <button class="nav_icon_btn" @click="goFavorite">
           <i class="bi bi-heart nav_icon"></i>
           <span class="nav_label">찜하기</span>
@@ -97,29 +104,35 @@ const goCustomerservice = () => router.push('/mypage/cs');
   border-bottom: 1px solid var(--border);
   box-shadow: var(--shadow-header);
   align-items: center;
+  overflow: hidden;
 }
 
 .header_inner {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 24px;
-  height: 60px;
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: 200px 1fr auto;
   align-items: center;
   gap: 16px;
+  height: 60px;
+  padding: 0 24px;
+  box-sizing: border-box;
 }
-.logo_link { flex-shrink: 0;}
-.header_logo { 
+.logo_link {
+  justify-self: start;
   display: flex;
-  align-items: flex-start;
-  height: 120px;
+  align-items: center;
+}
+.header_logo { 
+  display: block;
+  width: 160px;
+  height: auto;
+  max-height: 120px;
   }
 
   .header_address {
   flex: 1;
   display: flex;
   align-items: center;
+  justify-self: center;
   justify-content: center;
   gap: 6px;
   cursor: pointer;
@@ -127,20 +140,25 @@ const goCustomerservice = () => router.push('/mypage/cs');
   padding: 8px 14px;
   border: 1.5px solid var(--border);
   border-radius: 20px;
+  width: 100%;
   max-width: 530px;
+  min-width: 0;
   transition: border-color 0.15s;
 }
 
 .header_address:hover { border-color: var(--primary); }
-.address_icon { font-size: 14px; }
-.address_text { font-size: 13px; color: var(--gray); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; justify-content: center;}
+.address_icon { font-size: 14px; background: none; border: none; }
+.address_text { font-size: 13px; color: var(--gray); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: center;}
 
 .header_nav {
   display: flex;
   align-items: center;
+  justify-self: end;
+  width: 500px;
   gap: 4px;
 
 }
+
 .nav_icon_btn {
   display: flex;
   flex-direction: column;
@@ -153,7 +171,7 @@ const goCustomerservice = () => router.push('/mypage/cs');
   transition: background 0.12s;
 }
 .nav_icon_btn:hover { background: var(--primary-light); }
-.nav_icon  { font-size: 18px; }
+.nav_icon  { font-size: 24px; }
 .nav_label { font-size: 11px; color: #555; font-weight: 500; }
 
 .nav_divider {
@@ -173,8 +191,8 @@ const goCustomerservice = () => router.push('/mypage/cs');
 }
 .nav_bottom_inner {
   max-width: 1200px;
-  margin: 0 auto;
-  padding: 8px 24px;
+  margin: 0 auto ;
+  padding: 28px 0;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -185,7 +203,7 @@ const goCustomerservice = () => router.push('/mypage/cs');
   padding: 6px 10px;
   background: none;
   border: none;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 600;
   color: #555;
   border-radius: var(--radius-sm);

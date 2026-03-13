@@ -13,12 +13,14 @@
       <div class="section">
         <h3 class="section_title">회사 정보</h3>
         <table class="info_table">
-          <tr><th>상호명</th><td>뭐물꼬</td></tr>
-          <tr><th>대표자</th><td>홍길동</td></tr>
-          <tr><th>사업자등록번호</th><td>000-00-00000</td></tr>
-          <tr><th>주소</th><td>대구광역시 중구 동성로 1길 1</td></tr>
-          <tr><th>고객센터</th><td>1588-0000</td></tr>
-          <tr><th>이메일</th><td>contact@momoolggo.com</td></tr>
+          <tbody>
+            <tr><th>상호명</th><td>뭐물꼬</td></tr>
+            <tr><th>대표자</th><td>홍길동</td></tr>
+            <tr><th>사업자등록번호</th><td>000-00-00000</td></tr>
+            <tr><th>주소</th><td>대구광역시 중구 동성로 1길 1</td></tr>
+            <tr><th>고객센터</th><td>1588-0000</td></tr>
+            <tr><th>이메일</th><td>contact@momoolggo.com</td></tr>
+          </tbody>
         </table>
       </div>
     </div>

@@ -2,9 +2,10 @@
 import { reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import axios from 'axios'
+import { useAuthStore } from '@/stores/authStore'
 
 const router = useRouter()
-const emit = defineEmits(['login-success'])
+const authStore = useAuthStore()
 
 const state = reactive({
   form: {
@@ -34,9 +35,9 @@ const signin = async () => {
       userPw: state.form.userPw,
     })
     const data = res.data.resultData
-    emit('login-success')
+    authStore.signIn(data)
 
-    if (data.role === 'OWNER')      router.push('/owner')
+    if (data.role === 'OWNER')      router.push('/ownerservice')
     else if (data.role === 'ADMIN') router.push('/admin')
     else                            router.push('/')
   } catch (err) {
@@ -114,7 +115,6 @@ const signin = async () => {
   overflow: hidden;
 }
 
-/* 로그인 카드 — 정중앙 */
 .signin_card {
   width: 460px;
   background: #ffffff;
@@ -127,14 +127,9 @@ const signin = async () => {
   z-index: 1;
 }
 .logo_wrap { text-align: center; }
-.signin_logo { height: 150px; 
-  width:150px;}
+.signin_logo { height: 150px; width:150px; }
 
-/* 역할 탭 */
-.role_tabs {
-  display: flex;
-  gap: 10px;
-}
+.role_tabs { display: flex; gap: 10px; }
 .role_tab {
   flex: 1;
   padding: 11px 0;
@@ -154,7 +149,6 @@ const signin = async () => {
   color: #ffffff;
 }
 
-/* 마스코트 — 오른쪽 끝에 고정 */
 .mascot_img {
   position: absolute;
   right: -250px;

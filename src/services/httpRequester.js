@@ -2,7 +2,7 @@ import axios from 'axios';
 axios.defaults.baseURL = '/api';
 //권한 설정까지 다되면 주석제거 코드일부수정해야됨
 
-// axios.defaults.withCredentials = true; //보안쿠키 내용이 서버에 전달, 보안쿠키에 AT, RT 저장
+axios.defaults.withCredentials = true; //보안쿠키 내용이 서버에 전달, 보안쿠키에 AT, RT 저장
 
 // axios.interceptors.response.use(
 //     (res) => {

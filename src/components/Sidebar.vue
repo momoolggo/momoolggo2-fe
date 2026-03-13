@@ -1,16 +1,12 @@
 <script setup>
-import { ref } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useStore } from '@/stores/useStore'; 
 
 const router = useRouter();
 const route = useRoute(); 
 const store = useStore();
-const isTooltipVisible = ref(false);
 
-const goToRegisterStore = () => {
-  router.push('/owner/addstore'); 
-};
+// 툴팁 관련 ref 및 함수는 더 이상 필요 없으므로 삭제했습니다.
 </script>
 
 <template>
@@ -18,25 +14,9 @@ const goToRegisterStore = () => {
     <div class="logo-section">
       <img src="@/assets/logo.png" alt="뭐물꼬" class="logo" />
       
-      <div 
-        class="shop-info" 
-        @mouseenter="isTooltipVisible = true" 
-        @mouseleave="isTooltipVisible = false"
-      >
+      <div class="shop-info">
         <div class="store-name-wrapper">
-          <h3>코이보타루 <span class="verified">✔</span></h3>
-          
-          <transition name="fade">
-            <div v-if="isTooltipVisible" class="store-tooltip">
-              <p v-for="(name, index) in store.myStores" :key="index" class="tooltip-text">
-                {{ name }} ✔
-              </p>
-              
-              <button @click.stop="goToRegisterStore" class="add-store-btn"> 
-                + 가게 추가하기
-              </button>
-            </div>
-          </transition>
+          <h3>{{ store.myStore }} <span class="verified">✔</span></h3>
         </div>
         <p><strong>김수빈</strong> 사장님</p>
       </div>
@@ -74,36 +54,14 @@ const goToRegisterStore = () => {
 
 .logo-section { text-align: center; margin-bottom: 80px; }
 .logo { width: 220px; margin-bottom: 20px; }
-.shop-info { position: relative; cursor: pointer; }
+/* 툴팁이 사라졌으므로 cursor: pointer는 제거해도 무방합니다 */
+.shop-info { position: relative; }
 .store-name-wrapper { position: relative; }
 .shop-info h3 { font-size: 22px; margin-bottom: 5px; color: #333; }
 .verified { color: #3f51b5; font-size: 18px; }
 .shop-info p { font-size: 15px; color: #666; }
 
-.store-tooltip {
-  position: absolute;
-  top: calc(100% + 35px);
-  left: 50%;
-  transform: translateX(-50%);
-  width: 150px;
-  background: #fff;
-  padding: 15px;
-  border-radius: 15px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-  z-index: 100;
-  text-align: left;
-}
-.tooltip-text { font-size: 16px; font-weight: bold; color: #333; margin-bottom: 20px; }
-.add-store-btn {
-  background-color: #4A5FF2;
-  color: white;
-  border: none;
-  border-radius: 20px;
-  padding: 6px 12px;
-  font-size: 13px;
-  cursor: pointer;
-  width: 100%;
-}
+/* 툴팁 관련 스타일(store-tooltip, tooltip-text, add-store-btn)은 모두 삭제했습니다. */
 
 .menu-container { flex: 1; display: flex; flex-direction: column; gap: 25px; margin-top: 60px; }
 .menu-item {

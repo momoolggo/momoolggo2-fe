@@ -1,27 +1,42 @@
 <script setup>
-import { reactive } from 'vue'; // reactive 임포트
+import { reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
-
-import Sidebar from '@/components/Sidebar.vue'; 
+// Sidebar 임포트 제거
 import { useStore } from '@/stores/useStore';
 import axios from 'axios';
 
 const router = useRouter();
 const store = useStore();
 
+const fileInput = ref(null);
+const previewImage = ref(null);
+
 const state = reactive({
   form: {
-    storeName: '',      // name -> storeName으로 변경
-    location: '',       // 그대로 사용 (기본 주소)
-    addressDetail: '',  // (XML에 없지만 나중에 합쳐서 보내야 함)
-    storeTel: '',       // 그대로 사용
-    businessName: '',   // 그대로 사용
-    businessNumber: '', // 그대로 사용
-    storeInfo: ''       // 그대로 사용
+    storeName: '',      
+    location: '',       
+    addressDetail: '',  
+    storeTel: '',       
+    businessName: '',   
+    businessNumber: '', 
+    storeInfo: '',
+    storePic: null      
   }
 });
 
 const handleCancel = () => router.back();
+
+const triggerFileUpload = () => {
+  fileInput.value.click();
+};
+
+const onFileChange = (e) => {
+  const file = e.target.files[0];
+  if (file) {
+    state.form.storePic = file;
+    previewImage.value = URL.createObjectURL(file);
+  }
+};
 
 const handleSubmit = async () => {
   if (!state.form.storeName) {
@@ -30,18 +45,24 @@ const handleSubmit = async () => {
   }
 
   try {
-    await axios.post('/api/owner/store', {
-      userId: 3,  // 로그인된 사용자 ID
-      storeName: state.form.storeName,
-      businessNumber: state.form.businessNumber,
-      businessName: state.form.businessOwner,
-      location: state.form.address + ' ' + state.form.addressDetail,
-      storeTel: state.form.phone,
-      storeInfo: state.form.description,
-      storePic: ''
-    }, { withCredentials: true });
+    const formData = new FormData();
+    formData.append('userId', 3);
+    formData.append('storeName', state.form.storeName);
+    formData.append('businessNumber', state.form.businessNumber);
+    formData.append('businessName', state.form.businessName);
+    formData.append('location', state.form.location + ' ' + state.form.addressDetail);
+    formData.append('storeTel', state.form.storeTel);
+    formData.append('storeInfo', state.form.storeInfo);
+    
+    if (state.form.storePic) {
+      formData.append('storePic', state.form.storePic);
+    }
 
-    store.addStore(state.form.name);
+    await axios.post('/api/owner/store', formData, { 
+      withCredentials: true 
+    });
+
+    store.setStore(state.form.storeName); // addStore에서 setStore로 변경된 스토어 반영
     alert("가게 등록이 완료되었습니다.");
     router.push('/owner/order');
   } catch (err) {
@@ -53,8 +74,6 @@ const handleSubmit = async () => {
 
 <template>
   <div class="container">
-    <Sidebar />
-
     <main class="main-content">
       <div class="content-header">
         <h1>가게 등록 / 추가 하기</h1>
@@ -77,7 +96,7 @@ const handleSubmit = async () => {
                 <input v-model="state.form.location" type="text" placeholder="우편번호" readonly />
                 <button class="search-btn" type="button">우편번호 검색</button>
               </div>
-              <input type="text" class="full-input" placeholder="기본 주소" readonly />
+              <input type="text" class="full-input" placeholder="기본 주소" readonly v-model="state.form.location" />
               <input v-model="state.form.addressDetail" type="text" placeholder="상세주소를 입력하세요" class="full-input" />
             </div>
           </div>
@@ -101,12 +120,14 @@ const handleSubmit = async () => {
         <div class="right-form">
           <div class="form-group">
             <label>가게 대표 사진</label>
-            <div class="image-upload-box">
-              <div class="upload-placeholder">
+            <div class="image-upload-box" @click="triggerFileUpload" style="cursor: pointer; overflow: hidden;">
+              <img v-if="previewImage" :src="previewImage" style="width: 100%; height: 100%; object-fit: cover;" />
+              <div v-else class="upload-placeholder">
                 <span class="plus-icon">+</span>
                 <p>여기를 눌러 사진을 추가 하세요</p>
               </div>
             </div>
+            <input type="file" ref="fileInput" @change="onFileChange" accept="image/*" style="display: none;" />
           </div>
 
           <div class="form-group">
@@ -128,17 +149,34 @@ const handleSubmit = async () => {
 </template>
 
 <style scoped>
-/* 기존 스타일을 그대로 유지합니다 */
-.container { display: flex; background-color: #f9f9f9; min-height: 100vh; }
-.main-content { flex: 1; padding: 60px 80px; }
+/* 정중앙 정렬을 위한 스타일 수정 */
+.container { 
+  display: flex; 
+  justify-content: center; /* 가로 중앙 */
+  align-items: center;     /* 세로 중앙 */
+  background-color: #f9f9f9; 
+  min-height: 100vh; 
+  padding: 40px;
+}
+
+.main-content { 
+  width: 100%;
+  max-width: 1000px; /* 폼의 최대 너비 제한 */
+  background: #fff;
+  padding: 50px;
+  border-radius: 30px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+}
+
 .content-header { border-bottom: 1px solid #eee; margin-bottom: 40px; padding-bottom: 15px; }
-.content-header h1 { font-size: 24px; color: #333; }
+.content-header h1 { font-size: 24px; color: #333; text-align: center; } /* 타이틀도 중앙 */
+
 .form-wrapper { display: flex; gap: 60px; }
 .left-form, .right-form { flex: 1; display: flex; flex-direction: column; gap: 25px; }
 .form-group { margin-bottom: 15px; }
 .form-group label { display: block; font-size: 16px; font-weight: bold; color: #555; margin-bottom: 10px; }
 .input-wrapper, .textarea-wrapper { position: relative; }
-input, textarea { width: 100%; padding: 12px 15px; border: 1.5px solid #ddd; border-radius: 12px; font-size: 15px; }
+input, textarea { width: 100%; padding: 12px 15px; border: 1.5px solid #ddd; border-radius: 12px; font-size: 15px; background-color: #fcfcfc; }
 .char-count { position: absolute; right: 10px; bottom: -20px; font-size: 12px; color: #bbb; }
 .zipcode-row { display: flex; gap: 10px; margin-bottom: 8px; }
 .search-btn { white-space: nowrap; padding: 0 15px; border: 1px solid #ccc; border-radius: 20px; background: #fff; color: #888; font-size: 12px; cursor: pointer; }
@@ -146,9 +184,9 @@ input, textarea { width: 100%; padding: 12px 15px; border: 1.5px solid #ddd; bor
 .upload-placeholder { text-align: center; color: #bbb; }
 .plus-icon { font-size: 40px; display: block; margin-bottom: 10px; }
 textarea { height: 120px; resize: none; }
-.action-buttons { display: flex; justify-content: flex-end; gap: 15px; margin-top: 50px; }
-.btn-cancel { background: #e0e0e0; border: none; padding: 10px 30px; border-radius: 8px; cursor: pointer; }
-.btn-submit { background: #4A5FF2; color: #fff; border: none; padding: 10px 30px; border-radius: 8px; cursor: pointer; }
+.action-buttons { display: flex; justify-content: center; gap: 15px; margin-top: 50px; } /* 버튼도 중앙 */
+.btn-cancel { background: #e0e0e0; border: none; padding: 12px 40px; border-radius: 12px; cursor: pointer; font-weight: bold; }
+.btn-submit { background: #4A5FF2; color: #fff; border: none; padding: 12px 60px; border-radius: 12px; cursor: pointer; font-weight: bold; }
 .address-input { display: flex; flex-direction: column; gap: 12px; }
-.full-input { width: 100%; padding: 12px 15px; border: 1.5px solid #ddd; border-radius: 12}
-  </style>
+.full-input { width: 100%; padding: 12px 15px; border: 1.5px solid #ddd; border-radius: 12px; }
+</style>

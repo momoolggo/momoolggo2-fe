@@ -2,11 +2,18 @@ import { defineStore } from 'pinia';
 import { ref } from 'vue';
 
 export const useStore = defineStore('store', () => {
-  const myStores = ref(['코이보타루']);
 
-  function addStore(storeName) {
-    myStores.value.push(storeName);
+  const myStore = ref('코이보타루');
+
+ 
+  function setStore(storeName) {
+    myStore.value = storeName;
   }
 
-  return { myStores, addStore };
+  
+  function clearStore() {
+    myStore.value = null;
+  }
+
+  return { myStore, setStore, clearStore };
 });

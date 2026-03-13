@@ -4,7 +4,7 @@ const router = useRouter()
 
 const goAbout      = () => router.push('/about')
 const goPrivacy    = () => router.push('/privacy')
-const goPartner    = () => router.push('/partner')
+const goPartner    = () => router.push('/owner/addstore')
 const goTerms      = () => router.push('/terms')
 const goNotice     = () => router.push('/notice')
 

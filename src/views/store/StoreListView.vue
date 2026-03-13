@@ -28,13 +28,31 @@ const storeList = reactive({
     list: [],
     find: {
         searchText: '',
-        size: 50,
+        size: 10,
         currentPage: 1,
         categoryId: 0,
-        maxPage: 0
+        maxPage: 10
     },
     relatedSearchList: []
 });
+
+// 가게정보 불러오기
+const getStores = async () => {
+    const params = {
+        searchText: storeList.find.searchText,
+        size: storeList.find.size,
+        currentPage: storeList.find.currentPage,
+        categoryId: storeList.find.categoryId
+    };
+    try {
+        const result = await storeService.getstorelist(params);
+        if (result.resultData) {
+            storeList.list = result.resultData;
+        }
+    } catch (error) {
+        console.error("가게 목록 조회 실패", error);
+    }
+};
 
 // --- 카테고리 변경 함수 ---
 const changeCategory = (id) => {
@@ -43,8 +61,9 @@ const changeCategory = (id) => {
     getStores();
 };
 
-// --- 화살표 스크롤 함수 ---
+// --- 카테고리 화살표 스크롤 함수 ---
 const scroll = (direction) => {
+  
     if (scrollContainer.value) {
         const scrollAmount = 1000;
         scrollContainer.value.scrollBy({
@@ -68,23 +87,6 @@ const pageRange = computed(() => {
     return pages;
 });
 
-// --- API 데이터 호출 ---
-const getStores = async () => {
-    const params = {
-        searchText: storeList.find.searchText,
-        size: storeList.find.size,
-        currentPage: storeList.find.currentPage,
-        categoryId: storeList.find.categoryId
-    };
-    try {
-        const result = await storeService.getstorelist(params);
-        if (result.resultData) {
-            storeList.list = result.resultData;
-        }
-    } catch (error) {
-        console.error("가게 목록 조회 실패", error);
-    }
-};
 
 onMounted(getStores);
 
@@ -93,11 +95,9 @@ const changePage = (page) => {
     getStores();
     window.scrollTo(0, 0);
 };
-
 const goToDetail = (id) => {
     router.push(`/store/${id}`);
 };
-
 const currentCategoryName = computed(() => {
     const found = categories.find(c => c.id === storeList.find.categoryId);
     return found ? found.name : '전체';
@@ -129,7 +129,7 @@ const currentCategoryName = computed(() => {
         <h2>{{ currentCategoryName }}</h2>
     </header>
 
-    
+
     <div class="list-container">
         <StoreCard
             v-for="store in storeList.list"

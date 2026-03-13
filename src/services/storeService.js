@@ -1,4 +1,4 @@
-import axios from './httpRequester';
+import axios from 'axios';
 
 class storeService{
     #url = '/store';

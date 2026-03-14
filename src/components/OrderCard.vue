@@ -1,7 +1,7 @@
 <script setup>
 defineProps({
-  title: { type: String, required: true },
-  count: { type: [Number, String], default: 0 },
+  title: { type: String, required: true }, //카드 제목. 필수로 필요해서 required:true
+  count: { type: [Number, String], default: 0 }, //카드에 적힐 숫자. 안들어오면 일단 0
   type: { type: String, default: 'default' } // 부모 컴포넌트에서 넘겨준 속성명(type)과 일치시킴
 });
 </script>

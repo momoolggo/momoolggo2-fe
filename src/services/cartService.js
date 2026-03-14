@@ -13,6 +13,7 @@ class CartService {
         return res.data;
     }
 
+
     async updateCartItem(id, data) { // 장바구니 수량 변경 (수정된 부분 반영)
         // 위에서 논의한 대로 id는 경로로, data는 바디로 보냅니다.
         const res = await axios.put(`${this.#url}-items/${id}`, data);
@@ -28,7 +29,7 @@ class CartService {
         const res = await axios.delete(`${this.#url}/clear`);
         return res.data;
     }
-    
+
     async clearAndAdd(cartData) {
       const res = await axios.post(`${this.#url}/clear-and-add`, cartData);
       return res.data;

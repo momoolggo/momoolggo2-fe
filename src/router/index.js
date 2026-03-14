@@ -34,6 +34,10 @@ const router = createRouter({
     //찜 목록
     {path: '/favorite',        component: () => import('@/views/servicee/FavoriteView.vue') },
 
+    // ── 이벤트 (추후 구현)
+    { path: '/event',           component: () => import('@/views/servicee/EventView.vue') },
+
+
     // ── 사장 (추후 구현)
     { path: '/ownerservice',     component: () => import('@/views/owner/OwnerOrderView.vue') },
 

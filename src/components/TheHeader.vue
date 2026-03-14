@@ -26,19 +26,16 @@ const goRiderservice = () => router.push('/rider');
 const goOwnerservice = () => router.push('/ownerservice');
 const goEvent = () => router.push('/event');
 const goCustomerservice = () => router.push('/mypage/cs');
+const goTodayFood = () => router.push('/whatKind');
 
 </script>
-
 <template>
   <header class="header">
     <div class="header_inner">
-
-      <!-- 왼쪽 — 로고 -->
       <router-link to="/" class="logo_link">
         <img src="@/assets/뭐물꼬_로고.png" alt="뭐물꼬" class="logo_img header_logo" />
       </router-link>
 
-      <!-- 가운데 — 주소 -->
       <div class="header_address">
         <span class="address_text">가게·메뉴 검색</span>
         <button class="address_icon">
@@ -46,7 +43,6 @@ const goCustomerservice = () => router.push('/mypage/cs');
         </button>
       </div>
 
-      <!-- 오른쪽 — 네비 -->
       <nav class="header_nav">
         <button class="nav_icon_btn" @click="goLocation">
           <i class="bi bi-geo-alt-fill nav_icon"></i>
@@ -63,43 +59,40 @@ const goCustomerservice = () => router.push('/mypage/cs');
 
         <div class="nav_divider"></div>
 
-        <!-- 비로그인 -->
         <template v-if="!isSignedIn">
           <button class="nav_text_btn" @click="goSignin">로그인</button>
           <router-link to="/signup" class="nav_text_btn">회원가입</router-link>
         </template>
 
-        <!-- 로그인 상태 -->
         <template v-else>
           <span class="nav_username">{{ userInfo?.name ?? '' }}님</span>
           <button class="nav_text_btn" @click="emit('signout')">로그아웃</button>
           <button class="nav_text_btn" @click="goMypage">마이페이지</button>
         </template>
       </nav>
-
     </div>
 
-    <!--상단바 하단-->
     <div class="nav_bottom">
       <div class="nav_bottom_inner">
         <button class="nav_bottom_btn" @click="goSearchstore">주변 맛집찾기</button>
-      <button class="nav_bottom_btn" @click="goRiderservice">라이더 서비스</button>
-      <button class="nav_bottom_btn" @click="goOwnerservice">사장님 서비스</button>
-      <button class="nav_bottom_btn" @click="goEvent">이벤트</button>
-      <button class="nav_bottom_btn" @click="goCustomerservice">고객 센터</button>
-    </div>
-      </div>
 
+        <button class="nav_bottom_btn" @click="goTodayFood">오늘 뭐먹지?</button>
+
+        <button class="nav_bottom_btn" @click="goRiderservice">라이더 서비스</button>
+        <button class="nav_bottom_btn" @click="goOwnerservice">사장님 서비스</button>
+        <button class="nav_bottom_btn" @click="goEvent">이벤트</button>
+        <button class="nav_bottom_btn" @click="goCustomerservice">고객 센터</button>
+      </div>
+    </div>
   </header>
 </template>
 
 <style scoped>
+/* 이전과 동일한 스타일 유지 */
 .header {
-  position: sticky;
-  top: 0;
+  position: relative;
   z-index: 100;
   width: 100%;
-  background: var(--white);
   background-color: #FEFAEE;
   border-bottom: 1px solid var(--border);
   box-shadow: var(--shadow-header);
@@ -116,19 +109,21 @@ const goCustomerservice = () => router.push('/mypage/cs');
   padding: 0 24px;
   box-sizing: border-box;
 }
+
 .logo_link {
   justify-self: start;
   display: flex;
   align-items: center;
 }
-.header_logo { 
+
+.header_logo {
   display: block;
   width: 160px;
   height: auto;
   max-height: 120px;
-  }
+}
 
-  .header_address {
+.header_address {
   flex: 1;
   display: flex;
   align-items: center;
@@ -156,7 +151,6 @@ const goCustomerservice = () => router.push('/mypage/cs');
   justify-self: end;
   width: 500px;
   gap: 4px;
-
 }
 
 .nav_icon_btn {
@@ -181,14 +175,12 @@ const goCustomerservice = () => router.push('/mypage/cs');
   margin: 0 6px;
 }
 
-.nav_bottom{
-  top: 0;
-  z-index: 100;
+.nav_bottom {
   width: 100%;
-  background: var(--white);
   background-color: #FEFAEE;
   border-bottom: 1px solid var(--border);
 }
+
 .nav_bottom_inner {
   max-width: 1200px;
   margin: 0 auto ;
@@ -199,7 +191,7 @@ const goCustomerservice = () => router.push('/mypage/cs');
   gap: 20px;
 }
 
-.nav_bottom_btn{
+.nav_bottom_btn {
   padding: 6px 10px;
   background: none;
   border: none;

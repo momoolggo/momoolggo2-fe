@@ -37,6 +37,12 @@ const router = createRouter({
     // ── 이벤트 (추후 구현)
     { path: '/event',           component: () => import('@/views/servicee/EventView.vue') },
 
+    // ── 오늘 뭐 먹지? (추후 구현)
+    { path: '/whatKind',        component: () => import('@/views/servicee/WhatkindView.vue') },
+
+
+    // ── 신규 서비스 (추후 구현)
+    {path: '/new',  component: () => import('@/views/servicee/NewView.vue') },
 
     // ── 사장 (추후 구현)
     { path: '/ownerservice',     component: () => import('@/views/owner/OwnerOrderView.vue') },

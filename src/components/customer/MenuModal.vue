@@ -1,6 +1,6 @@
 <script setup>
 import { ref } from 'vue'
-import { useAuthStore } from '@/stores/authStore'  // ✅ 추가
+import { useUserStore } from '@/stores/userStore'  // ✅ 추가
 import cartService from '@/services/cartService'   // ✅ 추가
 
 const props = defineProps({
@@ -9,7 +9,7 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['close', 'add-to-cart'])
-const authStore = useAuthStore()  // ✅ 추가
+const userStore = useUserStore()  // ✅ 추가
 const quantity = ref(1)
 
 const updateQuantity = (val) => {
@@ -21,7 +21,7 @@ const updateQuantity = (val) => {
 const handleAddCart = async () => {
   try {
     const cartData = {
-      userNo: authStore.state.userNo,
+      userNo: userStore.state.userNo,
       menuId: props.menu.menuId,
       quantity: quantity.value,
     }
@@ -39,7 +39,7 @@ const handleAddCart = async () => {
 
       if (confirmed) {
         await cartService.clearAndAdd({
-          userNo: authStore.state.userNo,
+          userNo: userStore.state.userNo,
           menuId: props.menu.menuId,
           quantity: quantity.value,
         })

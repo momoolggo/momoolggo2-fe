@@ -1,6 +1,9 @@
 <script setup>
 import { reactive, onMounted } from 'vue'
-import axios from 'axios'
+import { useUserStore } from '@/stores/userStore'
+import userService from '@/services/userService'
+
+const userStore = useUserStore()
 
 const state = reactive({
   form: {
@@ -21,8 +24,7 @@ const state = reactive({
 // 내 정보 불러오기
 onMounted(async () => {
   try {
-    const res = await axios.get('/api/user')
-    const d = res.data.resultData
+    const d = await userService.getUser()
     state.form.userId = d.userId ?? ''
     state.form.name   = d.name   ?? ''
     state.form.tel    = d.tel    ?? ''
@@ -43,9 +45,9 @@ const update = async () => {
     return
   }
   try {
-    state.errorMsg  = ''
+    state.errorMsg   = ''
     state.successMsg = ''
-    await axios.put('/api/user', {
+    await userService.updateMe({
       name:   state.form.name,
       userPw: state.form.userPw || null,
       tel:    state.form.tel,
@@ -121,12 +123,8 @@ const update = async () => {
       <div class="field">
         <label class="label">성별 <span class="optional">(선택)</span></label>
         <div class="radio_group">
-          <label class="radio_label">
-            <input v-model="state.form.gender" type="radio" :value="1" /> 남
-          </label>
-          <label class="radio_label">
-            <input v-model="state.form.gender" type="radio" :value="2" /> 여
-          </label>
+          <label class="radio_label"><input v-model="state.form.gender" type="radio" :value="1" /> 남</label>
+          <label class="radio_label"><input v-model="state.form.gender" type="radio" :value="2" /> 여</label>
         </div>
       </div>
 
@@ -146,46 +144,11 @@ const update = async () => {
 </template>
 
 <style scoped>
-.profile_wrap {
-  max-width: 520px;
-  margin: 40px auto;
-  padding: 0 16px;
-}
-.page_title {
-  font-size: 20px;
-  font-weight: 700;
-  margin-bottom: 24px;
-}
-.form_card {
-  background: #fff;
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-card);
-  padding: 32px 28px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-.inp.readonly {
-  background: #f5f5f5;
-  color: #999;
-  cursor: not-allowed;
-}
-.success_msg {
-  color: #16a34a;
-  font-size: 13px;
-  text-align: center;
-}
-.radio_group {
-  display: flex;
-  gap: 20px;
-}
-.radio_label {
-  font-size: 14px;
-  color: var(--gray-dark);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
+.profile_wrap { max-width: 520px; margin: 40px auto; padding: 0 16px; }
+.page_title { font-size: 20px; font-weight: 700; margin-bottom: 24px; }
+.form_card { background: #fff; border-radius: var(--radius-lg); box-shadow: var(--shadow-card); padding: 32px 28px; display: flex; flex-direction: column; gap: 16px; }
+.inp.readonly { background: #f5f5f5; color: #999; cursor: not-allowed; }
+.success_msg { color: #16a34a; font-size: 13px; text-align: center; }
+.radio_group { display: flex; gap: 20px; }
+.radio_label { font-size: 14px; color: var(--gray-dark); cursor: pointer; display: flex; align-items: center; gap: 4px; }
 </style>

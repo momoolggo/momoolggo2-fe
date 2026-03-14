@@ -2,7 +2,7 @@
 <script setup>
 import { reactive } from 'vue';
 import { useRouter } from 'vue-router';
-import Footer from '@/components/Footer.vue';
+import Footer from '@/components/common/Footer.vue';
 
 const router = useRouter();
 

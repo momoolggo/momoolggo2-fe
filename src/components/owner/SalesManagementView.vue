@@ -1,5 +1,5 @@
 <script setup>
-import Sidebar from '@/components/Sidebar.vue';
+import Sidebar from '@/components/owner/Sidebar.vue';
 import { ref } from 'vue';
 // import SalesChart from '@/components/SalesChart.vue';
 // import SalesRankingTable from '@/components/SalesRankingTable.vue';

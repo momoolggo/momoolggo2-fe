@@ -1,14 +1,12 @@
 <script setup>
 import { reactive, onMounted, computed } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
-// 컴포넌트 등록
-import MenuCategory from '@/components/MenuCategory.vue'; // 파일명 확인 필요
-import StoreInfo from '@/components/StoreInfo.vue';
-import MenuDetailModal from '@/components/MenuModal.vue';
+import { useRoute } from 'vue-router';
+import MenuCategory from '@/components/customer/MenuCategory.vue';
+import StoreInfo from '@/components/owner/StoreInfo.vue';
+import MenuDetailModal from '@/components/customer/MenuModal.vue';
 import storeService from '@/services/storeService';
 
 const route = useRoute();
-const router = useRouter();
 
 const state = reactive({
     storeInfo: {},
@@ -19,7 +17,6 @@ const state = reactive({
     isModalOpen: false,
 });
 
-//  가게 상세 정보 가져오기
 const getStoreDetail = async () => {
     const storeId = route.params.id;
     try {
@@ -30,7 +27,6 @@ const getStoreDetail = async () => {
     }
 };
 
-// 가게 메뉴 리스트 가져오기
 const getMenuList = async () => {
     const storeId = route.params.id;
     try {
@@ -41,12 +37,10 @@ const getMenuList = async () => {
     }
 };
 
-// 카테고리 그룹화 로직
 const groupedMenu = computed(() => {
     const result = [];
     state.menuList.forEach(menu => {
         const categoryName = menu.categoryName || '기타 메뉴';
-
         let group = result.find(g => g.name === categoryName);
         if (!group) {
             group = { name: categoryName, items: [] };
@@ -57,7 +51,6 @@ const groupedMenu = computed(() => {
     return result;
 });
 
-//  가게 리뷰 상세 가져오기
 const getReviewList = async () => {
     const storeId = route.params.id;
     try {
@@ -74,7 +67,6 @@ onMounted(() => {
     getReviewList();
 });
 
-// 모달 열기 (MenuCategory -> MenuItem을 거쳐 올라온 이벤트)
 const openMenuModal = (menu) => {
     state.selectedMenu = menu;
     state.isModalOpen = true;
@@ -93,7 +85,6 @@ const handleAddToCart = (item) => {
             <div class="info-visual">
                 <img :src="state.storeInfo.storePic || '/images/default-store.png'" class="store-img" />
             </div>
-
             <div class="info-content">
                 <div class="title-row">
                     <h1>{{ state.storeInfo.storeName }}</h1>
@@ -118,7 +109,6 @@ const handleAddToCart = (item) => {
                     </div>
                 </div>
             </div>
-
             <div class="info-character">
                 <img src="/favicon.png" alt="character" />
             </div>
@@ -163,32 +153,24 @@ const handleAddToCart = (item) => {
 
 <style scoped>
 .store-detail-view { max-width: 1100px; margin: 0 auto; background: #fff; }
-
 .store-header { padding: 40px; border-bottom: 8px solid #f5f5f5; }
 .info-container { display: flex; gap: 40px; align-items: flex-start; position: relative; }
-
 .store-img { width: 350px; height: 230px; border-radius: 12px; object-fit: cover; }
-
 .info-content { flex: 1; }
-.title-row { display: flex; align-items: center; justify-content:space-between; gap: 15px; margin-bottom: 10px; }
+.title-row { display: flex; align-items: center; justify-content: space-between; gap: 15px; margin-bottom: 10px; }
 .title-row h1 { font-size: 2.2rem; margin: 0; }
 .wish-heart { background: none; border: none; font-size: 24px; cursor: pointer; }
-
 .rating-row { font-size: 1.2rem; margin-bottom: 30px; }
 .star { color: #FFD700; font-weight: bold; }
-
 .delivery-spec { display: flex; flex-direction: column; gap: 12px; }
 .spec-item { display: flex; font-size: 1rem; }
 .spec-item .label { width: 120px; color: #999; }
 .spec-item .val { color: #333; font-weight: 500; }
-
 .info-character { width: 150px; align-self: flex-end; }
 .info-character img { width: 100%; object-fit: contain; }
-
 .detail-tabs { display: flex; border-bottom: 1px solid #eee; justify-content: center; }
 .detail-tabs button { padding: 15px 60px; border: none; background: none; color: #999; font-size: 1.1rem; cursor: pointer; }
 .detail-tabs button.active { color: #333; font-weight: bold; border-bottom: 4px solid #333; }
-
-.info-tab-wrapper {width: 100%;}
+.info-tab-wrapper { width: 100%; }
 .menu-tab-content { width: 100%; }
 </style>

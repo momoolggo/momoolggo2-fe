@@ -1,27 +1,20 @@
 <script setup>
 import { reactive } from 'vue'
 import { useRouter } from 'vue-router'
-import axios from 'axios'
-import { useAuthStore } from '@/stores/authStore'
+import { useUserStore } from '@/stores/userStore'
+import userService from '@/services/userService'
 
 const router = useRouter()
-const authStore = useAuthStore()
+const userStore = useUserStore()
 
 const state = reactive({
   form: {
     userId: '',
     userPw: '',
-    role: 'CUSTOMER',
   },
   showPw: false,
   errorMsg: '',
 })
-
-const tabs = [
-  { label: '고객',   value: 'CUSTOMER' },
-  { label: '업주',   value: 'OWNER'    },
-  { label: '라이더', value: 'RIDER'    },
-]
 
 const signin = async () => {
   if (!state.form.userId || !state.form.userPw) {
@@ -30,16 +23,16 @@ const signin = async () => {
   }
   try {
     state.errorMsg = ''
-    const res = await axios.post('/api/user/login', {
+    const data = await userService.signin({
       userId: state.form.userId,
       userPw: state.form.userPw,
     })
-    const data = res.data.resultData
-    authStore.signIn(data)
-
-    if (data.role === 'OWNER')      router.push('/ownerservice')
-    else if (data.role === 'ADMIN') router.push('/admin')
-    else                            router.push('/')
+    if (data.role !== 'OWNER') {
+      state.errorMsg = '사장님 계정이 아닙니다.'
+      return
+    }
+    userStore.signIn(data)
+    router.push('/ownerservice')
   } catch (err) {
     state.errorMsg = err.response?.data?.resultMessage ?? '로그인에 실패했습니다.'
   }
@@ -48,23 +41,12 @@ const signin = async () => {
 
 <template>
   <div class="signin_page">
-
-    <!-- 중앙 — 로그인 카드 -->
     <div class="signin_card">
       <div class="logo_wrap">
-        <img src="@/assets/뭐물꼬_로고2.png" alt="뭐물꼬" class="signin_logo" />
+        <img src="@/assets/뭐물꼬_로고.png" alt="뭐물꼬" class="signin_logo" />
       </div>
 
-      <div class="role_tabs">
-        <label
-          v-for="tab in tabs"
-          :key="tab.value"
-          :class="['role_tab', { active: state.form.role === tab.value }]"
-        >
-          <input v-model="state.form.role" type="radio" :value="tab.value" hidden />
-          {{ tab.label }}
-        </label>
-      </div>
+      <h2 class="signin_title">사장님 로그인</h2>
 
       <input
         v-model="state.form.userId"
@@ -93,13 +75,15 @@ const signin = async () => {
 
       <div class="auth_link">
         <span>계정이 없으신가요?</span>
-        <router-link to="/signup">회원가입</router-link>
+        <router-link to="/owner/signup">회원가입</router-link>
+      </div>
+
+      <div class="back_link">
+        <router-link to="/">← 홈으로 돌아가기</router-link>
       </div>
     </div>
 
-    <!-- 오른쪽 끝 — 마스코트 -->
     <img src="@/assets/뭐물꼬_마스코트.png" alt="뭐물꼬 마스코트" class="mascot_img" />
-
   </div>
 </template>
 
@@ -114,7 +98,6 @@ const signin = async () => {
   justify-content: center;
   overflow: hidden;
 }
-
 .signin_card {
   width: 460px;
   background: #ffffff;
@@ -127,28 +110,8 @@ const signin = async () => {
   z-index: 1;
 }
 .logo_wrap { text-align: center; }
-.signin_logo { height: 150px; width:150px; }
-
-.role_tabs { display: flex; gap: 10px; }
-.role_tab {
-  flex: 1;
-  padding: 11px 0;
-  border: 1.5px solid #E0E0E0;
-  border-radius: 10px;
-  background: #F5F5F5;
-  color: #999;
-  font-size: 15px;
-  font-weight: 600;
-  cursor: pointer;
-  text-align: center;
-  transition: all 0.15s;
-}
-.role_tab.active {
-  background: var(--primary);
-  border-color: var(--primary);
-  color: #ffffff;
-}
-
+.signin_logo { height: 150px; width: 150px; }
+.signin_title { text-align: center; font-size: 20px; font-weight: 700; color: var(--black); }
 .mascot_img {
   position: absolute;
   right: -250px;
@@ -157,4 +120,7 @@ const signin = async () => {
   object-fit: contain;
   pointer-events: none;
 }
+.back_link { text-align: center; font-size: 13px; }
+.back_link a { color: var(--gray); text-decoration: none; }
+.back_link a:hover { color: var(--primary); }
 </style>

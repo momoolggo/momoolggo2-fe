@@ -1,7 +1,7 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import axios from 'axios';
-import OrderDetailModal from './OrderDetailModal.vue'; // 모달 파일 경로 확인 필수
+import OrderDetailModal from '@/components/owner/OrderDetailModal.vue'; // 모달 파일 경로 확인 필수
 
 const orders = ref([]); //서버에서 받아온 주문을 담을 공간
 const modalOpen = ref(false); //상세정보모달을 결정하는 스위치. 처음에 페이지열었을땐 닫힘상태라서 false

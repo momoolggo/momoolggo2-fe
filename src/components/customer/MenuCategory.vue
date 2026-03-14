@@ -1,6 +1,6 @@
 <script setup>
 import { ref } from 'vue';
-import MenuItem from '@/components/MenuCard.vue';
+import MenuItem from '@/components/customer/MenuCard.vue';
 
 const props = defineProps({
   categoryName: String,

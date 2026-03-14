@@ -1,8 +1,8 @@
 <script setup>
 import { ref, computed } from 'vue';
-import MenuCard from '@/components/MenuCard.vue';
-import CategoryModal from '@/components/CategoryModal.vue';
-import MenuAddModal from '@/components/MenuAddModal.vue';
+import MenuCard from '@/components/customer/MenuCard.vue';
+import CategoryModal from '@/components/owner/CategoryModal.vue';
+import MenuAddModal from '@/components/owner/MenuAddModal.vue';
 
 const isCategoryModalOpen = ref(false);
 const isMenuAddModalOpen = ref(false);

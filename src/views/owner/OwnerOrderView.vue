@@ -1,10 +1,10 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'; //ref : 반응형 변수, 계산된 속성: computed
-import Sidebar from '@/components/Sidebar.vue';
-import OrderCard from '@/components/OrderCard.vue';
-import OrderList from '@/components/OrderList.vue';
-import OwnerMenu from '@/components/OwnerMenu.vue';
-import salesManagementView from '@/components/SalesManagementView.vue'
+import Sidebar from '@/components/owner/Sidebar.vue';
+import OrderCard from '@/components/owner/OrderCard.vue';
+import OrderList from '@/components/owner/OrderList.vue';
+import OwnerMenu from '@/components/owner/OwnerMenu.vue';
+import salesManagementView from '@/components/owner/SalesManagementView.vue'
 import axios from 'axios';
 
 const state = ref({ //이거 데이터베이스에 있나..?

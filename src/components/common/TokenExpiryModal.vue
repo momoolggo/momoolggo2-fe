@@ -13,11 +13,11 @@
 
 <script setup>
 import { ref, watch, onUnmounted } from 'vue'
-import { useAuthStore } from '@/stores/authStore'
+import { useUserStore } from '@/stores/userStore'
 import { useRouter } from 'vue-router'
 import axios from 'axios'
 
-const authStore = useAuthStore()
+const userStore = useUserStore()
 const router = useRouter()
 const visible = ref(false)
 
@@ -32,7 +32,7 @@ const clearTimers = () => {
 }
 // atExpiresAt이 바뀔 때마다 타이머 재설정
 watch(
-  () => authStore.state.atExpiresAt,
+  () => userStore.state.atExpiresAt,
   (expiresAt) => {
     clearTimers()
     if (!expiresAt) return

@@ -85,7 +85,7 @@ function spin() {
 
 function goToCategory() {
   if (!resultCategory.value) return
-  router.push({ path: '/storelist', query: { categoryId: resultCategory.value.id } })
+  router.push({ path: '/storelist', query: { category: resultCategory.value.name } })
 }
 
 function spinAgain() {

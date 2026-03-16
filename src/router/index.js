@@ -63,6 +63,8 @@ const routes = [
   { path: '/order',    name: 'Order',    component: OrderView,    meta: { requiresAuth: true, role: 'CUSTOMER' } },
   { path: '/event',    name: 'Event',    component: EventView,    meta: { requiresAuth: true, role: 'CUSTOMER' } },
   { path: '/whatkind', name: 'WhatKind', component: WhatKindView, meta: { requiresAuth: true, role: 'CUSTOMER' } },
+  {path: '/payment/success', name: 'PaymentSuccess', component: () => import('@/views/servicee/PaySuccess.vue'), meta: { requiresAuth: true, role: 'CUSTOMER' } },
+  {path: '/payment/fail', name: 'PaymentFailure', component: () => import('@/views/servicee/PayFail.vue'), meta: { requiresAuth: true, role: 'CUSTOMER' } },
 
   // ── 사장님 전용
   { path: '/ownerservice', name: 'OwnerService', component: OwnerOrderView, meta: { requiresAuth: true, role: 'OWNER' } },

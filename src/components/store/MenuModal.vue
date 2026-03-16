@@ -31,7 +31,7 @@ const handleAddCart = async () => {
     alert('장바구니에 담겼습니다! 🛒')
     quantity.value = 1
     emit('close')
-
+    
   } catch (error) {
     // 409: 다른 매장 메뉴 존재
     if (error.response?.status === 409) {

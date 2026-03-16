@@ -56,6 +56,12 @@ class OwnerService {
         const res = await axios.delete(`${this.#url}/menu/${menuId}`);
         return res.data;
     }
+
+    //로그인 후 가게 정보 조회 (가게 있으면 주문관리, 없으면 입점신청)
+    async getMyStore() {
+    const res = await axios.get(`${this.#url}/store`)
+    return res.data
+    }
 }
 
 export default new OwnerService();

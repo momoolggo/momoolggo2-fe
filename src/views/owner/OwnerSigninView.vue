@@ -2,10 +2,13 @@
 import { reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/userStore'
+import { useStore } from '@/stores/useStore'
 import userService from '@/services/userService'
+import ownerService from '@/services/ownerService'
 
 const router = useRouter()
 const userStore = useUserStore()
+const store = useStore()
 
 const state = reactive({
   form: {
@@ -32,7 +35,18 @@ const signin = async () => {
       return
     }
     userStore.signIn(data)
-    router.push('/ownerservice')
+
+    // 가게 정보 조회
+    const storeData = await ownerService.getMyStore()
+    console.log('storeData:', storeData)
+    if (storeData?.resultData?.storeName) {
+      store.setStore(storeData.resultData.storeName, storeData.resultData.storeId)
+      router.push('/ownerservice')
+    } else {
+      store.clearStore()
+      router.push('/ownerservice/addstore')
+    }
+
   } catch (err) {
     state.errorMsg = err.response?.data?.resultMessage ?? '로그인에 실패했습니다.'
   }

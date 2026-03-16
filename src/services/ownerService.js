@@ -29,7 +29,7 @@ class OwnerService {
 
     // 가게 주문 조회 (state: 주문상태 필터)
     async getOrders(storeId, state) {
-        const res = await axios.get(`${this.#url}/order`, { params: { storeId, state } });
+    const res = await axios.get(`${this.#url}/order`, { params: { store_id: storeId, state } });
         return res.data;
     }
 
@@ -55,6 +55,23 @@ class OwnerService {
     async deleteMenu(menuId) {
         const res = await axios.delete(`${this.#url}/menu/${menuId}`);
         return res.data;
+    }
+
+    //로그인 후 가게 정보 조회 (가게 있으면 주문관리, 없으면 입점신청)
+    async getMyStore() {
+    const res = await axios.get(`${this.#url}/store`)
+    return res.data
+    }
+
+    //매출관리
+    async getSalesStats(period) {
+        const res = await axios.get(`${this.#url}/sales/stats`, { params: { period } });
+    return res.data;
+    }
+
+    async getSalesRanking(period) {
+        const res = await axios.get(`${this.#url}/sales/ranking`, { params: { period } });
+    return res.data;
     }
 }
 

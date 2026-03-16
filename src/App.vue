@@ -28,6 +28,7 @@ const signout = async () => {
 </script>
 
 <template>
+  <div class="app-wrapper">
   <TheHeader
     v-if="showHeader"
     :is-signed-in="userStore.state.isSignedIn"
@@ -37,7 +38,16 @@ const signout = async () => {
   <router-view />
   <TokenExpiryModal />
   <MobileNavi />
+  </div>
 </template>
 
 <style scoped>
+.app-wrapper{
+  max-width: 480px;
+  margin: 0 auto;
+  min-height: 100vh;
+  position: relative;
+  background: #fff;
+ 
+}
 </style>

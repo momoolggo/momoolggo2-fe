@@ -10,8 +10,8 @@ const router = useRouter()
 const userStore = useUserStore()
 
 // 헤더를 숨길 페이지
-const noHeaderPages = ['/']
-const showHeader = computed(() => !noHeaderPages.includes(route.path))
+const noHeaderPages = ['/', '/owner/signin', '/owner/signup']
+const showHeader = computed(() => !noHeaderPages.includes(route.path));
 
 onMounted(() => {
   userStore.checkAuth()

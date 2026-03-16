@@ -44,8 +44,7 @@ const formattedDate = computed(() => {
   <div class="owner-layout">
     <Sidebar :activeMenu="currentMenu" @menu-change="menu => currentMenu = menu" />
     <main class="main-content">
-
-      <!-- 주문관리 화면 -->
+      <!--주문관리 화면-->
       <template v-if="currentMenu === 'order'">
         <div class="date-container"><span class="date-text">📅 {{ formattedDate }}</span></div>
 

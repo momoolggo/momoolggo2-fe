@@ -114,7 +114,7 @@ const isOwner = computed(() => userStore.state.role === 'OWNER')
 .header {
   position: relative;
   z-index: 100;
-  width: 100%;
+  max-width: 480px;
   background-color: #FEFAEE;
   border-bottom: 1px solid var(--border);
   box-shadow: var(--shadow-header);

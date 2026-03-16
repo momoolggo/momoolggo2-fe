@@ -1,146 +1,233 @@
-
 <script setup>
-import { reactive } from 'vue';
-import { useRouter } from 'vue-router';
-import Footer from '@/components/common/Footer.vue';
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+import Footer from '@/components/common/Footer.vue'
 
-const router = useRouter();
+const router = useRouter()
 
-const state = reactive({
-  categories: [
-    { label: '한식'},
-    { label: '중식'},
-    { label: '일식'},
-    { label: '양식' },
-    { label: '디저트'},
-    { label: '분식' },
-    { label: '패스트푸드'},
-    { label: '찜 탕'},
-    { label: '치킨'},
-    { label: '야식'},
-    { label: '족발'},
-    { label: '피자'},
+// 카테고리
+const categories = [
+  { label: '한식',       img: '비빔밥'  },
+  { label: '중식',       img: '짜장면'  },
+  { label: '일식',       img: '스시'    },
+  { label: '양식',       img: '파스타'  },
+  { label: '디저트',     img: '케잌'    },
+  { label: '분식',       img: '떡볶이'  },
+  { label: '패스트푸드', img: '햄버거'  },
+  { label: '찜·탕',     img: '찜탕'    },
+  { label: '치킨',       img: '치킨'    },
+  { label: '야식',       img: '닭발'    },
+  { label: '족발',       img: '족발'    },
+  { label: '피자',       img: '피자'    },
 ]
 
-});
-const goCategory = (label) => {
+// 배너
+const banners = [
+  { img: '/src/assets/배너1.png', route: '/event'    },
+  { img: '/src/assets/배너2.png', route: '/whatKind' },
+  { img: '/src/assets/배너3.png', route: '/whatKind'},
+]
+
+// 현재 배너(인디케이터용)
+const currentBanner = ref(0)
+
+// 스와이프 스크롤 → 인디케이터 업데이트
+function onScroll(e) {
+  const el = e.target
+  const index = Math.round(el.scrollLeft / el.offsetWidth)
+  currentBanner.value = index
+}
+
+// 배너 클릭하면 라우트 이동
+function onBannerClick(route) {
+  router.push(route)
+}
+
+// 카테고리 클릭
+function goCategory(label) {
   router.push({ path: '/storelist', query: { category: label } })
 }
 </script>
 
 <template>
-  <main class="home">
+  <div class="home-page">
 
-  <img src="@/assets/뭐물꼬_마스코트.png" alt="뭐물꼬 마스코트" class="mascot_img" />
-
-    <div class="wrapper">
-  <div class="item" @click="goCategory('한식')">한식
-  <img src="@/assets/비빔밥.png" alt="한식"/>
+    <!-- 배너 슬라이더 (스와이프) -->
+    <div class="banner-wrap" @scroll="onScroll">
+      <div
+        v-for="(banner, i) in banners"
+        :key="i"
+        class="banner-item"
+        @click="onBannerClick(banner.route)"
+      >
+        <img :src="banner.img" :alt="`배너 ${i + 1}`" />
+      </div>
     </div>
-  <div class="item"  @click="goCategory('중식')">중식
-  <img src="@/assets/짜장면.png" alt="중식" />
+
+    <!-- 인디케이터 -->
+    <div class="dots">
+      <span
+        v-for="(_, i) in banners"
+        :key="i"
+        class="dot"
+        :class="{ active: i === currentBanner }"
+      />
+    </div>
+
+    <!-- 카테고리 섹션 -->
+    <section class="category-section">
+      <div class="category-grid">
+        <div
+          v-for="cat in categories"
+          :key="cat.label"
+          class="category-item"
+          @click="goCategory(cat.label)"
+        >
+          <img :src="`/src/assets/${cat.img}.png`" :alt="cat.label" />
+          <span>{{ cat.label }}</span>
+        </div>
+      </div>
+
+      <button class="view-all-btn" @click="router.push('/storelist')">
+        메뉴 전체 보기 >>
+      </button>
+    </section>
+
   </div>
-  <div class="item"  @click="goCategory('일식')">일식
-  <img src="@/assets/스시.png" alt="스시" />
-  </div>
-  <div class="item"  @click="goCategory('양식')">양식
-    <img src="@/assets/파스타.png" alt="양식" />
-  </div>
-  <div class="item"  @click="goCategory('디저트')">디저트
-    <img src="@/assets/케잌.png" alt="디저트"/>
-  </div>
-  <div class="item"  @click="goCategory('분식')">분식
-    <img src="@/assets/떡볶이.png" alt="분식"/>
-  </div>
-  <div class="item"  @click="goCategory('패스트푸드')">패스트푸드
-    <img src="@/assets/햄버거.png" alt="패스트푸드"/>
-  </div>
-  <div class="item"  @click="goCategory('찜 탕')">야식
-    <img src="@/assets/찜탕.png" alt="찜탕"/>
-  </div>
-  <div class="item"  @click="goCategory('치킨')">야식
-    <img src="@/assets/치킨.png" alt="치킨"/>
-  </div>
-  <div class="item"  @click="goCategory('야식')">야식
-    <img src="@/assets/야식.png" alt="야식"/>
-  </div>
-  <div class="item"  @click="goCategory('족발')">야식
-    <img src="@/assets/족발.png" alt="족발"/>
-  </div>
-  <div class="item"  @click="goCategory('피자')">야식
-    <img src="@/assets/피자.png" alt="피자"/>
-  </div>
-  </div>
-</main>
-<Footer></Footer>
+  <Footer />
 </template>
 
 <style scoped>
-.home{
-  position: relative;;
-  background-color: #A40C0B;
-  width: 100vw;
-  min-height: 500px;
-  padding-top: 1px;
-  padding-bottom: 10px;
-  overflow-x: hidden;   /* 화면 줄면 가로스크롤 */
-  overflow-y: auto;
+
+.home-page {
+  max-width: 480px;
+  margin: 0 auto;
+  min-height: 100vh;
+  /* 배경을 이미지와 유사한 선명한 오렌지/레드 계열로 변경 */
+  background: #C44101; 
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px 0 80px;
+  overflow-x: hidden;
+ 
 }
 
+/* 배너 슬라이더 */
+.banner-wrap {
+  width: 100%;
+  display: flex;
+  overflow-x: scroll;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+}
+.banner-wrap::-webkit-scrollbar { display: none; }
 
-.wrapper {
+.banner-item {
+  flex-shrink: 0;
+  width: 100%;
+  scroll-snap-align: start;
+}
+.banner-item img {
+  width: 100%;
+  height: 160px; 
+  object-fit: cover;
+}
+
+/* ── 인디케이터 ── */
+.dots {
+  display: flex;
+  gap: 6px;
+  margin: 12px 0;
+}
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.4);
+}
+.dot.active {
+  width: 16px;
+  border-radius: 4px;
+  background: #fff;
+}
+
+/* ── 카테고리 섹션 ── */
+.category-section {
+  width: 92%; 
+  margin-top: 15px;
+ 
+}
+
+.category-grid {
   display: grid;
-  grid-template-columns: repeat(4, 180px); /* 1fr 말고 고정값 */
-  gap: 50px;
-  width: max-content; /* 내용 크기만큼만 */
-  margin: 50px auto 0;
-  padding: 0 40px 40px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px; /* 카드 사이 간격 */
 }
 
-.item{
-  display: grid;
-  position: relative;
-  background-color: #FEFAEE;
-  text-align: center;
-  font-size: 30px;
-  font-family: 'NanumSquare_acEB', 'Pretendard', 'Noto Sans KR';
-  color: #A40C0B;
-  padding: 24px 16px;
-  border: 1px solid #FEFAEE;
-  border-radius: 28px;
-  height: 200px;
-  width: 180px;
-  z-index: 90;
-  white-space: nowrap;
-  box-sizing: border-box;
-  overflow: hidden;
+.category-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: #fffcea; 
+  border-radius: 24px; 
+  padding: 15px 10px 12px;
+  cursor: pointer;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1); 
+  transition: transform 0.1s;
+}
+.category-item:active {
+  transform: scale(0.95);
 }
 
-.item img{
-  position: absolute;
-  width: 150px;
-  place-self: end;
+/* 카테고리 텍스트 스타일 */
+.category-item span {
+  font-size: 15px;
+  font-weight: 800;
+  color: #B21F1F; /* 진한 붉은색 글자 */
+  margin-bottom: 8px; /* 텍스트를 위로, 이미지를 아래로 */
+  order: -1; /* 텍스트가 이미지보다 위에 오도록 설정 */
+}
+
+.category-item img {
+  width: 100%; /* 카드의 너비에 맞춤 */
+  max-width: 85px;
+  height: auto;
+  aspect-ratio: 1 / 1;
   object-fit: contain;
+  /* 이미지 하단을 둥글게 깎고 싶다면 추가 */
+  border-radius: 0 0 15px 15px;
 }
 
-.item:hover {
-  border-color: var(--primary);
+/* ── 전체 보기 버튼 ── */
+.view-all-btn {
+  display: block;
+  width: 100%;
+  margin-top: 20px;
+  padding: 14px;
+  background: #fff;
+  border: none;
+  border-radius: 30px; 
+  color: #666; 
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+.view-all-btn:active {
+  background: #f0f0f0;
 }
 
-.mascot_img {
-  position: absolute;
-  top: -50px;
-  right: -100px;
-  width: 600px;
-  object-fit: contain;
-  pointer-events: none;
-  z-index: 110;
+.banner-wrap {
+  display: flex;
+  overflow-x: auto; /* 혹은 scroll */
+  scroll-snap-type: x mandatory; /* 필수 */
+  -webkit-overflow-scrolling: touch; /* iOS 부드러운 스크롤 */
 }
 
-@media (max-width: 1500px) {
-  .mascot_img {
-    position: absolute;
-    z-index: 90;
-  }
+.banner-item {
+  flex: 0 0 100%; /* 너비를 꽉 채우도록 보장 */
+  scroll-snap-align: start; /* 필수 */
 }
+
 </style>

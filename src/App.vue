@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import TheHeader from '@/components/common/TheHeader.vue'
 import { useUserStore } from '@/stores/userStore'
 import TokenExpiryModal from '@/components/common/TokenExpiryModal.vue'
+import MobileNavi from './components/common/MobileNavi.vue'
 
 const route  = useRoute()
 const router = useRouter()
@@ -22,6 +23,8 @@ const signout = async () => {
   await userStore.signOut()
   router.push('/signin')
 }
+
+
 </script>
 
 <template>
@@ -33,6 +36,7 @@ const signout = async () => {
   />
   <router-view />
   <TokenExpiryModal />
+  <MobileNavi />
 </template>
 
 <style scoped>

@@ -1,68 +1,79 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue'; //ref : 반응형 변수, 계산된 속성: computed
+import { ref, computed, onMounted } from 'vue';
 import Sidebar from '@/components/owner/Sidebar.vue';
 import OrderCard from '@/components/owner/OrderCard.vue';
 import OrderList from '@/components/owner/OrderList.vue';
 import OwnerMenu from '@/components/owner/OwnerMenu.vue';
-import salesManagementView from '@/components/owner/SalesManagementView.vue'
-import axios from 'axios';
+import salesManagementView from '@/components/owner/SalesManagementView.vue';
+import AddStoreView from '@/views/owner/AddStoreView.vue';
+import ownerService from '@/services/ownerService';
+import { useStore } from '@/stores/useStore';
 
-const state = ref({ //이거 데이터베이스에 있나..?
-  totla: 0,
-  watitng: 0,
+const storeInfo = useStore();
+
+const stats = ref({
+  total: 0,
+  waiting: 0,
   completed: 0,
   cancel: 0
 });
 
-const fetchState = async () => { //ordercard 그날 주문 데이터 연결 코드
-  try{
-    const response = await axios.get('/api/owner/order', {params: {store_id: 1}});
-    state.value = response.data;
+const fetchState = async () => {
+  if (!storeInfo.myStoreId) return;
+  try {
+    const response = await ownerService.getOrders(storeInfo.myStoreId, null);
+    if (response?.resultData) {
+      stats.value = response.resultData;
+    }
   } catch (error) {
-    console.error("통계 조회 실패:" ,error);
+    console.error("통계 조회 실패:", error);
   }
 };
 
 onMounted(fetchState);
 
-const currentMenu = ref('order'); // 현재 어떤 화면을 보여줄지 결정 기본값은 주문 관리
+const currentMenu = ref('order');
 
 const formattedDate = computed(() => {
-  const now = new Date(); //오늘 날짜 자동계산해주는 변수.
+  const now = new Date();
   return `${now.getFullYear()} / ${String(now.getMonth() + 1).padStart(2, '0')} / ${String(now.getDate()).padStart(2, '0')}`;
-  //          지금 연도         /   월 가져옴, 자바는 1월이 0이라 +1 , padStrart: 글자길이 2글자로 맞추되, 모자라면 0 붙임.
 });
 </script>
 
 <template>
   <div class="owner-layout">
     <Sidebar :activeMenu="currentMenu" @menu-change="menu => currentMenu = menu" />
-      <!--activeMenu:현재 메뉴 알려주고, @menu-change: 사이드바에서 메뉴 클릭하면 메인화면 변수 바꿔줌 -->
     <main class="main-content">
-      <!--주문관리 화면-->
+
+      <!-- 주문관리 화면 -->
       <template v-if="currentMenu === 'order'">
         <div class="date-container"><span class="date-text">📅 {{ formattedDate }}</span></div>
 
-        <!--주문현황 요약해서 보여줌-->
         <section class="summary-container">
-          <OrderCard title="총 주문수" count="stats.total" />
-          <OrderCard title="주문수락대기" count="stats.waiting" />
-          <OrderCard title="배달 완료" count="stats.completed" />
-          <OrderCard title="취소건수" count="stats.cancel" type="cancel" />
+          <OrderCard title="총 주문수"     :count="stats.total"     />
+          <OrderCard title="주문수락대기"  :count="stats.waiting"   />
+          <OrderCard title="배달 완료"     :count="stats.completed" />
+          <OrderCard title="취소건수"      :count="stats.cancel"    type="cancel" />
         </section>
-        <!--실제 주문 목록들을 상세히 보여주는 리스트임-->
+
         <section class="order-list-section"><OrderList /></section>
       </template>
 
-      <!--매출관리 화면: 매출관리 통계, 그래프 들어있는 컴포넌트 보여줌-->
+      <!-- 매출관리 화면 -->
       <template v-if="currentMenu === 'sales'">
-        <div><salesManagementView/></div>
+        <div><salesManagementView /></div>
       </template>
-      
-      <!--매뉴관리 화면: 카테고리설정및 메뉴추가 컴포넌트-->
+
+      <!-- 메뉴관리 화면 -->
       <template v-if="currentMenu === 'menu'">
-        <div> <OwnerMenu/></div>
-        </template>
+        <div><OwnerMenu /></div>
+      </template>
+
+      <!-- 입점신청 (가게 없을 때) -->
+      <template v-if="currentMenu === 'addstore'">
+        <AddStoreView />
+      </template>
+
     </main>
   </div>
 </template>

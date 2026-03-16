@@ -38,8 +38,9 @@ const signin = async () => {
 
     // 가게 정보 조회
     const storeData = await ownerService.getMyStore()
+    console.log('storeData:', storeData)
     if (storeData?.resultData?.storeName) {
-      store.setStore(storeData.resultData.storeName)
+      store.setStore(storeData.resultData.storeName, storeData.resultData.storeId)
       router.push('/ownerservice')
     } else {
       store.clearStore()

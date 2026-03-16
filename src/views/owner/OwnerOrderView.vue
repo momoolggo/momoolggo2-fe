@@ -39,7 +39,7 @@ const formattedDate = computed(() => {
     <Sidebar :activeMenu="currentMenu" @menu-change="menu => currentMenu = menu" />
       <!--activeMenu:현재 메뉴 알려주고, @menu-change: 사이드바에서 메뉴 클릭하면 메인화면 변수 바꿔줌 -->
     <main class="main-content">
-      <!--주문관리 화면-->>
+      <!--주문관리 화면-->
       <template v-if="currentMenu === 'order'">
         <div class="date-container"><span class="date-text">📅 {{ formattedDate }}</span></div>
 

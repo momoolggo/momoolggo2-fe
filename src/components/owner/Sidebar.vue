@@ -23,7 +23,7 @@ const emit = defineEmits(['menu-change']);
       <button class="menu-item" :class="{ active: activeMenu === 'sales' }" @click="emit('menu-change', 'sales')">매출 관리</button>
       <button class="menu-item" :class="{ active: activeMenu === 'menu' }" @click="emit('menu-change', 'menu')">메뉴 관리</button>
       <button class="menu-item" :class="{ active: activeMenu === 'store' }" @click="emit('menu-change', 'store')">가게 관리</button>
-      <button class="menu-item" :class="{ active: activeMenu === 'setting' }" @click="emit('menu-change', 'setting')">설정</button>
+      
     </nav>
 
     <div class="footer">

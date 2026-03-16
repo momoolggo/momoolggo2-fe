@@ -3,7 +3,7 @@ import { ref } from 'vue';
 
 export const useStore = defineStore('store', () => {
 
-  const myStore = ref('코이보타루');
+  const myStore = ref(null);
 
  
   function setStore(storeName) {

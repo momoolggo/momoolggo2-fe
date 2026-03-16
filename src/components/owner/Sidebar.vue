@@ -1,7 +1,10 @@
 <script setup>
 import { useStore } from '@/stores/useStore'; 
+import { useUserStore } from '@/stores/userStore'
 
 const store = useStore();
+const userStore = useUserStore()
+
 defineProps({
   activeMenu: String
 });
@@ -14,7 +17,7 @@ const emit = defineEmits(['menu-change']);
       <img src="@/assets/logo.png" alt="뭐물꼬" class="logo" />
       <div class="shop-info">
         <h3>{{ store.myStore }} <span class="verified">✔</span></h3>
-        <p><strong>김수빈</strong> 사장님</p>
+        <p><strong>{{ userStore.state.name }}</strong> 사장님</p>
       </div>
     </div>
 

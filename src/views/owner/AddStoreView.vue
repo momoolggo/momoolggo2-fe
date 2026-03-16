@@ -1,9 +1,9 @@
 <script setup>
-import { reactive, ref, onMounted } from 'vue';
+import { reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useStore } from '@/stores/useStore';
 import { useUserStore } from '@/stores/userStore';
-import axios from 'axios';
+import ownerService from '@/services/ownerService';
 import NaverMap from '@/components/common/NaverMap.vue';
 
 const router = useRouter();
@@ -24,11 +24,11 @@ const state = reactive({
     businessName: '',
     businessNumber: '',
     storeInfo: '',
-    storePic: null
+    storePic: '',
+    categoryId: ''
   },
 });
 
-// ── NaverMap에서 주소 선택 시
 const onAddressSelect = ({ address, lat, lng }) => {
   state.form.location = address;
   state.form.lat = lat;
@@ -42,8 +42,9 @@ const triggerFileUpload = () => fileInput.value.click();
 const onFileChange = (e) => {
   const file = e.target.files[0];
   if (file) {
-    state.form.storePic = file;
-    previewImage.value = URL.createObjectURL(file);
+    const imageUrl = URL.createObjectURL(file);
+    previewImage.value = imageUrl;
+    state.form.storePic = imageUrl;  // 문자열 경로로 저장
   }
 };
 
@@ -53,20 +54,22 @@ const submit = async () => {
     return;
   }
   try {
-    const formData = new FormData();
-    formData.append('userId', userStore.state.userNo); // 하드코딩 제거 → 로그인 유저 자동
-    formData.append('storeName', state.form.storeName);
-    formData.append('businessNumber', state.form.businessNumber);
-    formData.append('businessName', state.form.businessName);
-    formData.append('location', state.form.location + ' ' + state.form.addressDetail);
-    formData.append('storeTel', state.form.storeTel);
-    formData.append('storeInfo', state.form.storeInfo);
+    // JSON 객체로 전송 (FormData 아님)
+    const data = {
+      userId: userStore.state.userNo,
+      storeName: state.form.storeName,
+      businessNumber: state.form.businessNumber,
+      businessName: state.form.businessName,
+      location: state.form.location + ' ' + state.form.addressDetail,
+      storeTel: state.form.storeTel,
+      storeInfo: state.form.storeInfo,
+      storePic: state.form.storePic || '',
+      categoryId: state.form.categoryId,
+      lat: state.form.lat,
+      lng: state.form.lng
+    };
 
-    if (state.form.storePic) {
-      formData.append('storePic', state.form.storePic);
-    }
-
-    await axios.post('/owner/store', formData);
+    await ownerService.registerStore(data);
 
     store.setStore(state.form.storeName);
     alert("가게 등록이 완료되었습니다.");
@@ -145,6 +148,24 @@ const submit = async () => {
             </div>
             <input type="file" ref="fileInput" @change="onFileChange" accept="image/*" style="display: none;" />
           </div>
+          <div class="form-group">
+            <label>카테고리</label>
+             <select v-model="state.form.categoryId" class="full-input">
+              <option value="" disabled>카테고리를 선택하세요</option>
+              <option :value="1">한식</option>
+              <option :value="2">중식</option>
+              <option :value="3">일식</option>
+              <option :value="4">양식</option>
+              <option :value="5">디저트</option>
+              <option :value="6">분식</option>
+              <option :value="7">패스트푸드</option>
+              <option :value="8">찜,탕</option>
+              <option :value="9">치킨</option>
+              <option :value="10">야식</option>
+              <option :value="11">족발</option>
+              <option :value="12">피자</option>
+  </select>
+</div>
 
           <!-- 가게 소개글 -->
           <div class="form-group">

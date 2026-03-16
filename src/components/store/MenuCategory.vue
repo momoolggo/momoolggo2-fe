@@ -1,6 +1,6 @@
 <script setup>
 import { ref } from 'vue';
-import MenuItem from '@/components/customer/MenuCard.vue';
+import MenuItem from '@/components/store/MenuCard.vue';
 
 const props = defineProps({
   categoryName: String,
@@ -32,30 +32,31 @@ const toggleCategory = () => {
     </div>
   </div>
 </template>
-
 <style scoped>
 .menu-category-group {
   width: 100%;
-  background-color: #fff; /* 전체 배경은 흰색 */
+  background-color: #fff;
   margin-bottom: 5px;
 }
 
 .category-header {
-  background-color: #f8f8f8; /* 카테고리 바만 연한 회색 */
+  background-color: #f8f8f8;
   padding: 15px 20px;
   display: flex;
   justify-content: space-between;
   align-items: center;
   border-bottom: 1px solid #eee;
-  position: sticky; /* 스크롤 시 카테고리 고정 (선택 사항) */
-  top: 60px;
-  z-index: 5;
+
+  /* --- 수정된 부분: 고정 기능을 해제합니다 --- */
+  position: relative; /* sticky 대신 relative 사용 */
+  top: 0;            /* 60px에서 0으로 변경 혹은 제거 */
+  z-index: 1;        /* 다른 요소와 꼬이지 않게 낮게 설정 */
 }
 
 .menu-list {
   display: flex;
   flex-direction: column;
-  padding: 10px 0; /* 카드들이 들어갈 위아래 여백 */
+  padding: 10px 0;
   background-color: #ffffff;
 }
 </style>

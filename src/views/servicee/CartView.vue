@@ -1,9 +1,13 @@
 <script setup>
 import { reactive, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import storeService from '@/services/storeService';
+import cartService from '@/services/cartService';  // ✅ storeService → cartService
+import { useUserStore } from '@/stores/userStore';
 
 const router = useRouter();
+const userStore = useUserStore();
+const user = computed(() => userStore.state);
+const userNo = computed(() => userStore.state.userNo); // ✅ userNo 추가
 
 const state = reactive({
     storeName: '',
@@ -17,10 +21,17 @@ const state = reactive({
 const debounceTimers = {};
 
 const loadCart = async () => {
-    // 실제 로직 (주석 해제하여 사용 가능)
     try {
-        const res = await storeService.getCart();
+        const res = await cartService.getCartList(userNo.value); // ✅ 수정
         const data = res.resultData;
+
+        if (!data || !data.items || data.items.length === 0) {
+            state.storeName = '';
+            state.storeId = null;
+            state.cartItems = [];
+            return;
+        }
+
         state.storeName = data.storeName || '';
         state.storeId = data.storeId || null;
         state.cartItems = (data.items || []).map(i => ({ ...i, checked: false }));
@@ -34,6 +45,8 @@ const loadCart = async () => {
             { id: 2, menuName: "참치초밥 세트", price: 15000, quantity: 2, menuPic: "https://picsum.photos/101", checked: false },
             { id: 3, menuName: "우동", price: 7000, quantity: 1, menuPic: "https://picsum.photos/102", checked: false }
         ];
+    } finally {
+        state.loading = false;
     }
 };
 
@@ -59,8 +72,7 @@ const changeQuantity = (item, delta) => {
 
     debounceTimers[item.id] = setTimeout(async () => {
         try {
-            // await storeService.updateCartItem(item.id, { quantity: item.quantity });
-            console.log(`${item.id}번 수량 변경 완료`);
+            await cartService.updateCartItem(item.id, { quantity: item.quantity }); // ✅ 수정
         } catch (e) {
             console.error('수량 변경 실패:', e);
             alert('수량 변경에 실패했습니다. 다시 시도해주세요.');
@@ -79,14 +91,18 @@ const removeItem = async (item) => {
     // 1. UI 선반영
     if (idx !== -1) state.cartItems.splice(idx, 1);
 
-    // // 2. API 호출
-    // try {
-    //     await storeService.removeCartItem(item.id);
-    // } catch (e) {
-    //     console.error('삭제 실패:', e);
-    //     state.cartItems = originalItems; // 실패 시 복구
-    //     alert('삭제 요청에 실패했습니다.');
-    // }
+    // 2. API 호출
+    try {
+        await cartService.deleteCartItem(item.id); // ✅ 수정
+        if (state.cartItems.length === 0) {
+            state.storeName = '';
+            state.storeId = null;
+        }
+    } catch (e) {
+        console.error('삭제 실패:', e);
+        state.cartItems = originalItems; // 실패 시 복구
+        alert('삭제 요청에 실패했습니다.');
+    }
 };
 
 const allChecked = computed(() =>
@@ -110,13 +126,17 @@ const deleteSelected = async () => {
     state.cartItems = state.cartItems.filter(i => !i.checked);
 
     // 2. API 호출 (순차 혹은 병렬 처리)
-    // try {
-    //     await Promise.all(selectedIds.map(id => storeService.removeCartItem(id)));
-    // } catch (e) {
-    //     console.error('선택 삭제 실패:', e);
-    //     state.cartItems = originalItems;
-    //     alert('일부 또는 전체 메뉴 삭제에 실패했습니다.');
-    // }
+    try {
+        await Promise.all(selectedIds.map(id => cartService.deleteCartItem(id))); // ✅ 수정
+        if (state.cartItems.length === 0) {
+            state.storeName = '';
+            state.storeId = null;
+        }
+    } catch (e) {
+        console.error('선택 삭제 실패:', e);
+        state.cartItems = originalItems;
+        alert('일부 또는 전체 메뉴 삭제에 실패했습니다.');
+    }
 };
 
 // --- [수정] 장바구니 비우기 (낙관적 업데이트) ---
@@ -135,15 +155,15 @@ const clearCart = async () => {
     state.cartItems = [];
 
     // 2. API 호출
-    // try {
-    //     await storeService.clearCart(); // storeService에 해당 메서드가 있다고 가정
-    // } catch (e) {
-    //     console.error('장바구니 비우기 실패:', e);
-    //     state.storeName = backup.name;
-    //     state.storeId = backup.id;
-    //     state.cartItems = backup.items;
-    //     alert('장바구니 비우기에 실패했습니다.');
-    // }
+    try {
+        await cartService.clearCart(userNo.value); // ✅ 수정
+    } catch (e) {
+        console.error('장바구니 비우기 실패:', e);
+        state.storeName = backup.name;
+        state.storeId = backup.id;
+        state.cartItems = backup.items;
+        alert('장바구니 비우기에 실패했습니다.');
+    }
 };
 
 const goOrder = () => router.push('/order');

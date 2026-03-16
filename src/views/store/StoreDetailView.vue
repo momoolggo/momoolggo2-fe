@@ -1,12 +1,14 @@
 <script setup>
 import { reactive, onMounted, computed } from 'vue';
 import { useRoute } from 'vue-router';
-import MenuCategory from '@/components/customer/MenuCategory.vue';
-import StoreInfo from '@/components/owner/StoreInfo.vue';
-import MenuDetailModal from '@/components/customer/MenuModal.vue';
+import MenuCategory from '@/components/store/MenuCategory.vue';
+import StoreInfo from '@/components/store/StoreInfo.vue';
+import MenuDetailModal from '@/components/store/MenuModal.vue';
 import storeService from '@/services/storeService';
-
+import { useUserStore } from '@/stores/userStore';
 const route = useRoute();
+const userStore = useUserStore();
+const userNo = userStore.state.userNo;
 
 const state = reactive({
     storeInfo: {},
@@ -15,13 +17,20 @@ const state = reactive({
     selectedMenu: {},
     review: [],
     isModalOpen: false,
+    isWished: false,
 });
 
 const getStoreDetail = async () => {
-    const storeId = route.params.id;
+    const storeId = Number(route.params.id);
+    const params = {
+        userNo: userNo,
+        storeId: storeId
+    };
     try {
         const res = await storeService.getStore(storeId);
         state.storeInfo = res.resultData;
+        const result = await storeService.checkFavorite(params);
+        state.isWished = result.resultData || false;
     } catch (error) {
         console.error("가게데이터 로드 실패:", error);
     }
@@ -34,6 +43,30 @@ const getMenuList = async () => {
         state.menuList = res.resultData || [];
     } catch (error) {
         console.error("메뉴 데이터 로드 실패:", error);
+    }
+};
+
+const getReviewList = async () => {
+    const storeId = route.params.id;
+    try {
+        const res = await storeService.getReviewList(storeId);
+        state.review = res.resultData || [];
+    } catch (error) {
+        console.error("리뷰 데이터 로드 실패:", error);
+    }
+};
+
+const toggleWish = async () => {
+    const params = {
+        userNo: userNo,
+        storeId: Number(route.params.id)
+    };
+    try {
+        const result =await storeService.toggleFavorite(params);
+        state.isWished =result.resultData;
+    } catch (error) {
+        console.error("찜 처리 중 오류 발생:", error);
+        alert("요청 처리에 실패했습니다.");
     }
 };
 
@@ -51,16 +84,6 @@ const groupedMenu = computed(() => {
     return result;
 });
 
-const getReviewList = async () => {
-    const storeId = route.params.id;
-    try {
-        const res = await storeService.getReviewList(storeId);
-        state.review = res.resultData || [];
-    } catch (error) {
-        console.error("리뷰 데이터 로드 실패:", error);
-    }
-};
-
 onMounted(() => {
     getStoreDetail();
     getMenuList();
@@ -73,7 +96,6 @@ const openMenuModal = (menu) => {
 };
 
 const handleAddToCart = (item) => {
-    console.log("장바구니 담기:", item);
     state.isModalOpen = false;
 };
 </script>
@@ -88,7 +110,13 @@ const handleAddToCart = (item) => {
             <div class="info-content">
                 <div class="title-row">
                     <h1>{{ state.storeInfo.storeName }}</h1>
-                    <button class="wish-heart">🤍</button>
+                    <button
+                        class="wish-btn"
+                        :class="{ 'is-active': state.isWished }"
+                        @click="toggleWish"
+                    >
+                        <span class="heart-icon">{{ state.isWished ? '♥' : '♡' }}</span>
+                    </button>
                 </div>
                 <div class="rating-row">
                     <span class="star">⭐ {{ state.storeInfo.ratingAvg }}</span>
@@ -154,12 +182,22 @@ const handleAddToCart = (item) => {
 <style scoped>
 .store-detail-view { max-width: 1100px; margin: 0 auto; background: #fff; }
 .store-header { padding: 40px; border-bottom: 8px solid #f5f5f5; }
-.info-container { display: flex; gap: 40px; align-items: flex-start; position: relative; }
+.info-container { display: flex; gap: 40px; align-items: flex-start; }
 .store-img { width: 350px; height: 230px; border-radius: 12px; object-fit: cover; }
 .info-content { flex: 1; }
 .title-row { display: flex; align-items: center; justify-content: space-between; gap: 15px; margin-bottom: 10px; }
 .title-row h1 { font-size: 2.2rem; margin: 0; }
-.wish-heart { background: none; border: none; font-size: 24px; cursor: pointer; }
+
+.wish-btn {
+    background: #fff; border: 1px solid #ddd; border-radius: 50%;
+    width: 48px; height: 48px; display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: all 0.2s ease; box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+.heart-icon { font-size: 26px; color: #bbb; line-height: 1; margin-top: 2px; }
+.wish-btn.is-active { border-color: #ff5252; background-color: #fff5f5; }
+.wish-btn.is-active .heart-icon { color: #ff5252; }
+.wish-btn:hover { transform: scale(1.05); }
+
 .rating-row { font-size: 1.2rem; margin-bottom: 30px; }
 .star { color: #FFD700; font-weight: bold; }
 .delivery-spec { display: flex; flex-direction: column; gap: 12px; }
@@ -168,9 +206,17 @@ const handleAddToCart = (item) => {
 .spec-item .val { color: #333; font-weight: 500; }
 .info-character { width: 150px; align-self: flex-end; }
 .info-character img { width: 100%; object-fit: contain; }
-.detail-tabs { display: flex; border-bottom: 1px solid #eee; justify-content: center; }
+
+/* 탭 바: 상단 고정(sticky) 속성 완전 제거 */
+.detail-tabs {
+    display: flex;
+    border-bottom: 1px solid #eee;
+    justify-content: center;
+    background: #fff;
+    position: relative; /* 고정 방지 */
+    z-index: 10;
+}
 .detail-tabs button { padding: 15px 60px; border: none; background: none; color: #999; font-size: 1.1rem; cursor: pointer; }
 .detail-tabs button.active { color: #333; font-weight: bold; border-bottom: 4px solid #333; }
-.info-tab-wrapper { width: 100%; }
-.menu-tab-content { width: 100%; }
+.info-tab-wrapper, .menu-tab-content { width: 100%; }
 </style>

@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed } from 'vue';
-import MenuCard from '@/components/customer/MenuCard.vue';
+import MenuCard from '@/components/store/MenuCard.vue';
 import CategoryModal from '@/components/owner/CategoryModal.vue';
 import MenuAddModal from '@/components/owner/MenuAddModal.vue';
 

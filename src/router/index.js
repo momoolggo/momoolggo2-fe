@@ -5,6 +5,7 @@ import { useUserStore } from '@/stores/userStore'
 import LandingView from '@/views/LandingView.vue'
 import StoreListView from '@/views/store/StoreListView.vue'
 import StoreDetailView from '@/views/store/StoreDetailView.vue'
+import WhatKindView from '@/views/servicee/WhatKindView.vue'
 
 // ── 사장님
 import OwnerSigninView  from '@/views/owner/OwnerSigninView.vue'
@@ -37,17 +38,21 @@ const routes = [
     component: LandingView,
   },
   {
-    path: '/storelist',
+    path: '/storelist',  //가게목록조회
     name: 'StoreList',
     component: StoreListView,
     meta: { requiresAuth: true, role: 'CUSTOMER' },
   },
   {
-    path: '/store/:id',
+    path: '/store/:id', //가게 상세조회
     name: 'StoreDetail',
     component: StoreDetailView,
     meta: { requiresAuth: true, role: 'CUSTOMER' },
   },
+
+  {path: '/whatkind', name: 'WhatKind', component: WhatKindView}, //룰렛페이지
+
+  {path: '/event', name: 'Event', component: () => import('@/views/servicee/EventView.vue')}, //이벤트 페이지
 
   // ── 사장님 인증
   {
@@ -101,6 +106,12 @@ const routes = [
       { path: 'review',  name: 'MyPageReview',  component: MyPageReviewView  },
       { path: 'cs',      name: 'MyPageCs',      component: MyPageCsView      },
     ],
+  },
+  {path: '/favorite', //찜목록
+     name: 'Favorite', component: () => import('@/views/servicee/FavoriteView.vue'), meta: { requiresAuth: true, role: 'CUSTOMER' },
+  },
+  {path: '/cart', //장바구니
+     name: 'Cart', component: () => import('@/views/servicee/CartView.vue'), meta: { requiresAuth: true, role: 'CUSTOMER' },
   },
 
   { path: '/cart',      name: 'Cart',      component: CartView,      meta: { requiresAuth: true, role: 'CUSTOMER' } },

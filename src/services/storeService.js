@@ -32,10 +32,15 @@ class StoreService {
         const res = await axios.get(`${this.#url}/favorite`, { params });
         return res.data;
     }
+    // 가게 찜 여부 체크
+    async checkFavorite(params) {
+        const res = await axios.get(`${this.#url}/favorite/check`,  {params} );
+        return res.data;
+    }
 
     // 가게 찜 토글
-    async toggleFavorite(storeId) {
-        const res = await axios.post(`${this.#url}/favorite/${storeId}`);
+    async toggleFavorite(params) {
+        const res = await axios.post(`${this.#url}/favorite`,  params );
         return res.data;
     }
 }

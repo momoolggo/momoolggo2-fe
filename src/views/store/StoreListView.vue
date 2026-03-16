@@ -1,10 +1,12 @@
 <script setup>
-import { computed, reactive, onMounted, ref } from 'vue';
+import { computed, reactive, onMounted, ref , watch } from 'vue';
 import { useRouter } from 'vue-router';
-import StoreCard from '@/components/customer/StoreCard.vue';
+import { useRoute } from 'vue-router';
+import StoreCard from '@/components/store/StoreCard.vue';
 import storeService from '@/services/storeService';
 
 const router = useRouter();
+const route = useRoute();
 const scrollContainer = ref(null);
 
 const categories = [
@@ -51,11 +53,25 @@ const getStores = async () => {
     }
 };
 
-const changeCategory = (id) => {
-    storeList.find.categoryId = id;
-    storeList.find.currentPage = 1;
-    getStores();
+const changeCategory = (name) => {//카테고리 누르면 param에 카테고리 이름이 들어감
+  router.push({
+    query: {
+      ...route.query,
+      category: name,
+    }
+  });
 };
+
+const getCategoryIdByName = (name) => { //카테고리 이름을 아이디로 변경해서 반환
+  const found = categories.find(c => c.name === name);
+  return found ? found.id : 0; // 못 찾으면 전체(0) 반환
+};
+
+watch(() => route.query.category, (newCategory) => {//query값 변경 감지해서 코드실행
+  storeList.find.categoryId = getCategoryIdByName(newCategory);
+  storeList.find.currentPage = 1;
+  getStores();
+}, { immediate: true });
 
 const scroll = (direction) => {
     if (scrollContainer.value) {
@@ -107,7 +123,7 @@ const currentCategoryName = computed(() => {
                 :key="cat.id"
                 class="category-item"
                 :class="{ active: storeList.find.categoryId === cat.id }"
-                @click="changeCategory(cat.id)"
+                @click="changeCategory(cat.name)"
             >
                 <span class="cat-icon">{{ cat.icon }}</span>
                 <span class="cat-name">{{ cat.name }}</span>

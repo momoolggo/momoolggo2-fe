@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 class CartService {
-    #url = '/cart';
+    #url = '/cart';       
 
     // 장바구니 담기
     async addToCart(cartData) {
@@ -17,19 +17,19 @@ class CartService {
 
     // 장바구니 수량 변경
     async updateCartItem(id, data) {
-        const res = await axios.put(`${this.#url}-items/${id}`, data);
+        const res = await axios.put(`${this.#url}/items/${id}`, data);  // ✅ /items/ 로 수정
         return res.data;
     }
 
     // 장바구니 항목 삭제
-    async deleteCartItem(cartId) {
-        const res = await axios.delete(`${this.#url}/${cartId}`);
+    async deleteCartItem(cartItemId) {
+        const res = await axios.delete(`${this.#url}/items/${cartItemId}`);  // ✅ /items/ 추가
         return res.data;
     }
 
     // 장바구니 전체 비우기
-    async clearCart() {
-        const res = await axios.delete(`${this.#url}/clear`);
+    async clearCart(userNo) {
+        const res = await axios.delete(`${this.#url}/clear/${userNo}`);  // ✅ userNo 추가
         return res.data;
     }
 

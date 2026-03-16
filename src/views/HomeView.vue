@@ -190,12 +190,11 @@ function goCategory(label) {
 }
 
 .category-item img {
-  width: 100%; /* 카드의 너비에 맞춤 */
+  width: 100%;
   max-width: 85px;
   height: auto;
   aspect-ratio: 1 / 1;
   object-fit: contain;
-  /* 이미지 하단을 둥글게 깎고 싶다면 추가 */
   border-radius: 0 0 15px 15px;
 }
 
@@ -220,14 +219,14 @@ function goCategory(label) {
 
 .banner-wrap {
   display: flex;
-  overflow-x: auto; /* 혹은 scroll */
-  scroll-snap-type: x mandatory; /* 필수 */
+  overflow-x: auto; 
+  scroll-snap-type: x mandatory; 
   -webkit-overflow-scrolling: touch; /* iOS 부드러운 스크롤 */
 }
 
 .banner-item {
-  flex: 0 0 100%; /* 너비를 꽉 채우도록 보장 */
-  scroll-snap-align: start; /* 필수 */
+  flex: 0 0 100%; 
+  scroll-snap-align: start; 
 }
 
 </style>

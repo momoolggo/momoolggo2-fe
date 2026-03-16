@@ -27,6 +27,13 @@ class StoreService {
         return res.data;
     }
 
+     // 메뉴, 가게 검색
+    async getSearchStore(params) {
+        const res = await axios.get(`${this.#url}/searchstore`, { params });
+        return res.data;
+    }
+
+
     // 가게 찜 조회
     async getFavorite(params) {
         const res = await axios.get(`${this.#url}/favorite`, { params });

@@ -55,7 +55,7 @@ const signout = async () => {
 
 .app-wrapper{
   width: 100%;
-  max-width: 480px;
+  
   margin: 0 auto;
   min-height: 100vh;
   position: relative;

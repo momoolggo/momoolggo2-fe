@@ -1,101 +1,707 @@
 <script setup>
-import { ref, computed } from 'vue';
-import MenuCard from '@/components/store/MenuCard.vue';
-import CategoryModal from '@/components/owner/CategoryModal.vue';
-import MenuAddModal from '@/components/owner/MenuAddModal.vue';
+import { ref, reactive, computed, onMounted } from 'vue'
+import ownerService from '@/services/ownerService'
+import { useStore } from '@/stores/useStore'
 
-const isCategoryModalOpen = ref(false);
-const isMenuAddModalOpen = ref(false);
+const storeInfo = useStore()
 
-const allCategories = ref([
-  { id: 1, name: '1인분 메뉴' },
-  { id: 2, name: '인기메뉴' },
-  { id: 3, name: '메인메뉴' }
-]);
+// ── 상태
+const menuList = ref([])
+const categories = ref([])
+const loading = ref(false)
 
-const selectedCategories = ref([
-  { id: 1, name: '1인분 메뉴' }
-]);
+// 모달 상태
+const showMenuModal = ref(false)
+const showCategoryModal = ref(false)
+const editMode = ref(false)
 
-const updateCategories = (payload) => {
-  allCategories.value = payload.all;
-  selectedCategories.value = payload.selected;
-  isCategoryModalOpen.value = false;
-};
+const menuForm = reactive({
+  menuId: null,
+  categoryId: null,
+  name: '',
+  menuInfo: '',
+  price: '',
+  menuPic: '',
+})
 
-// MenuCard가 사용하는 필드명: menuName, menuInfo, price, menuPic, soldout
-const menuList = ref([
-  { id: 1, menuName: '참돔 오차즈케', menuInfo: '밥 + 국산 참돔 + 녹차 + 후리카케 + 김 + 장국 구성입니다.', price: 21000, menuPic: null, soldout: 0, categoryId: 1 },
-  { id: 2, menuName: '연어 오차즈케', menuInfo: '밥 + 노르웨이산 연어 + 녹차 + 후리카케 + 김 구성입니다.', price: 19000, menuPic: null, soldout: 0, categoryId: 1 },
-  { id: 3, menuName: '명란 오차즈케', menuInfo: '밥 + 명란젓 + 녹차 + 후리카케 + 김 구성입니다.', price: 17000, menuPic: null, soldout: 1, categoryId: 2 },
-]);
+const categoryForm = reactive({
+  categoryId: null,
+  category: '',
+  editMode: false,
+})
 
+// ── 카테고리별 메뉴 그룹
 const groupedMenus = computed(() => {
-  return selectedCategories.value.map(cat => ({
-    category: cat,
-    menus: menuList.value.filter(menu => menu.categoryId === cat.id)
-  }));
-});
+  const groups = []
+  for (const cat of categories.value) {
+    const catId = cat.categoryId
+    const menus = menuList.value.filter(m => Number(m.categoryId) === Number(catId))
+    groups.push({ ...cat, menus })
+  }
+  return groups
+})
 
-const addMenu = (menuData) => {
-  menuList.value.push({
-    id: Date.now(),
-    menuName: menuData.name,
-    menuInfo: menuData.description,
-    price: menuData.price ? Number(menuData.price) : 0,
-    menuPic: menuData.image ? URL.createObjectURL(menuData.image) : null,
-    soldout: 0,
-    categoryId: menuData.categoryId
-  });
-  isMenuAddModalOpen.value = false;
-};
+// ── 데이터 로드
+const loadAll = async () => {
+  if (!storeInfo.myStoreId) return
+  loading.value = true
+  try {
+    const [menuRes, catRes] = await Promise.all([
+      ownerService.getMenus(storeInfo.myStoreId),
+      ownerService.getCategories(storeInfo.myStoreId),
+    ])
+    menuList.value = menuRes.resultData || []
+    categories.value = catRes.resultData || []
+  } catch (e) {
+    console.error('로드 실패:', e)
+    menuList.value = []
+    categories.value = []
+  } finally {
+    loading.value = false
+  }
+}
+
+onMounted(loadAll)
+
+// ══════════════════════════════════════
+//  메뉴 추가/수정 모달
+// ══════════════════════════════════════
+const openAddMenu = () => {
+  menuForm.menuId = null
+  menuForm.categoryId = categories.value.length ? categories.value[0].categoryId : null
+  menuForm.name = ''
+  menuForm.menuInfo = ''
+  menuForm.price = ''
+  menuForm.menuPic = ''
+  editMode.value = false
+  showMenuModal.value = true
+}
+
+const openEditMenu = (item) => {
+  menuForm.menuId = item.menuId
+  menuForm.categoryId = item.categoryId
+  menuForm.name = item.name
+  menuForm.menuInfo = item.menuInfo || ''
+  menuForm.price = item.price
+  menuForm.menuPic = item.menuPic || ''
+  editMode.value = true
+  showMenuModal.value = true
+}
+
+const saveMenu = async () => {
+  if (!menuForm.name) { alert('메뉴명을 입력해 주세요.'); return }
+  if (!menuForm.price) { alert('가격을 입력해 주세요.'); return }
+  if (!menuForm.categoryId) { alert('카테고리를 선택해 주세요.'); return }
+
+  try {
+    if (editMode.value) {
+      await ownerService.updateMenu({
+        menuId: menuForm.menuId,
+        name: menuForm.name,
+        menuInfo: menuForm.menuInfo,
+        price: Number(menuForm.price),
+        menuPic: menuForm.menuPic,
+      })
+    } else {
+      await ownerService.registerMenu({
+        storeId: storeInfo.myStoreId,
+        categoryId: Number(menuForm.categoryId),
+        name: menuForm.name,
+        menuInfo: menuForm.menuInfo,
+        price: Number(menuForm.price),
+        menuPic: menuForm.menuPic,
+      })
+    }
+    showMenuModal.value = false
+    await loadAll()
+  } catch {
+    alert('저장 실패')
+  }
+}
+
+const deleteMenu = async (menuId) => {
+  if (!confirm('이 메뉴를 삭제하시겠습니까?')) return
+  try {
+    await ownerService.deleteMenu(menuId)
+    await loadAll()
+  } catch {
+    alert('삭제 실패')
+  }
+}
+
+// ══════════════════════════════════════
+//  카테고리 관리 모달
+// ══════════════════════════════════════
+const openCategoryModal = () => {
+  categoryForm.categoryId = null
+  categoryForm.category = ''
+  categoryForm.editMode = false
+  showCategoryModal.value = true
+}
+
+const startEditCategory = (cat) => {
+  categoryForm.categoryId = cat.categoryId
+  categoryForm.category = cat.categoryName
+  categoryForm.editMode = true
+}
+
+const cancelEditCategory = () => {
+  categoryForm.categoryId = null
+  categoryForm.category = ''
+  categoryForm.editMode = false
+}
+
+const saveCategory = async () => {
+  if (!categoryForm.category.trim()) { alert('카테고리명을 입력해 주세요.'); return }
+
+  try {
+    if (categoryForm.editMode) {
+      await ownerService.updateCategory(categoryForm.categoryId, categoryForm.category.trim())
+    } else {
+      await ownerService.addCategory(storeInfo.myStoreId, categoryForm.category.trim())
+    }
+    categoryForm.categoryId = null
+    categoryForm.category = ''
+    categoryForm.editMode = false
+    await loadAll()
+  } catch {
+    alert('저장 실패')
+  }
+}
+
+const deleteCategory = async (categoryId) => {
+  if (!confirm('이 카테고리와 포함된 메뉴가 모두 삭제됩니다. 계속하시겠습니까?')) return
+  try {
+    await ownerService.deleteCategory(categoryId)
+    await loadAll()
+  } catch {
+    alert('삭제 실패')
+  }
+}
+
+// 가격 포맷
+const formatPrice = (price) => Number(price).toLocaleString() + '원'
 </script>
 
 <template>
-  <div class="owner-layout">
-    <main class="main-content">
-      <header class="menu-header">
-        <div class="header-left">
-          <h2>메뉴 관리</h2>
-          <button class="btn-category" @click="isCategoryModalOpen = true">카테고리 관리</button>
-        </div>
-        <button class="btn-add-menu" @click="isMenuAddModalOpen = true">+ 메뉴 추가하기</button>
-      </header>
+  <div class="menu-manage">
 
-      <section class="menu-list-section">
-        <template v-for="group in groupedMenus" :key="group.category.id">
-          <p class="category-title">{{ group.category.name }}</p>
-          <div class="menu-grid">
-            <MenuCard v-for="item in group.menus" :key="item.id" :menu="item" />
+    <!-- 상단 탭 / 버튼 -->
+    <div class="menu-topbar">
+      <div class="tab-group">
+        <span class="tab active">메뉴 관리</span>
+        <button class="tab tab-btn" @click="openCategoryModal">카테고리 관리</button>
+      </div>
+      <button class="btn-add-menu" @click="openAddMenu">+ 메뉴 추가하기</button>
+    </div>
+
+    <!-- 로딩 -->
+    <div v-if="loading" class="state-msg">불러오는 중...</div>
+
+    <!-- 메뉴 목록 (카테고리별) -->
+    <template v-else-if="groupedMenus.length">
+      <div v-for="group in groupedMenus" :key="group.categoryId" class="category-group">
+        <h3 class="category-title">{{ group.categoryName }}</h3>
+
+        <div v-if="!group.menus.length" class="empty-cat">등록된 메뉴가 없습니다.</div>
+
+        <div v-for="item in group.menus" :key="item.menuId" class="menu-row">
+          <div class="menu-text">
+            <div class="menu-name">{{ item.name }}</div>
+            <div v-if="item.menuInfo" class="menu-desc">{{ item.menuInfo }}</div>
+            <div class="menu-price">{{ formatPrice(item.price) }}</div>
           </div>
-        </template>
-      </section>
+          <div class="menu-right">
+            <img v-if="item.menuPic" :src="item.menuPic" class="menu-thumb" />
+            <div v-else class="menu-thumb-empty">🍽️</div>
+            <div class="menu-btns">
+              <button class="btn-sm btn-edit" @click="openEditMenu(item)">수정</button>
+              <button class="btn-sm btn-del" @click="deleteMenu(item.menuId)">삭제</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </template>
 
-      <CategoryModal
-        v-if="isCategoryModalOpen"
-        :initialCategories="allCategories || []"
-        :initialSelected="selectedCategories || []"
-        @close="isCategoryModalOpen = false"
-        @save="updateCategories"
-      />
+    <!-- 완전 빈 상태 -->
+    <div v-else class="state-msg">
+      <p>등록된 메뉴가 없습니다.</p>
+      <p class="sub">메뉴를 추가해 보세요!</p>
+    </div>
 
-      <MenuAddModal
-        v-if="isMenuAddModalOpen"
-        :categories="selectedCategories"
-        @close="isMenuAddModalOpen = false"
-        @save="addMenu"
-      />
-    </main>
+    <!-- ════════════════════════════════ -->
+    <!--  메뉴 추가 / 수정 모달           -->
+    <!-- ════════════════════════════════ -->
+    <div v-if="showMenuModal" class="overlay" @click.self="showMenuModal = false">
+      <div class="modal">
+        <div class="modal-head">
+          <h3>{{ editMode ? '메뉴 수정' : '메뉴 추가' }}</h3>
+          <button class="modal-x" @click="showMenuModal = false">✕</button>
+        </div>
+
+        <div class="field">
+          <label>메뉴명</label>
+          <input v-model="menuForm.name" type="text" placeholder="메뉴명을 입력하세요" maxlength="24" />
+          <span class="cnt">{{ menuForm.name.length }}/24</span>
+        </div>
+
+        <div class="field">
+          <label>메뉴 설명</label>
+          <textarea v-model="menuForm.menuInfo" placeholder="메뉴에 대한 설명을 입력하세요" maxlength="100"></textarea>
+          <span class="cnt">{{ menuForm.menuInfo.length }}/100</span>
+        </div>
+
+        <div class="field">
+          <label>가격</label>
+          <div class="price-row">
+            <input v-model="menuForm.price" type="number" placeholder="0" />
+            <span class="unit">원</span>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>카테고리</label>
+          <select v-model="menuForm.categoryId">
+            <option :value="null" disabled>카테고리를 선택하세요</option>
+            <option v-for="cat in categories" :key="cat.categoryId" :value="cat.categoryId">
+              {{ cat.categoryName }}
+            </option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>메뉴 사진</label>
+          <input v-model="menuForm.menuPic" type="text" placeholder="이미지 URL을 입력하세요" />
+        </div>
+
+        <div class="modal-foot">
+          <button class="btn-cancel" @click="showMenuModal = false">취소</button>
+          <button class="btn-save" @click="saveMenu">저장</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════ -->
+    <!--  카테고리 관리 모달              -->
+    <!-- ════════════════════════════════ -->
+    <div v-if="showCategoryModal" class="overlay" @click.self="showCategoryModal = false">
+      <div class="modal modal-cat">
+        <div class="modal-head">
+          <h3>카테고리 관리</h3>
+          <button class="modal-x" @click="showCategoryModal = false">✕</button>
+        </div>
+
+        <!-- 카테고리 목록 -->
+        <div class="cat-list">
+          <div v-for="cat in categories" :key="cat.categoryId" class="cat-item">
+            <span class="cat-name">{{ cat.categoryName }}</span>
+            <div class="cat-actions">
+              <button class="btn-xs" @click="startEditCategory(cat)">수정</button>
+              <button class="btn-xs btn-xs-del" @click="deleteCategory(cat.categoryId)">삭제</button>
+            </div>
+          </div>
+          <div v-if="!categories.length" class="empty-cat">등록된 카테고리가 없습니다.</div>
+        </div>
+
+        <!-- 추가 / 수정 입력 -->
+        <div class="cat-form">
+          <input
+            v-model="categoryForm.category"
+            type="text"
+            :placeholder="categoryForm.editMode ? '카테고리명 수정' : '새 카테고리명 입력'"
+            maxlength="20"
+            @keyup.enter="saveCategory"
+          />
+          <button class="btn-cat-save" @click="saveCategory">
+            {{ categoryForm.editMode ? '수정' : '추가' }}
+          </button>
+          <button v-if="categoryForm.editMode" class="btn-cat-cancel" @click="cancelEditCategory">취소</button>
+        </div>
+      </div>
+    </div>
+
   </div>
 </template>
 
 <style scoped>
-.owner-layout { display: flex; background-color: #f9f9f9; min-height: 100vh; }
-.main-content { flex: 1; padding: 40px; }
-.menu-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
-.header-left { display: flex; align-items: center; gap: 20px; }
-.btn-category { padding: 8px 16px; border-radius: 8px; border: 1px solid #ddd; background: #fff; cursor: pointer; }
-.btn-add-menu { padding: 10px 20px; border-radius: 8px; border: none; background: #eee; color: #666; cursor: pointer; font-weight: bold; }
-.category-title { font-size: 16px; color: #888; margin-bottom: 20px; }
-.menu-grid { display: flex; flex-direction: column; gap: 15px; }
+.menu-manage {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+/* ── 상단 탭바 ── */
+.menu-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 28px;
+  border-bottom: 2px solid #eee;
+  padding-bottom: 14px;
+}
+.tab-group {
+  display: flex;
+  gap: 8px;
+}
+.tab {
+  padding: 8px 18px;
+  font-size: 14px;
+  font-weight: 700;
+  border-radius: 8px;
+  border: 1.5px solid transparent;
+  background: none;
+  color: #888;
+  cursor: default;
+}
+.tab.active {
+  color: #A40C0B;
+  border-color: #A40C0B;
+  background: #fff4f4;
+}
+.tab-btn {
+  cursor: pointer;
+  border: 1.5px solid #e5e3dc;
+  transition: all 0.15s;
+}
+.tab-btn:hover {
+  border-color: #A40C0B;
+  color: #A40C0B;
+}
+.btn-add-menu {
+  padding: 10px 22px;
+  background: #A40C0B;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.btn-add-menu:hover { background: #8a0a09; }
+
+/* ── 카테고리 그룹 ── */
+.category-group {
+  margin-bottom: 32px;
+}
+.category-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #333;
+  padding: 10px 0;
+  border-bottom: 1.5px solid #eee;
+  margin-bottom: 12px;
+}
+
+/* ── 메뉴 행 ── */
+.menu-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 20px;
+  background: #fff;
+  border: 1.5px solid #eee;
+  border-radius: 12px;
+  margin-bottom: 10px;
+  transition: box-shadow 0.15s;
+}
+.menu-row:hover {
+  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+}
+
+.menu-text {
+  flex: 1;
+  min-width: 0;
+}
+.menu-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin-bottom: 4px;
+}
+.menu-desc {
+  font-size: 13px;
+  color: #888;
+  margin-bottom: 6px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.menu-price {
+  font-size: 15px;
+  font-weight: 700;
+  color: #A40C0B;
+}
+
+.menu-right {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-left: 20px;
+  flex-shrink: 0;
+}
+.menu-thumb {
+  width: 72px;
+  height: 72px;
+  border-radius: 10px;
+  object-fit: cover;
+}
+.menu-thumb-empty {
+  width: 72px;
+  height: 72px;
+  border-radius: 10px;
+  background: #f5f5f5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+}
+.menu-btns {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.btn-sm {
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.btn-edit {
+  background: #fff;
+  border: 1.5px solid #ddd;
+  color: #555;
+}
+.btn-edit:hover { border-color: #A40C0B; color: #A40C0B; }
+.btn-del {
+  background: #fff;
+  border: 1.5px solid #A40C0B;
+  color: #A40C0B;
+}
+.btn-del:hover { background: #A40C0B; color: #fff; }
+
+/* ── 상태 메시지 ── */
+.state-msg {
+  text-align: center;
+  padding: 60px 0;
+  color: #888;
+  font-size: 15px;
+}
+.state-msg .sub { font-size: 13px; color: #bbb; margin-top: 8px; }
+.empty-cat {
+  text-align: center;
+  color: #bbb;
+  padding: 20px 0;
+  font-size: 13px;
+}
+
+/* ══════════════════════════════ */
+/*  공통 모달                     */
+/* ══════════════════════════════ */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+.modal {
+  background: #fff;
+  border-radius: 18px;
+  padding: 30px 28px;
+  width: 460px;
+  max-height: 85vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.modal-head h3 { font-size: 18px; font-weight: 700; }
+.modal-x {
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  color: #888;
+}
+
+/* 필드 */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.field label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #444;
+}
+.field input,
+.field textarea,
+.field select {
+  width: 100%;
+  padding: 11px 14px;
+  border: 1.5px solid #e5e3dc;
+  border-radius: 10px;
+  font-size: 14px;
+  outline: none;
+  background: #fafafa;
+  box-sizing: border-box;
+  transition: border-color 0.15s;
+  font-family: inherit;
+}
+.field input:focus,
+.field textarea:focus,
+.field select:focus {
+  border-color: #A40C0B;
+  background: #fff;
+}
+.field textarea {
+  height: 90px;
+  resize: none;
+}
+.cnt {
+  align-self: flex-end;
+  font-size: 11px;
+  color: #bbb;
+}
+.price-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.price-row input { flex: 1; }
+.unit {
+  font-size: 14px;
+  font-weight: 600;
+  color: #444;
+}
+
+.modal-foot {
+  display: flex;
+  gap: 10px;
+  margin-top: 6px;
+}
+.btn-cancel {
+  flex: 1;
+  padding: 13px;
+  background: #f4f4f4;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.btn-cancel:hover { background: #e8e8e8; }
+.btn-save {
+  flex: 1;
+  padding: 13px;
+  background: #A40C0B;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.btn-save:hover { background: #8a0a09; }
+
+/* ══════════════════════════════ */
+/*  카테고리 모달                  */
+/* ══════════════════════════════ */
+.modal-cat {
+  width: 420px;
+}
+.cat-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 240px;
+  overflow-y: auto;
+  border: 1.5px solid #eee;
+  border-radius: 10px;
+  padding: 12px;
+}
+.cat-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  background: #fafafa;
+  border-radius: 8px;
+}
+.cat-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+}
+.cat-actions {
+  display: flex;
+  gap: 6px;
+}
+.btn-xs {
+  padding: 5px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 6px;
+  border: 1.5px solid #ddd;
+  background: #fff;
+  color: #555;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.btn-xs:hover { border-color: #A40C0B; color: #A40C0B; }
+.btn-xs-del { border-color: #A40C0B; color: #A40C0B; }
+.btn-xs-del:hover { background: #A40C0B; color: #fff; }
+
+.cat-form {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.cat-form input {
+  flex: 1;
+  padding: 10px 14px;
+  border: 1.5px solid #e5e3dc;
+  border-radius: 10px;
+  font-size: 14px;
+  outline: none;
+  background: #fafafa;
+  transition: border-color 0.15s;
+}
+.cat-form input:focus { border-color: #A40C0B; background: #fff; }
+.btn-cat-save {
+  padding: 10px 18px;
+  background: #A40C0B;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.btn-cat-save:hover { background: #8a0a09; }
+.btn-cat-cancel {
+  padding: 10px 14px;
+  background: #f4f4f4;
+  border: none;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.btn-cat-cancel:hover { background: #e8e8e8; }
 </style>

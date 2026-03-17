@@ -45,20 +45,18 @@ const routes = [
 
   // ── 고객 전용
   { path: '/home', name: 'Home', component: HomeView, meta: { requiresAuth: true, role: 'CUSTOMER' } },
-  {
-    path: '/mypage',
-    name: 'MyPage',
-    component: MyPageView,
-    meta: { requiresAuth: true, role: 'CUSTOMER' },
-    children: [
-      { path: 'profile', name: 'MyPageProfile', component: MyPageProfileView },
-      { path: 'address', name: 'MyPageAddress', component: MyPageAddressView },
-      { path: 'orders',  name: 'MyPageOrders',  component: MyPageOrdersView  },
-      { path: 'coupon',  name: 'MyPageCoupon',  component: MyPageCouponView  },
-      { path: 'review',  name: 'MyPageReview',  component: MyPageReviewView  },
-      { path: 'cs',      name: 'MyPageCs',      component: MyPageCsView      },
-    ],
-  },
+    
+    // /mypage는 메뉴 페이지
+{ path: '/mypage', name: 'MyPage', component: MyPageView, meta: { requiresAuth: true, role: 'CUSTOMER' } },
+
+// 하위 페이지들은 독립 라우트
+{ path: '/mypage/profile', name: 'MyPageProfile', component: MyPageProfileView, meta: { requiresAuth: true, role: 'CUSTOMER' } },
+{ path: '/mypage/address', name: 'MyPageAddress', component: MyPageAddressView, meta: { requiresAuth: true, role: 'CUSTOMER' } },
+{ path: '/mypage/orders',  name: 'MyPageOrders',  component: MyPageOrdersView,  meta: { requiresAuth: true, role: 'CUSTOMER' } },
+{ path: '/mypage/coupon',  name: 'MyPageCoupon',  component: MyPageCouponView,  meta: { requiresAuth: true, role: 'CUSTOMER' } },
+{ path: '/mypage/review',  name: 'MyPageReview',  component: MyPageReviewView,  meta: { requiresAuth: true, role: 'CUSTOMER' } },
+{ path: '/mypage/cs',      name: 'MyPageCs',      component: MyPageCsView,      meta: { requiresAuth: true, role: 'CUSTOMER' } },
+  
   { path: '/cart',     name: 'Cart',     component: CartView,     meta: { requiresAuth: true, role: 'CUSTOMER' } },
   { path: '/favorite', name: 'Favorite', component: FavoriteView, meta: { requiresAuth: true, role: 'CUSTOMER' } },
   { path: '/order',    name: 'Order',    component: OrderView,    meta: { requiresAuth: true, role: 'CUSTOMER' } },

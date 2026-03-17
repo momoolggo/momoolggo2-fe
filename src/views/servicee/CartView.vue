@@ -169,168 +169,327 @@ const clearCart = async () => {
 const goOrder = () => router.push('/order');
 const goStore = () => state.storeId ? router.push(`/store/${state.storeId}`) : router.push('/storelist');
 </script>
-
 <template>
-<div class="cart-page">
-    <h2 class="cart-title">장바구니</h2>
+  <div class="cart-page">
+      <h2 class="cart-title">장바구니</h2>
 
-    <div class="cart-layout">
+      <div class="cart-container">
+          <template v-if="state.cartItems.length > 0">
+              <div class="store-header" @click="goStore">
+                  <span class="store-icon">🍱</span>
+                  <span class="store-name">{{ state.storeName }}</span>
+                  <span class="arrow-icon">❯</span>
+              </div>
 
-        <aside class="summary-panel">
-            <template v-if="state.cartItems.length > 0">
-                <div class="store-badge" @click="goStore" style="cursor: pointer;">
-                    <span class="store-icon">🏪</span>
-                    <span class="store-name">{{ state.storeName }}</span>
-                </div>
+              <section class="cart-items-card">
+                  <div class="items-toolbar">
+                      <button class="toolbar-btn" @click="toggleAll">
+                          {{ allChecked ? '전체해제' : '전체선택' }}
+                      </button>
+                      <button class="toolbar-btn delete" @click="deleteSelected">선택삭제</button>
+                  </div>
 
-                <div class="price-section">
-                    <div class="section-label">메뉴 금액</div>
-                    <div class="price-breakdown">
-                        <div v-for="item in state.cartItems" :key="item.id" class="breakdown-row">
-                            <span class="breakdown-name">{{ item.menuName }}</span>
-                            <span class="breakdown-val">{{ (item.price * item.quantity).toLocaleString() }}원</span>
-                        </div>
-                    </div>
-                    <div class="breakdown-total">
-                        <span>합계</span>
-                        <span>{{ menuTotal.toLocaleString() }}원</span>
-                    </div>
-                </div>
+                  <div v-for="item in state.cartItems" :key="item.id" class="cart-item">
+                      <img :src="item.menuPic || '/images/default-menu.png'" class="item-img" />
 
-                <div class="price-section">
-                    <div class="price-row">
-                        <span class="section-label">배달팁</span>
-                        <span class="price-val">{{ state.deliveryTip.toLocaleString() }}원</span>
-                    </div>
-                </div>
+                      <div class="item-info">
+                          <div class="item-name">{{ item.menuName }}</div>
+                          <div class="item-price">가격: {{ item.price.toLocaleString() }}원</div>
 
-                <div class="total-section">
-                    <span class="total-label">총 결제 금액</span>
-                    <span class="total-val">{{ totalPrice.toLocaleString() }}원</span>
-                </div>
+                          <div class="item-controls">
+                              <button class="option-btn">옵션변경</button>
+                              <div class="quantity-ctrl">
+                                  <button @click="changeQuantity(item, -1)">−</button>
+                                  <span>{{ item.quantity }}</span>
+                                  <button @click="changeQuantity(item, +1)">+</button>
+                              </div>
+                          </div>
+                      </div>
 
-                <button class="order-btn" @click="goOrder">주문하기</button>
-                <button class="clear-btn" @click="clearCart">장바구니 비우기</button>
-            </template>
+                      <input type="checkbox" v-model="item.checked" class="item-check" />
+                  </div>
+              </section>
 
-            <template v-else>
-                <div class="store-badge" @click="goStore" style="cursor: pointer;">
-                    <span class="store-icon">🔎</span>
-                    <span class="store-name">가게를 둘러보세요</span>
-                </div>
+              <section class="summary-card">
+                  <div class="price-row">
+                      <span class="label">메뉴 금액</span>
+                      <span class="val">{{ menuTotal.toLocaleString() }}원</span>
+                  </div>
+                  <div class="price-details">
+                      <div v-for="item in state.cartItems" :key="'detail-'+item.id" class="detail-line">
+                          <span>{{ item.menuName }} x {{item.quantity}}</span>
+                          <span>{{ (item.price * item.quantity).toLocaleString() }}원</span>
+                      </div>
+                  </div>
 
-                <div class="price-section">
-                    <div class="price-row">
-                        <span class="section-label">메뉴 금액</span>
-                        <span class="price-val">0원</span>
-                    </div>
-                </div>
-                <div class="price-section">
-                    <div class="price-row">
-                        <span class="section-label">배달팁</span>
-                        <span class="price-val">0원</span>
-                    </div>
-                </div>
+                  <div class="price-row">
+                      <span class="label">배달팁</span>
+                      <span class="val">{{ state.deliveryTip.toLocaleString() }}원</span>
+                  </div>
+                  <div class="price-row">
+                      <span class="label">할인 쿠폰</span>
+                      <span class="val">0원</span>
+                  </div>
 
-                <div class="total-section">
-                    <span class="total-label">총 결제 금액</span>
-                    <span class="total-val">0원</span>
-                </div>
+                  <div class="total-row">
+                      <span class="total-label">총 결제 금액</span>
+                      <span class="total-val">{{ totalPrice.toLocaleString() }}원</span>
+                  </div>
+              </section>
 
-                <button class="order-btn secondary" @click="goStore">주문 하러 가기</button>
-            </template>
-        </aside>
+              <div class="action-area">
+                  <button class="order-btn" @click="goOrder">주문하기</button>
+                  <button class="clear-btn-box" @click="clearCart">장바구니 전체 비우기</button>
+              </div>
+          </template>
 
-        <section class="cart-items-panel">
-            <template v-if="state.cartItems.length > 0">
-                <div class="items-toolbar">
-                    <button class="toolbar-btn select-all" @click="toggleAll">
-                        {{ allChecked ? '전체해제' : '전체선택' }}
-                    </button>
-                    <button class="toolbar-btn delete-selected" @click="deleteSelected">선택삭제</button>
-                </div>
-
-                <div class="item-list">
-                    <div v-for="item in state.cartItems" :key="item.id" class="cart-item">
-                        <input type="checkbox" v-model="item.checked" class="item-check" />
-
-                        <div class="item-info">
-                            <div class="item-name">{{ item.menuName }}</div>
-                            <div class="item-price">가격: {{ item.price.toLocaleString() }}원</div>
-                            <button class="option-btn">옵션변경</button>
-                            <div class="quantity-ctrl">
-                                <button @click="changeQuantity(item, -1)">−</button>
-                                <span>{{ item.quantity }}</span>
-                                <button @click="changeQuantity(item, +1)">+</button>
-                            </div>
-                        </div>
-
-                        <img
-                            :src="item.menuPic || '/images/default-menu.png'"
-                            class="item-img"
-                            :alt="item.menuName"
-                        />
-                    </div>
-                </div>
-            </template>
-
-            <template v-else>
-                <div class="empty-cart">
-                    <span class="empty-icon">⚠️</span>
-                    <p>담은 메뉴가 없습니다</p>
-                </div>
-            </template>
-        </section>
-
-    </div>
-</div>
+          <template v-else>
+              <div class="empty-cart">
+                  <span class="empty-icon">⚠️</span>
+                  <p>담은 메뉴가 없습니다</p>
+                  <button class="order-btn" @click="goStore">메뉴 담으러 가기</button>
+              </div>
+          </template>
+      </div>
+  </div>
 </template>
 
 <style scoped>
-/* 사용자의 기존 스타일 유지 */
-.cart-page { max-width: 1100px; margin: 0 auto; padding: 40px 20px 80px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-.cart-title { text-align: center; font-size: 1.5rem; font-weight: 600; margin-bottom: 30px; color: #111; }
-.cart-layout { display: grid; grid-template-columns: 4fr 6fr; gap: 20px; align-items: start; }
-.summary-panel { border: 1px solid #e0e0e0; border-radius: 12px; padding: 24px 22px; background: #fff; position: sticky; top: 20px; }
-.store-badge:hover { transform: translateX(4px); }
-.store-badge { cursor: pointer; transition: transform 0.2s; display: flex; align-items: center; gap: 8px; font-size: 0.95rem; font-weight: 700; color: #111; padding-bottom: 16px; border-bottom: 1px solid #f0f0f0; margin-bottom: 4px; }
-.store-icon { font-size: 1.1rem; }
-.price-section { padding: 14px 0; border-bottom: 1px solid #f0f0f0; }
-.section-label { font-size: 0.83rem; color: #555; margin-bottom: 8px; font-weight: 500; }
-.price-breakdown { display: flex; flex-direction: column; gap: 5px; margin-bottom: 8px; }
-.breakdown-row { display: flex; justify-content: space-between; font-size: 0.78rem; color: #999; }
-.breakdown-name { max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.breakdown-total { display: flex; justify-content: space-between; font-size: 0.85rem; color: #333; font-weight: 500; padding-top: 6px; border-top: 1px dashed #eee; }
-.price-row { display: flex; justify-content: space-between; align-items: center; }
-.price-val { font-size: 0.85rem; color: #888; }
-.total-section { display: flex; justify-content: space-between; align-items: center; padding: 18px 0 20px; }
-.total-label { font-size: 0.95rem; font-weight: 600; color: #111; }
-.total-val { font-size: 1.15rem; font-weight: 700; color: #111; }
-.order-btn { width: 100%; padding: 13px; background: #4A90E2; color: #fff; border: none; border-radius: 8px; font-size: 0.95rem; font-weight: 600; cursor: pointer; transition: background 0.2s; margin-bottom: 10px; }
-.order-btn:hover { background: #357ABD; }
-.order-btn.secondary { margin-bottom: 0; }
-.clear-btn { width: 100%; padding: 10px; background: #fff; color: #aaa; border: 1px solid #e0e0e0; border-radius: 8px; font-size: 0.85rem; cursor: pointer; transition: all 0.2s; }
-.clear-btn:hover { background: #fff0f0; color: #ff4d4f; border-color: #ffccc7; }
-.cart-items-panel { border: 1px solid #e0e0e0; border-radius: 12px; background: #fff; min-height: 480px; overflow: hidden; }
-.items-toolbar { display: flex; justify-content: flex-end; gap: 8px; padding: 14px 16px; border-bottom: 1px solid #f0f0f0; }
-.toolbar-btn { padding: 6px 14px; border-radius: 6px; border: none; font-size: 0.82rem; cursor: pointer; font-weight: 500; }
-.select-all { background: #4A90E2; color: #fff; }
-.delete-selected { background: #ff4d4f; color: #fff; }
-.item-list { display: flex; flex-direction: column; }
-.cart-item { display: flex; align-items: center; gap: 16px; padding: 20px 18px; border-bottom: 1px solid #f5f5f5; }
-.cart-item:last-child { border-bottom: none; }
-.item-check { width: 17px; height: 17px; cursor: pointer; flex-shrink: 0; }
-.item-info { flex: 1; display: flex; flex-direction: column; gap: 7px; }
-.item-name { font-size: 0.95rem; font-weight: 600; color: #111; }
-.item-price { font-size: 0.82rem; color: #888; }
-.option-btn { width: fit-content; padding: 5px 12px; border: 1px solid #ddd; border-radius: 6px; background: #fff; font-size: 0.78rem; color: #555; cursor: pointer; }
-.option-btn:hover { background: #f5f5f5; }
-.item-img { width: 100px; height: 100px; border-radius: 10px; object-fit: cover; background: #f0f0f0; flex-shrink: 0; }
-.quantity-ctrl { display: flex; align-items: center; width: fit-content; border: 1px solid #ddd; border-radius: 6px; overflow: hidden; }
-.quantity-ctrl button { width: 30px; height: 28px; border: none; background: #f5f5f5; font-size: 1rem; cursor: pointer; color: #333; }
-.quantity-ctrl button:hover { background: #e8e8e8; }
-.quantity-ctrl span { width: 34px; text-align: center; font-size: 0.9rem; font-weight: 500; border-left: 1px solid #ddd; border-right: 1px solid #ddd; line-height: 28px; }
-.empty-cart { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 480px; gap: 14px; background: #fafafa; }
-.empty-icon { font-size: 2.5rem; }
-.empty-cart p { font-size: 1rem; color: #999; font-weight: 500; }
+.cart-page {
+  width: 100%;
+  background: #f8f9fa;
+  min-height: 100vh;
+  padding-bottom: 100px;
+}
+
+.cart-title {
+  background: #fff;
+  margin: 0;
+  padding: 20px;
+  text-align: center;
+  font-size: 1.2rem;
+  font-weight: 700;
+  border-bottom: 1px solid #eee;
+}
+
+.cart-container {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* --- [수정] 매장 헤더 호버 효과 추가 --- */
+.store-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: fit-content; /* 텍스트 길이에 맞춤 */
+}
+
+.store-header:hover {
+  opacity: 0.7;
+  transform: translateX(2px);
+}
+
+.store-name {
+  font-weight: 800;
+  font-size: 1.1rem;
+  color: #111;
+}
+
+.arrow-icon {
+  font-size: 0.8rem;
+  color: #bbb;
+}
+
+/* 아이템 리스트 카드 */
+.cart-items-card {
+  background: #fff;
+  border: 1px solid #e9ecef;
+  border-radius: 15px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+}
+
+.items-toolbar {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid #f1f3f5;
+}
+
+.toolbar-btn {
+  background: none;
+  border: none;
+  color: #666;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.toolbar-btn.delete { color: #ff4d4f; }
+
+.cart-item {
+  position: relative;
+  display: flex;
+  padding: 20px 16px;
+  gap: 12px;
+  border-bottom: 1px solid #f8f9fa;
+}
+
+.item-img {
+  width: 85px;
+  height: 85px;
+  border-radius: 12px;
+  object-fit: cover;
+}
+
+.item-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.item-name { font-weight: 700; font-size: 1rem; color: #222; }
+.item-price { font-size: 0.9rem; color: #888; margin-bottom: 8px; }
+
+.item-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.option-btn {
+  padding: 6px 12px;
+  border: 1px solid #eee;
+  border-radius: 6px;
+  background: #f8f9fa;
+  font-size: 0.75rem;
+  color: #666;
+  cursor: pointer;
+}
+
+.quantity-ctrl {
+  display: flex;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  background: #fff;
+}
+
+.quantity-ctrl button {
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.quantity-ctrl span {
+  width: 30px;
+  text-align: center;
+  line-height: 28px;
+  font-size: 0.85rem;
+  border-left: 1px solid #eee;
+  border-right: 1px solid #eee;
+}
+
+.item-check {
+  position: absolute;
+  top: 20px;
+  right: 16px;
+  width: 22px;
+  height: 22px;
+  accent-color: #4A90E2;
+  cursor: pointer;
+}
+
+/* 금액 상세 카드 */
+.summary-card {
+  background: #fff;
+  border: 1px solid #e9ecef;
+  border-radius: 15px;
+  padding: 20px 16px;
+}
+
+.price-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.price-details {
+  padding: 0 0 12px 0;
+  border-bottom: 1px solid #f1f3f5;
+  margin-bottom: 12px;
+}
+
+.detail-line {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  color: #888;
+  margin-bottom: 6px;
+}
+
+.total-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 15px;
+}
+
+.total-label { font-size: 1.1rem; font-weight: 800; }
+.total-val { font-size: 1.3rem; font-weight: 800; color: #4A90E2; }
+
+/* --- [수정] 하단 버튼 구역: 비우기 버튼 디자인 강화 --- */
+.action-area {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.order-btn {
+  width: 100%;
+  padding: 18px;
+  background: #4A90E2;
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  font-size: 1.15rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(74, 144, 226, 0.2);
+}
+
+.order-btn:active {
+  background: #357ABD;
+}
+
+.clear-btn-box {
+  width: 100%;
+  padding: 14px;
+  background: #fff;
+  color: #ff4d4f;
+  border: 1px solid #ff4d4f; /* 테두리를 주어 버튼임을 강조 */
+  border-radius: 12px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.clear-btn-box:hover {
+  background: #fff1f0;
+}
+
+.empty-cart {
+  text-align: center;
+  padding: 100px 0;
+}
 </style>

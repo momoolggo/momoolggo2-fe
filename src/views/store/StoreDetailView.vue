@@ -46,15 +46,15 @@ const getMenuList = async () => {
     }
 };
 
-const getReviewList = async () => {
-    const storeId = route.params.id;
-    try {
-        const res = await storeService.getReviewList(storeId);
-        state.review = res.resultData || [];
-    } catch (error) {
-        console.error("리뷰 데이터 로드 실패:", error);
-    }
-};
+// const getReviewList = async () => {
+//     const storeId = route.params.id;
+//     try {
+//         const res = await storeService.getReviewList(storeId);
+//         state.review = res.resultData || [];
+//     } catch (error) {
+//         console.error("리뷰 데이터 로드 실패:", error);
+//     }
+// };
 
 const toggleWish = async () => {
     const params = {
@@ -87,7 +87,7 @@ const groupedMenu = computed(() => {
 onMounted(() => {
     getStoreDetail();
     getMenuList();
-    getReviewList();
+    // getReviewList();
 });
 
 const openMenuModal = (menu) => {
@@ -99,124 +99,225 @@ const handleAddToCart = (item) => {
     state.isModalOpen = false;
 };
 </script>
-
 <template>
-<div class="store-detail-view">
-    <section class="store-header">
-        <div class="info-container">
-            <div class="info-visual">
-                <img :src="state.storeInfo.storePic || '/images/default-store.png'" class="store-img" />
-            </div>
-            <div class="info-content">
-                <div class="title-row">
-                    <h1>{{ state.storeInfo.storeName }}</h1>
-                    <button
-                        class="wish-btn"
-                        :class="{ 'is-active': state.isWished }"
-                        @click="toggleWish"
-                    >
-                        <span class="heart-icon">{{ state.isWished ? '♥' : '♡' }}</span>
-                    </button>
-                </div>
-                <div class="rating-row">
-                    <span class="star">⭐ {{ state.storeInfo.ratingAvg }}</span>
-                    <span class="review-count">({{ state.storeInfo.ratingCount }})</span>
-                </div>
-                <div class="delivery-spec">
-                    <div class="spec-item">
-                        <span class="label">최소 주문 금액</span>
-                        <span class="val">{{ state.storeInfo.minPrice?.toLocaleString() }}원</span>
-                    </div>
-                    <div class="spec-item">
-                        <span class="label">예상 배달 시간</span>
-                        <span class="val">30~40분</span>
-                    </div>
-                    <div class="spec-item">
-                        <span class="label">배달 팁</span>
-                        <span class="val">1,500원</span>
-                    </div>
-                </div>
-            </div>
-            <div class="info-character">
-                <img src="/favicon.png" alt="character" />
-            </div>
-        </div>
-    </section>
+  <div class="store-detail-view">
+      <section class="store-cover">
+          <img :src="state.storeInfo.storePic || '/images/default-store.png'" class="cover-img" />
+          <button class="back-btn" @click="$router.back()">←</button>
+      </section>
 
-    <nav class="detail-tabs">
-        <button :class="{ active: state.activeTab === 'menu' }" @click="state.activeTab = 'menu'">메뉴</button>
-        <button :class="{ active: state.activeTab === 'info' }" @click="state.activeTab = 'info'">가게정보</button>
-        <button :class="{ active: state.activeTab === 'review' }" @click="state.activeTab = 'review'">리뷰</button>
-    </nav>
+      <section class="store-header-info">
+          <div class="title-row">
+              <h1>{{ state.storeInfo.storeName }}</h1>
+              <button
+                  class="wish-btn"
+                  :class="{ 'is-active': state.isWished }"
+                  @click="toggleWish"
+              >
+                  <span class="heart-icon">{{ state.isWished ? '♥' : '♡' }}</span>
+              </button>
+          </div>
 
-    <div v-if="state.activeTab === 'menu'" class="menu-tab-content">
-        <MenuCategory
-            v-for="group in groupedMenu"
-            :key="group.name"
-            :category-name="group.name"
-            :items="group.items"
-            @click-menu="openMenuModal"
-        />
-    </div>
+          <div class="rating-row">
+              <span class="star">⭐ {{ state.storeInfo.ratingAvg }}</span>
+              <span class="review-count">({{ state.storeInfo.ratingCount }})</span>
+          </div>
 
-    <div v-if="state.activeTab === 'info'" class="info-tab-wrapper">
-        <StoreInfo :state="state.storeInfo" />
-    </div>
+          <div class="delivery-spec-grid">
+              <div class="spec-item">
+                  <span class="label">최소 주문 금액</span>
+                  <span class="val">{{ state.storeInfo.minPrice?.toLocaleString() }}원</span>
+              </div>
+              <div class="spec-item">
+                  <span class="label">예상 배달 시간</span>
+                  <span class="val">30~60분</span>
+              </div>
+              <div class="spec-item">
+                  <span class="label">배달 팁</span>
+                  <span class="val">1,500원</span>
+              </div>
+          </div>
+      </section>
 
-    <div v-if="state.activeTab === 'review'" class="review-container">
-        <p v-if="state.review.length === 0">아직 작성된 리뷰가 없습니다.</p>
-        <div v-else>
-            <p>총 {{ state.review.length }}개의 리뷰가 있습니다.</p>
-        </div>
-    </div>
+      <nav class="detail-tabs">
+          <button :class="{ active: state.activeTab === 'menu' }" @click="state.activeTab = 'menu'">메뉴</button>
+          <button :class="{ active: state.activeTab === 'info' }" @click="state.activeTab = 'info'">가게정보</button>
+          <button :class="{ active: state.activeTab === 'review' }" @click="state.activeTab = 'review'">리뷰</button>
+      </nav>
 
-    <MenuDetailModal
-        :menu="state.selectedMenu"
-        :is-open="state.isModalOpen"
-        @close="state.isModalOpen = false"
-        @add-to-cart="handleAddToCart"
-    />
-</div>
-</template>
+      <div class="tab-content-area">
+          <div v-if="state.activeTab === 'menu'" class="menu-list-wrapper">
+              <MenuCategory
+                  v-for="group in groupedMenu"
+                  :key="group.name"
+                  :category-name="group.name"
+                  :items="group.items"
+                  @click-menu="openMenuModal"
+              />
+          </div>
 
-<style scoped>
-.store-detail-view { max-width: 1100px; margin: 0 auto; background: #fff; }
-.store-header { padding: 40px; border-bottom: 8px solid #f5f5f5; }
-.info-container { display: flex; gap: 40px; align-items: flex-start; }
-.store-img { width: 350px; height: 230px; border-radius: 12px; object-fit: cover; }
-.info-content { flex: 1; }
-.title-row { display: flex; align-items: center; justify-content: space-between; gap: 15px; margin-bottom: 10px; }
-.title-row h1 { font-size: 2.2rem; margin: 0; }
+          <div v-if="state.activeTab === 'info'" class="info-tab-wrapper">
+              <StoreInfo :state="state.storeInfo" />
+          </div>
 
-.wish-btn {
-    background: #fff; border: 1px solid #ddd; border-radius: 50%;
-    width: 48px; height: 48px; display: flex; align-items: center; justify-content: center;
-    cursor: pointer; transition: all 0.2s ease; box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-}
-.heart-icon { font-size: 26px; color: #bbb; line-height: 1; margin-top: 2px; }
-.wish-btn.is-active { border-color: #ff5252; background-color: #fff5f5; }
-.wish-btn.is-active .heart-icon { color: #ff5252; }
-.wish-btn:hover { transform: scale(1.05); }
+          <div v-if="state.activeTab === 'review'" class="review-container">
+              <div class="review-summary">
+                  <p v-if="state.review.length === 0">아직 작성된 리뷰가 없습니다.</p>
+                  <p v-else>총 <strong>{{ state.review.length }}</strong>개의 리뷰가 있습니다.</p>
+              </div>
+          </div>
+      </div>
 
-.rating-row { font-size: 1.2rem; margin-bottom: 30px; }
-.star { color: #FFD700; font-weight: bold; }
-.delivery-spec { display: flex; flex-direction: column; gap: 12px; }
-.spec-item { display: flex; font-size: 1rem; }
-.spec-item .label { width: 120px; color: #999; }
-.spec-item .val { color: #333; font-weight: 500; }
-.info-character { width: 150px; align-self: flex-end; }
-.info-character img { width: 100%; object-fit: contain; }
+      <MenuDetailModal
+          :menu="state.selectedMenu"
+          :is-open="state.isModalOpen"
+          @close="state.isModalOpen = false"
+          @add-to-cart="handleAddToCart"
+      />
+  </div>
+  </template>
 
-/* 탭 바: 상단 고정(sticky) 속성 완전 제거 */
-.detail-tabs {
-    display: flex;
-    border-bottom: 1px solid #eee;
-    justify-content: center;
-    background: #fff;
-    position: relative; /* 고정 방지 */
-    z-index: 10;
-}
-.detail-tabs button { padding: 15px 60px; border: none; background: none; color: #999; font-size: 1.1rem; cursor: pointer; }
-.detail-tabs button.active { color: #333; font-weight: bold; border-bottom: 4px solid #333; }
-.info-tab-wrapper, .menu-tab-content { width: 100%; }
-</style>
+  <style scoped>
+  /* 전체 컨테이너 */
+  .store-detail-view {
+      width: 100%;
+      background: #fff;
+      min-height: 100vh;
+      padding-bottom: 60px; /* 하단 네비게이션 바 공간 */
+  }
+
+  /* 상단 커버 이미지 */
+  .store-cover {
+      position: relative;
+      width: 100%;
+      height: 250px;
+  }
+  .cover-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+  }
+  .back-btn {
+      position: absolute;
+      top: 15px;
+      left: 15px;
+      background: rgba(0,0,0,0.3);
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 36px;
+      height: 36px;
+      font-size: 1.2rem;
+      cursor: pointer;
+  }
+
+  /* 가게 정보 섹션 */
+  .store-header-info {
+      padding: 24px 20px;
+      text-align: left; /* 이미지 디자인은 좌측 정렬 기반 */
+  }
+
+  .title-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+  }
+
+  .title-row h1 {
+      font-size: 1.6rem;
+      font-weight: 800;
+      margin: 0;
+      color: #111;
+  }
+
+  .wish-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 5px;
+  }
+  .heart-icon {
+      font-size: 1.8rem;
+      color: #ccc;
+  }
+  .wish-btn.is-active .heart-icon {
+      color: #ff5252;
+  }
+
+  .rating-row {
+      font-size: 1.1rem;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+  }
+  .star { color: #FFD700; font-weight: bold; }
+  .review-count { color: #222; font-weight: 500; }
+
+  /* 배달 상세 정보 (Grid 레이아웃) */
+  .delivery-spec-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding-top: 15px;
+      border-top: 1px solid #f5f5f5;
+  }
+
+  .spec-item {
+      display: flex;
+      align-items: center;
+      font-size: 0.95rem;
+  }
+
+  .spec-item .label {
+      width: 100px;
+      color: #666;
+  }
+
+  .spec-item .val {
+      color: #222;
+      font-weight: 500;
+  }
+
+  /* 탭 바 스타일 */
+  .detail-tabs {
+      display: flex;
+      border-bottom: 1px solid #eee;
+      background: #fff;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+  }
+
+  .detail-tabs button {
+      flex: 1;
+      padding: 14px 0;
+      border: none;
+      background: none;
+      color: #999;
+      font-size: 1rem;
+      font-weight: 500;
+      cursor: pointer;
+  }
+
+  .detail-tabs button.active {
+      color: #111;
+      font-weight: 700;
+      border-bottom: 3px solid #111;
+  }
+
+  /* 탭 컨텐츠 영역 */
+  .tab-content-area {
+      background: #f8f9fa; /* 메뉴 카드 구분을 위한 연회색 배경 */
+      padding: px;
+  }
+
+  .review-summary {
+      background: #fff;
+      padding: 20px;
+      text-align: center;
+      color: #666;
+      border-radius: 12px;
+  }
+  </style>

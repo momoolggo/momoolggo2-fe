@@ -60,19 +60,6 @@ const signout = async () => {
   min-height: 100vh;
   position: relative;
   background: #fff;
-  overflow: hidden;
+
 }
-
-.app-main {
-  max-width: 480px;
-  margin: 0 auto;
-}
-
-body {
-  background-color: #fff;
-  margin: 0;
-  padding:0 ;
-}
-
-
 </style>

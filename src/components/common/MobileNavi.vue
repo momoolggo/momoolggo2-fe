@@ -43,18 +43,18 @@ const goTo = (page) => {
   bottom: 0;
   left: 0;
   right: 0;
-  z-index: 999; 
+  z-index: 999;
 
 
   max-width: 480px; /* home-page와 동일한 너비 설정 */
-  margin: 0 auto;   
+  margin: 0 auto;
   height: 70px;
   background-color: #ffffff;
   border-top: 1px solid #eeeeee;
   display: flex;
   justify-content: space-around;
   align-items: center;
-  padding-bottom: env(safe-area-inset-bottom); 
+  padding-bottom: env(safe-area-inset-bottom);
 }
 
 .nav-item {

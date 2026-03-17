@@ -67,7 +67,7 @@ const formattedNotice = computed(() => {
           </div>
 
           <div class="info-row mt-xl">
-            <dt>총 주문수</dt>
+            <dt>가게 총 주문수</dt>
             <dd>{{ state.orderCount?.toLocaleString() || 0 }} 건</dd>
           </div>
 

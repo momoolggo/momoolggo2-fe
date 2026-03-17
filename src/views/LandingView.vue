@@ -36,7 +36,7 @@ const goOrder = () => {
         <div class="hero_text">
           <p class="hero_sub">대구·경북 배달은</p>
           <h1 class="hero_title">
-            뭐올꼬<br />
+            뭐물꼬<br />
             <span class="hero_accent">하나면 끝!</span>
           </h1>
           <p class="hero_desc">
@@ -349,7 +349,7 @@ const goOrder = () => {
 /* ════════════════════════════════
    모바일 반응형
 ════════════════════════════════ */
-@media (max-width: 768px) {
+@media (max-width: 2000px) {
 
   /* 네비바 모바일 */
   .navbar_inner { padding: 0 16px; }

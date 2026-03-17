@@ -73,6 +73,36 @@ class OwnerService {
         const res = await axios.get(`${this.#url}/sales/ranking`, { params: { period } });
     return res.data;
     }
+
+    // 메뉴 목록 조회
+    async getMenus(storeId) {
+        const res = await axios.get(`${this.#url}/menu`, { params: { storeId } });
+        return res.data;
+    }
+
+    // 카테고리 목록 조회
+    async getCategories(storeId) {
+        const res = await axios.get(`${this.#url}/category`, { params: { storeId } });
+        return res.data;
+    }
+
+    // 카테고리 추가
+    async addCategory(storeId, category) {
+        const res = await axios.post(`${this.#url}/category`, { storeId, category });
+        return res.data;
+    }
+
+    // 카테고리 수정
+    async updateCategory(categoryId, category) {
+        const res = await axios.put(`${this.#url}/category`, { categoryId, category });
+        return res.data;
+    }
+
+    // 카테고리 삭제
+    async deleteCategory(categoryId) {
+        const res = await axios.delete(`${this.#url}/category/${categoryId}`);
+        return res.data;
+    }
 }
 
 export default new OwnerService();

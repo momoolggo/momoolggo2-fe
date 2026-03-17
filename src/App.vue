@@ -11,7 +11,7 @@ const router = useRouter()
 const userStore = useUserStore()
 
 // 헤더를 숨길 페이지
-const noHeaderPages = ['/', '/owner/signin', '/owner/signup']
+const noHeaderPages = ['/', '/owner/signin', '/owner/signup', '/customer/signin', '/customer/signup']
 const showHeader = computed(() => !noHeaderPages.includes(route.path));
 
 onMounted(() => {
@@ -38,7 +38,11 @@ const signout = async () => {
       />
       <router-view />
       <TokenExpiryModal />
-      <MobileNavi />
+      <MobileNavi 
+      v-if="showHeader"
+        :is-signed-in="userStore.state.isSignedIn"
+        :user-info="userStore.state"
+        @signout="signout"/>
     </div>
   </div>
 </template>

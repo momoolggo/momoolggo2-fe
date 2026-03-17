@@ -2,15 +2,6 @@
 import { reactive, onMounted } from 'vue'
 import addressService from '@/services/addressService'
 import NaverMap from '@/components/common/NaverMap.vue'
-import { watch } from 'vue'
-import { useRoute } from 'vue-router'
-
-
-const route = useRoute();
-
-watch( () => route.path, () => {
-  loadDefaultAddress()
-})
 
 const state = reactive({
   list: [],
@@ -29,7 +20,8 @@ const state = reactive({
 // ── 주소 목록 불러오기
 const loadList = async () => {
   try {
-    state.list = await addressService.findAll()
+    const res = await addressService.findAll()
+    state.list = res.resultData || res
   } catch {
     state.list = []
   }
@@ -108,7 +100,7 @@ const setDefault = async (addressId) => {
     </div>
 
     <!-- 주소 목록 -->
-    <div class="address_list">
+    <div class="my_address_list">
       <div v-for="item in state.list" :key="item.addressId" class="address_item">
         <div class="addr_left">
           <span v-if="item.defaultAd === 1" class="default_badge">기본</span>
@@ -134,7 +126,6 @@ const setDefault = async (addressId) => {
           <button class="modal_close" @click="closeModal">✕</button>
         </div>
 
-        <!-- 주소 - NaverMap 컴포넌트 (v-if로 모달 열릴 때만 렌더링 → 매번 새로 초기화) -->
         <div class="field">
           <label class="label">주소</label>
           <NaverMap
@@ -145,13 +136,11 @@ const setDefault = async (addressId) => {
           />
         </div>
 
-        <!-- 상세주소 -->
         <div class="field">
           <label class="label">상세주소</label>
           <input v-model="state.modalForm.addressDetail" type="text" class="inp" placeholder="동/호수 등" />
         </div>
 
-        <!-- 기본 배송지 체크 -->
         <label class="default_check">
           <input v-model="state.modalForm.defaultAd" type="checkbox" :true-value="1" :false-value="0" />
           기본 배송지로 설정
@@ -163,12 +152,15 @@ const setDefault = async (addressId) => {
         </div>
       </div>
     </div>
-
   </div>
 </template>
 
 <style scoped>
-.address_wrap { max-width: 860px; margin: 40px auto; padding: 0 16px; }
+.address_wrap {
+  max-width: 680px;
+  margin: 40px auto;
+  padding: 0 16px;
+}
 .page_header {
   display: flex;
   align-items: center;
@@ -183,13 +175,13 @@ const setDefault = async (addressId) => {
   white-space: nowrap;
 }
 
-.address_list {
+.my_address_list {
   display: flex;
   flex-direction: column;
   gap: 14px;
 }
 
-.address_item {
+.my_address_item {
   background: #fff;
   border: 1.5px solid var(--border);
   border-radius: var(--radius-md);
@@ -201,7 +193,8 @@ const setDefault = async (addressId) => {
   gap: 16px;
   min-height: 72px;
 }
-.addr_left { display: flex; align-items: center; gap: 12px; }
+.addr_left { display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0; }
+.addr_text { min-width: 0; flex: 1; }
 .default_badge {
   background: var(--primary);
   color: #fff;
@@ -210,10 +203,18 @@ const setDefault = async (addressId) => {
   padding: 3px 8px;
   border-radius: 20px;
   white-space: nowrap;
+  flex-shrink: 0;
 }
-.addr_main { font-size: 15px; font-weight: 600; color: var(--black); }
+.addr_main {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--black);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 .addr_detail { font-size: 14px; color: var(--gray); margin-top: 4px; }
-.addr_actions { display: flex; gap: 6px; }
+.addr_actions { display: flex; gap: 6px; flex-shrink: 0; }
 .btn_xs {
   padding: 6px 12px;
   font-size: 12px;
@@ -224,6 +225,7 @@ const setDefault = async (addressId) => {
   color: var(--gray-dark);
   font-weight: 600;
   transition: all 0.15s;
+  white-space: nowrap;
 }
 .btn_xs:hover { border-color: var(--primary); color: var(--primary); }
 .btn_danger { border-color: var(--primary) !important; color: var(--primary) !important; }

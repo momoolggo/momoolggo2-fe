@@ -1,33 +1,43 @@
 <script setup>
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
+import { computed } from 'vue'
 
 const router = useRouter()
+const route = useRoute()
+
+const isMainPage = computed(() => route.name === 'MyPage')
 
 const menus = [
-  { icon: 'bi bi-person',        label: '내 정보 수정', path: '/mypage/profile' },
-  { icon: 'bi bi-geo-alt',       label: '배송지 관리',  path: '/mypage/address' },
-  { icon: 'bi bi-ticket-perforated', label: '쿠폰함',   path: '/mypage/coupon', badge: '쿠폰 2차' },
-  { icon: 'bi bi-receipt',       label: '주문 내역',    path: '/mypage/orders'  },
-  { icon: 'bi bi-star',          label: '내 리뷰 관리', path: '/mypage/review'  },
-  { icon: 'bi bi-headset',       label: '고객센터',     path: '/mypage/cs'      },
+  { icon: 'bi bi-person',            label: '내 정보 수정', path: '/mypage/profile' },
+  { icon: 'bi bi-geo-alt',           label: '배송지 관리',  path: '/mypage/address' },
+  { icon: 'bi bi-ticket-perforated', label: '쿠폰함',       path: '/mypage/coupon', badge: '쿠폰 2차' },
+  { icon: 'bi bi-receipt',           label: '주문 내역',    path: '/mypage/orders'  },
+  { icon: 'bi bi-star',              label: '내 리뷰 관리', path: '/mypage/review'  },
+  { icon: 'bi bi-headset',           label: '고객센터',     path: '/mypage/cs'      },
 ]
 </script>
 
 <template>
   <div class="mypage_wrap">
-    <h2 class="page_title">마이페이지</h2>
-    <div class="menu_grid">
-      <div
-        v-for="menu in menus"
-        :key="menu.path"
-        class="menu_card"
-        @click="router.push(menu.path)"
-      >
-        <span v-if="menu.badge" class="badge">{{ menu.badge }}</span>
-        <i :class="[menu.icon, 'menu_icon']"></i>
-        <div class="menu_label">{{ menu.label }}</div>
+    <!-- 메인 마이페이지: 메뉴 그리드 -->
+    <template v-if="isMainPage">
+      <h2 class="page_title">마이페이지</h2>
+      <div class="menu_grid">
+        <div
+          v-for="menu in menus"
+          :key="menu.path"
+          class="menu_card"
+          @click="router.push(menu.path)"
+        >
+          <span v-if="menu.badge" class="badge">{{ menu.badge }}</span>
+          <i :class="[menu.icon, 'menu_icon']"></i>
+          <div class="menu_label">{{ menu.label }}</div>
+        </div>
       </div>
-    </div>
+    </template>
+
+    <!-- 하위 페이지 -->
+    <router-view v-else />
   </div>
 </template>
 

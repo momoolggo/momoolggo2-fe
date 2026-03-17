@@ -28,26 +28,51 @@ const signout = async () => {
 </script>
 
 <template>
-  <div class="app-wrapper">
-  <TheHeader
-    v-if="showHeader"
-    :is-signed-in="userStore.state.isSignedIn"
-    :user-info="userStore.state"
-    @signout="signout"
-  />
-  <router-view />
-  <TokenExpiryModal />
-  <MobileNavi />
+   <div class="app-outer">
+    <div class="app-wrapper">
+      <TheHeader
+        v-if="showHeader"
+        :is-signed-in="userStore.state.isSignedIn"
+        :user-info="userStore.state"
+        @signout="signout"
+      />
+      <router-view />
+      <TokenExpiryModal />
+      <MobileNavi />
+    </div>
   </div>
 </template>
 
 <style scoped>
+
+.app-outer {
+  width: 100%;
+  min-height: 100vh;
+  background-color: #fff;
+  display: flex;
+  justify-content: center;
+}
+
 .app-wrapper{
+  width: 100%;
   max-width: 480px;
   margin: 0 auto;
   min-height: 100vh;
   position: relative;
   background: #fff;
- 
+  overflow: hidden;
 }
+
+.app-main {
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+body {
+  background-color: #fff;
+  margin: 0;
+  padding:0 ;
+}
+
+
 </style>

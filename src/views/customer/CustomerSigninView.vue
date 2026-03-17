@@ -88,10 +88,10 @@ const signin = async () => {
 </template>
 
 <style scoped>
-.signin_page { position: relative; width: 100vw; height: 100vh; background: #ffffff; display: flex; align-items: center; justify-content: center; overflow: hidden; }
-.signin_card { width: 460px; background: #ffffff; border-radius: 20px; box-shadow: 0 4px 32px rgba(0,0,0,0.10); padding: 10px 40px 40px; display: flex; flex-direction: column; gap: 16px; z-index: 1; }
+.signin_page { position: relative; width: 100%; height: 100vh; background: #ffffff; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+.signin_card { width: 100%; max-width: 380px; margin: 0 auto; background: #ffffff; border-radius: 20px; box-shadow: 0 4px 32px rgba(0,0,0,0.10); padding: 10px 45px 40px; display: flex; flex-direction: column; gap: 18px; z-index: 1; }
 .logo_wrap { text-align: center; }
-.signin_logo { height: 150px; width: 150px; }
+.signin_logo { height: 130x; width: 140px; }
 .signin_title { text-align: center; font-size: 20px; font-weight: 700; color: var(--black); }
 .mascot_img { position: absolute; right: -250px; bottom: 380px; width: 1000px; object-fit: contain; pointer-events: none; }
 .back_link { text-align: center; font-size: 13px; }

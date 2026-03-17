@@ -1,8 +1,8 @@
 <script setup>
-import { useRouter } from 'vue-router'
-import { computed } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
+import { computed, ref, onMounted, watch } from 'vue'
 import { useUserStore } from '@/stores/userStore'
-import MyPageAddressView from '@/views/mypage/MyPageAddressView.vue'
+
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -20,9 +20,30 @@ defineProps({
 
 const emit = defineEmits(['signout'])
 
+// 기본 배송지 주소
+const defaultAddress = ref('주소를 설정해 주세요')
+
+const loadDefaultAddress = async () => {
+  try {
+    const list = await addressService.findAll()
+    const def = list.find(a => a.defaultAd === 1) ?? list[0] ?? null
+    if (def) {
+      defaultAddress.value = def.addressDetail
+        ? `${def.address} ${def.addressDetail}`
+        : def.address
+    } else {
+      defaultAddress.value = '주소를 설정해 주세요'
+    }
+  } catch {
+    defaultAddress.value = '주소를 설정해 주세요'
+  }
+}
+
+onMounted(loadDefaultAddress)
+
 const goCart    = () => router.push('/cart')
 const goSignin  = () => router.push('/signin')
-// const goMypage  = () => router.push('/mypage')
+const goAddress  = () => router.push('/mypage/address')
 
 const logoLink = computed(() => {
   const role = userStore.state.role
@@ -61,7 +82,7 @@ const isOwner = computed(() => userStore.state.role === 'OWNER')
 
           <div class="top-actions">
             <template v-if="!isSignedIn">
-              <button class="nav_text_btn" @click="goSignin">
+              <button class="nav_icon_btn" @click="goSignin">
                 <i class="bi bi-person"></i>
               </button>
             </template>
@@ -77,10 +98,12 @@ const isOwner = computed(() => userStore.state.role === 'OWNER')
         </div>
 
         <!--현재 주소 -->
-        <div class="row-address">
+        <button class="row-address" @click="goAddress">
           <i class="bi bi-geo-alt-fill address-pin"></i>
-          <span class="address-text">대구 광역시 수성구 범어동 774-16</span>
-        </div>
+          <span class="address-text">{{ defaultAddress }}</span>
+          <i class="bi bi-chevron-right address-arrow"></i>
+        </button>
+
 
         <!--검색창 -->
         <div class="row-search">
@@ -98,13 +121,14 @@ const isOwner = computed(() => userStore.state.role === 'OWNER')
 
 <style scoped>
 .header {
-  position: sticky;
+  position: relative;
   top: 0;
   z-index: 100;
   width: 100%;
   max-width: 480px;
+  height: 180px;
   background: #FEFAEE;
-  border-bottom: 1px solid #e8e4d8;
+  border-bottom: 0 solid #e8e4d8;
   box-shadow: 0 1px 6px rgba(0,0,0,0.07);
   display: flex;
   justify-content: center;
@@ -165,8 +189,8 @@ const isOwner = computed(() => userStore.state.role === 'OWNER')
   background: none;
   border: none;
   font-size: 13px;
-  font-weight: 500;
-  color: #333;
+  font-weight: 700;
+  color: #4a4646;
   padding: 4px 6px;
   cursor: pointer;
   display: flex;
@@ -175,12 +199,14 @@ const isOwner = computed(() => userStore.state.role === 'OWNER')
 }
 .nav_text_btn:active { color: #d63031; }
 
+
 .nav_username {
   font-size: 13px;
   font-weight: 700;
   color: #d63031;
   padding: 0 4px;
 }
+
 
 /*주소 */
 .row-address {
@@ -191,7 +217,17 @@ const isOwner = computed(() => userStore.state.role === 'OWNER')
   gap: 4px;
   width: 100%;
   text-align: center;
+  background-color: #FEFAEE;
+  border: none;
+  padding: 0;
+  cursor: pointer;
 }
+.row-address:active .address-text,
+.row-address:active .address-pin,
+.row-address:active .address-arrow{
+  color: #d63031;
+}
+
 
 .address-pin {
   font-size: 13px;

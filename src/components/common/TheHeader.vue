@@ -6,6 +6,7 @@ import { useUserStore } from '@/stores/userStore'
 
 const router = useRouter()
 const userStore = useUserStore()
+const searchText = ref('')
 
 defineProps({
   isSignedIn: {
@@ -44,6 +45,12 @@ onMounted(loadDefaultAddress)
 const goCart    = () => router.push('/cart')
 const goSignin  = () => router.push('/signin')
 const goAddress  = () => router.push('/mypage/address')
+const goSearchstore = () => {
+  const text = searchText.value.trim()
+  if (!text) return
+  router.push({ path: '/searchstore', query: { search_text: text } })
+}
+
 
 const logoLink = computed(() => {
   const role = userStore.state.role
@@ -105,14 +112,16 @@ const isOwner = computed(() => userStore.state.role === 'OWNER')
         </button>
 
 
-        <!--검색창 -->
-        <div class="row-search">
-          <div class="search-bar">
-            <span class="search-placeholder">가게 · 메뉴 검색</span>
-            <i class="bi bi-search search-icon"></i>
-          </div>
-        </div>
-
+      <!--검색창 -->
+      <form class="row-search" @submit.prevent="goSearchstore">
+          <label class="search-bar">
+          <input type="search" v-model="searchText" placeholder="가게·메뉴 검색" maxlength="30">
+          
+          <button type="submit" class="search_icon">
+            <i class="bi bi-search"></i>
+          </button>
+        </label>
+        </form> 
       </div>
     </template>
 
@@ -267,10 +276,32 @@ const isOwner = computed(() => userStore.state.role === 'OWNER')
   font-family: 'Pretendard', 'Noto Sans KR', sans-serif;
 }
 
-.search-icon {
+.search_icon {
   font-size: 15px;
   color: #888;
+  border: none;
+  background: transparent;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
+
+input[type="search"] {
+  background: transparent;
+  outline: none;
+  border: none;
+}
+
+input[type="search"]::-webkit-search-decoration,
+input[type="search"]::-webkit-search-cancel-button,
+input[type="search"]::-webkit-search-results-button,
+input[type="search"]::-webkit-search-results-decoration {
+  display: none;
+} 
+
 
 /*사장님 헤더*/
 .owner_header_inner {

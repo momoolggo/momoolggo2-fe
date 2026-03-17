@@ -28,6 +28,7 @@ import FavoriteView       from '@/views/servicee/FavoriteView.vue'
 import OrderView          from '@/views/servicee/OrderView.vue'
 import EventView          from '@/views/servicee/EventView.vue'
 import WhatKindView       from '@/views/servicee/WhatKindView.vue'
+import SearchStoreView    from '@/views/header/SearchStoreView.vue'
 
 const routes = [
   { path: '/', name: 'Landing', component: LandingView },
@@ -63,6 +64,7 @@ const routes = [
   { path: '/order',    name: 'Order',    component: OrderView,    meta: { requiresAuth: true, role: 'CUSTOMER' } },
   { path: '/event',    name: 'Event',    component: EventView,    meta: { requiresAuth: true, role: 'CUSTOMER' } },
   { path: '/whatkind', name: 'WhatKind', component: WhatKindView, meta: { requiresAuth: true, role: 'CUSTOMER' } },
+  { path: '/searchstore', name: 'Searchstore', component: SearchStoreView, meta: { requiresAuth: true, role: 'CUSTOMER' } },
   {path: '/payment/success', name: 'PaymentSuccess', component: () => import('@/views/servicee/PaySuccess.vue'), meta: { requiresAuth: true, role: 'CUSTOMER' } },
   {path: '/payment/fail', name: 'PaymentFailure', component: () => import('@/views/servicee/PayFail.vue'), meta: { requiresAuth: true, role: 'CUSTOMER' } },
 

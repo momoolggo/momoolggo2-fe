@@ -183,6 +183,7 @@ const handleAddToCart = (item) => {
       width: 100%;
       background: #fff;
       min-height: 100vh;
+      max-width: 480px;
       padding-bottom: 60px; /* 하단 네비게이션 바 공간 */
   }
 

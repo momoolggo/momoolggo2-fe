@@ -2,6 +2,15 @@
 import { reactive, onMounted } from 'vue'
 import addressService from '@/services/addressService'
 import NaverMap from '@/components/common/NaverMap.vue'
+import { watch } from 'vue'
+import { useRoute } from 'vue-router'
+
+
+const route = useRoute();
+
+watch( () => route.path, () => {
+  loadDefaultAddress()
+})
 
 const state = reactive({
   list: [],

@@ -108,7 +108,7 @@ function goCategory(label) {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 20px 0 80px;
+  padding: 0 0 80px;
   overflow-x: hidden;
  
 }

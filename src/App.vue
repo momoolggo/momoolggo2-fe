@@ -48,6 +48,6 @@ const signout = async () => {
   min-height: 100vh;
   position: relative;
   background: #fff;
- 
+
 }
 </style>

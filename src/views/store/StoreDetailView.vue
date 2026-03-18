@@ -179,6 +179,7 @@ const handleAddToCart = () => {
   min-height: 100vh;
   max-width: 480px;
   padding-bottom: 60px;
+  margin: 0 auto;
 }
 .store-cover { position: relative; width: 100%; height: 250px; }
 .cover-img { width: 100%; height: 100%; object-fit: cover; }

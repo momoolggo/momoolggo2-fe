@@ -170,7 +170,7 @@ const currentCategoryName = computed(() => {
 </template>
 
 <style scoped>
-.store-list-view { max-width: 480px; margin: 0 auto; background: #f8f8f8; min-height: 100vh; }
+.store-list-view { max-width: 480px; margin: 0 auto; background: #f8f8f8; min-height: 100vh;  }
 .category-nav { position: sticky; top: 0; z-index: 100; background: #fff; display: flex; align-items: center; border-bottom: 1px solid #eee; }
 .category-scroll-wrapper { display: flex; overflow-x: auto; scroll-behavior: smooth; padding: 15px 10px; scrollbar-width: none; }
 .category-scroll-wrapper::-webkit-scrollbar { display: none; }

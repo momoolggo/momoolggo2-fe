@@ -13,14 +13,11 @@ import { useStore } from '@/stores/useStore';
 const storeInfo = useStore();
 
 // 날짜 선택 (기본값: 오늘)
-const selectedDate = ref(new Date().toISOString().slice(0, 10)); // "2026-03-19" 형식
+const selectedDate = ref(new Date().toISOString().slice(0, 10));
 
 const stats = ref({
   total: 0,
   waiting: 0,
-  progress: 0,
-  rider: 0,
-  shipping: 0,
   completed: 0,
   cancel: 0
 });
@@ -28,29 +25,30 @@ const stats = ref({
 const fetchStats = async () => {
   if (!storeInfo.myStoreId) return;
   try {
-    const response = await ownerService.getOrders(storeInfo.myStoreId, null, selectedDate.value);
+    const response = await ownerService.getOrders(
+      storeInfo.myStoreId,
+      null,
+      selectedDate.value
+    );
     const orders = response?.resultData ?? [];
 
     stats.value = {
       total: orders.length,
       waiting: orders.filter(o => Number(o.state) === 0).length,
-      progress: orders.filter(o => Number(o.state) === 1).length,
-      rider: orders.filter(o => Number(o.state) === 2).length,
-      shipping: orders.filter(o => Number(o.state) === 3).length,
-      completed: orders.filter(o => Number(o.state) === 3).length,  // 배달 중 = 배달 완료 카운트에 포함 (필요시 조정)
-      cancel: orders.filter(o => Number(o.state) === 4).length
+      completed: orders.filter(o => Number(o.state) === 4).length,
+      cancel: orders.filter(o => Number(o.state) === 5).length
     };
   } catch (error) {
     console.error("통계 조회 실패:", error);
   }
 };
 
-// 날짜 변경 시 통계 + 주문목록 갱신
+// 날짜 변경 시 통계 갱신
 const onDateChange = () => {
   fetchStats();
 };
 
-// 자식 컴포넌트(OrderList)에서 사용할 수 있도록 provide
+// 자식 컴포넌트(OrderList)에서 사용
 provide('selectedDate', selectedDate);
 provide('refreshStats', fetchStats);
 
@@ -58,7 +56,6 @@ onMounted(fetchStats);
 
 const currentMenu = ref('order');
 
-// 달력에 표시할 포맷
 const formattedDate = computed(() => {
   const d = new Date(selectedDate.value + 'T00:00:00');
   return `${d.getFullYear()} / ${String(d.getMonth() + 1).padStart(2, '0')} / ${String(d.getDate()).padStart(2, '0')}`;
@@ -73,21 +70,21 @@ const formattedDate = computed(() => {
       <template v-if="currentMenu === 'order'">
         <div class="date-container">
           <label class="date-picker-wrapper">
-            <span class="date-text">📅 {{ formattedDate }}</span>
+            <span class="date-display">📅 {{ formattedDate }}</span>
             <input
               type="date"
               v-model="selectedDate"
               @change="onDateChange"
-              class="date-input-hidden"
+              class="date-input"
             />
           </label>
         </div>
 
         <section class="summary-container">
-          <OrderCard title="총 주문수"       :count="stats.total"     />
-          <OrderCard title="주문수락대기"    :count="stats.waiting"   />
-          <OrderCard title="배달 완료"       :count="stats.completed" />
-          <OrderCard title="취소건수"        :count="stats.cancel"    type="cancel" />
+          <OrderCard title="총 주문수"     :count="stats.total"     />
+          <OrderCard title="주문수락대기"  :count="stats.waiting"   />
+          <OrderCard title="배달 완료"     :count="stats.completed" />
+          <OrderCard title="취소건수"      :count="stats.cancel"    type="cancel" />
         </section>
 
         <section class="order-list-section"><OrderList /></section>
@@ -122,23 +119,31 @@ const formattedDate = computed(() => {
 .main-content { flex: 1; padding: 40px; }
 .date-container { display: flex; justify-content: flex-end; margin-bottom: 30px; }
 
+/* ===== 달력 선택 영역 ===== */
 .date-picker-wrapper {
   position: relative;
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
   cursor: pointer;
-}
-
-.date-text {
   background-color: #fff;
   padding: 10px 20px;
   border-radius: 8px;
   border: 1px solid #e0e0e0;
-  font-weight: bold;
-  color: #333;
-  display: inline-block;
+  transition: border-color 0.2s;
 }
 
-.date-input-hidden {
+.date-picker-wrapper:hover {
+  border-color: #2ac1bc;
+}
+
+.date-display {
+  font-weight: bold;
+  color: #333;
+  font-size: 15px;
+  pointer-events: none;  /* 텍스트가 클릭을 가로채지 않음 */
+}
+
+.date-input {
   position: absolute;
   top: 0;
   left: 0;
@@ -146,6 +151,11 @@ const formattedDate = computed(() => {
   height: 100%;
   opacity: 0;
   cursor: pointer;
+  z-index: 2;
+  /* 전체 영역이 클릭 가능하도록 */
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
 }
 
 .summary-container { display: flex; gap: 20px; margin-bottom: 50px; }

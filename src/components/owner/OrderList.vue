@@ -10,13 +10,17 @@ const modalOpen = ref(false);
 const selectedOrder = ref(null);
 
 // 부모에서 provide한 날짜와 갱신 함수
-const selectedDate = inject('selectedDate', ref(new Date().toISOString().slice(0, 10)));
+const selectedDate = inject('selectedDate', ref(null));
 const refreshStats = inject('refreshStats', () => {});
 
 const fetchOrders = async () => {
   if (!storeInfo.myStoreId) return;
   try {
-    const response = await ownerService.getOrders(storeInfo.myStoreId, null, selectedDate.value);
+    const response = await ownerService.getOrders(
+      storeInfo.myStoreId,
+      null,
+      selectedDate.value || undefined
+    );
     orders.value = response.resultData ?? [];
   } catch (error) {
     console.error("주문 조회 실패:", error);
@@ -46,7 +50,8 @@ const getStatusInfo = (status) => {
     '1': { text: '주문 진행 중', class: 'progress' },
     '2': { text: '라이더배차 진행중', class: 'rider' },
     '3': { text: '배달 중', class: 'shipping' },
-    '4': { text: '주문취소', class: 'cancel' }
+    '4': { text: '배달 완료', class: 'completed' },
+    '5': { text: '주문취소', class: 'cancel' }
   };
   return statusInfo[String(status)] || { text: '알 수 없음', class: 'waiting' };
 };
@@ -70,8 +75,8 @@ onMounted(fetchOrders);
       <span class="col-status">상태</span>
     </div>
 
-    <div v-for="(order, index) in orders" :key="order.orderId" class="order-item" @click="openModal(order)">
-      <span class="col-no">{{ order.orderId }}</span>
+    <div v-for="order in orders" :key="order.orderId" class="order-item" @click="openModal(order)">
+      <span class="col-no">{{ index + 1 }}</span>
       <span class="col-time">{{ order.orderDate }}</span>
       <span class="col-duration">-</span>
       <span class="col-addr">{{ order.address }}</span>
@@ -148,11 +153,12 @@ onMounted(fetchOrders);
   color: #fff;
 }
 
-.waiting  { background-color: #e2e4e8; color: #4f5e7b; }
-.progress { background-color: #4caf50; }
-.rider    { background-color: #ff9800; }
-.shipping { background-color: #5e2bed; }
-.cancel   { background-color: #e63911; }
+.waiting   { background-color: #e2e4e8; color: #4f5e7b; }
+.progress  { background-color: #4caf50; }
+.rider     { background-color: #ff9800; }
+.shipping  { background-color: #5e2bed; }
+.completed { background-color: #2ac1bc; }
+.cancel    { background-color: #e63911; }
 
 .no-data { text-align: center; padding: 50px; color: #aaa; }
 </style>

@@ -1,31 +1,22 @@
 <script setup>
 import { computed } from 'vue';
-import axios from 'axios';
+import ownerService from '@/services/ownerService';
 
 const props = defineProps(['order']);
 const emit = defineEmits(['close']);
 
-// 현재 상태에 따라 가능한 액션 버튼 결정
 const currentState = computed(() => Number(props.order?.state ?? 0));
-
-const getImageUrl = (path) => {
-  if (!path) return null;
-  if (path.startsWith('data:')) return path;
-  if (path.startsWith('http') || path.startsWith('blob')) return path;
-  return `http://localhost:8080${path}`;
-};
 
 // 상태 변경 (다음 단계로)
 const changeState = async (newState) => {
   try {
-    await axios.put(`http://localhost:8080/api/owner/order/${props.order.orderId}`, {
-      orderState: newState
-    });
+    await ownerService.updateOrderState(props.order.orderId, newState);
 
     const stateNames = {
       1: '주문을 수락했습니다.',
       2: '라이더 배차를 진행합니다.',
       3: '배달이 시작되었습니다.',
+      4: '배달이 완료되었습니다.',
     };
     alert(stateNames[newState] || '상태가 변경되었습니다.');
     emit('close');
@@ -39,7 +30,7 @@ const changeState = async (newState) => {
 const cancelOrder = async () => {
   if (!confirm('정말 주문을 취소하시겠습니까?\n취소된 주문은 복구할 수 없습니다.')) return;
   try {
-    await axios.delete(`http://localhost:8080/api/owner/order/${props.order.orderId}`);
+    await ownerService.deleteOrder(props.order.orderId);
     alert('주문이 취소되었습니다.');
     emit('close');
   } catch (error) {
@@ -48,12 +39,13 @@ const cancelOrder = async () => {
   }
 };
 
-// 상태 단계 표시용
+// 상태 단계 표시용 (5단계)
 const steps = [
   { state: 0, label: '주문 대기' },
   { state: 1, label: '주문 진행' },
   { state: 2, label: '라이더 배차' },
   { state: 3, label: '배달 중' },
+  { state: 4, label: '배달 완료' },
 ];
 </script>
 
@@ -111,32 +103,33 @@ const steps = [
 
       <!-- 액션 버튼 (상태에 따라 다르게 표시) -->
       <div class="modal-footer">
-        <!-- 항상 표시: 주문 취소 -->
-        <button class="btn cancel" @click="cancelOrder">주문 취소</button>
+        <!-- 배달 완료 전까지만 취소 가능 -->
+        <button v-if="currentState < 4" class="btn cancel" @click="cancelOrder">
+          주문 취소
+        </button>
 
         <!-- 상태 0: 수락 대기 → 주문 수락 -->
-        <button
-          v-if="currentState === 0"
-          class="btn accept"
-          @click="changeState(1)"
-        >주문 수락</button>
+        <button v-if="currentState === 0" class="btn accept" @click="changeState(1)">
+          주문 수락
+        </button>
 
         <!-- 상태 1: 진행 중 → 라이더 배차 -->
-        <button
-          v-if="currentState === 1"
-          class="btn rider"
-          @click="changeState(2)"
-        >라이더 배차</button>
+        <button v-if="currentState === 1" class="btn rider" @click="changeState(2)">
+          라이더 배차
+        </button>
 
         <!-- 상태 2: 배차 중 → 배달 시작 -->
-        <button
-          v-if="currentState === 2"
-          class="btn shipping"
-          @click="changeState(3)"
-        >배달 시작</button>
+        <button v-if="currentState === 2" class="btn shipping" @click="changeState(3)">
+          배달 시작
+        </button>
 
-        <!-- 상태 3: 배달 중 (완료 대기) -->
-        <span v-if="currentState === 3" class="status-msg">🚀 배달 중입니다</span>
+        <!-- 상태 3: 배달 중 → 배달 완료 -->
+        <button v-if="currentState === 3" class="btn complete" @click="changeState(4)">
+          배달 완료
+        </button>
+
+        <!-- 상태 4: 배달 완료 -->
+        <span v-if="currentState === 4" class="status-msg complete-msg">✅ 배달 완료</span>
       </div>
     </div>
   </div>
@@ -186,7 +179,7 @@ const steps = [
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  padding: 24px 30px 16px;
+  padding: 24px 20px 16px;
   position: relative;
 }
 
@@ -199,15 +192,15 @@ const steps = [
 }
 
 .step-circle {
-  width: 36px;
-  height: 36px;
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
   background: #e8e8e8;
   color: #999;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: bold;
   margin-bottom: 8px;
   transition: all 0.3s;
@@ -225,7 +218,7 @@ const steps = [
 }
 
 .step-label {
-  font-size: 12px;
+  font-size: 11px;
   color: #999;
   text-align: center;
 }
@@ -235,9 +228,9 @@ const steps = [
 
 .step-line {
   position: absolute;
-  top: 42px;
-  left: 15%;
-  right: 15%;
+  top: 41px;
+  left: 10%;
+  right: 10%;
   height: 3px;
   background: #e8e8e8;
   z-index: 0;
@@ -304,11 +297,13 @@ const steps = [
 .accept   { background: #4caf50; }
 .rider    { background: #ff9800; }
 .shipping { background: #5e2bed; }
+.complete { background: #2ac1bc; }
 
 .status-msg {
   font-size: 15px;
   font-weight: bold;
-  color: #5e2bed;
   padding: 10px;
 }
+
+.complete-msg { color: #2ac1bc; }
 </style>

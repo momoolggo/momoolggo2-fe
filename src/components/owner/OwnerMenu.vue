@@ -5,6 +5,12 @@ import { useStore } from '@/stores/useStore'
 
 const storeInfo = useStore()
 
+const getImageUrl = (path) => {
+  if (!path) return null
+  if (path.startsWith('http')) return path
+  return `http://localhost:8080${path}`
+}
+
 // ── 상태
 const menuList = ref([])
 const categories = ref([])
@@ -21,7 +27,8 @@ const menuForm = reactive({
   name: '',
   menuInfo: '',
   price: '',
-  menuPic: '',
+  menuPic: '',      // 서버 경로만 저장
+  previewUrl: '',   // 화면 미리보기용 (blob URL)
 })
 
 const categoryForm = reactive({
@@ -73,6 +80,7 @@ const openAddMenu = () => {
   menuForm.menuInfo = ''
   menuForm.price = ''
   menuForm.menuPic = ''
+  menuForm.previewUrl = ''
   editMode.value = false
   showMenuModal.value = true
 }
@@ -84,8 +92,29 @@ const openEditMenu = (item) => {
   menuForm.menuInfo = item.menuInfo || ''
   menuForm.price = item.price
   menuForm.menuPic = item.menuPic || ''
+  menuForm.previewUrl = item.menuPic ? getImageUrl(item.menuPic) : ''
   editMode.value = true
   showMenuModal.value = true
+}
+
+// 파일 업로드 핸들러
+const handleImageUpload = async (e) => {
+  const file = e.target.files[0]
+  if (!file) return
+
+  // 미리보기용 blob URL (화면에만 사용)
+  menuForm.previewUrl = URL.createObjectURL(file)
+
+  // 서버에 업로드 → 실제 경로 받아서 저장
+  try {
+    const formData = new FormData()
+    formData.append('file', file)
+    const res = await ownerService.uploadMenuImage(formData)
+    menuForm.menuPic = res.resultData  // /uploads/menu/파일명.jpg
+  } catch {
+    alert('이미지 업로드 실패')
+    menuForm.previewUrl = ''
+  }
 }
 
 const saveMenu = async () => {
@@ -98,6 +127,7 @@ const saveMenu = async () => {
       await ownerService.updateMenu({
         menuId: menuForm.menuId,
         name: menuForm.name,
+        categoryId: Number(menuForm.categoryId),
         menuInfo: menuForm.menuInfo,
         price: Number(menuForm.price),
         menuPic: menuForm.menuPic,
@@ -153,7 +183,6 @@ const cancelEditCategory = () => {
 
 const saveCategory = async () => {
   if (!categoryForm.category.trim()) { alert('카테고리명을 입력해 주세요.'); return }
-
   try {
     if (categoryForm.editMode) {
       await ownerService.updateCategory(categoryForm.categoryId, categoryForm.category.trim())
@@ -179,7 +208,6 @@ const deleteCategory = async (categoryId) => {
   }
 }
 
-// 가격 포맷
 const formatPrice = (price) => Number(price).toLocaleString() + '원'
 </script>
 
@@ -212,7 +240,8 @@ const formatPrice = (price) => Number(price).toLocaleString() + '원'
             <div class="menu-price">{{ formatPrice(item.price) }}</div>
           </div>
           <div class="menu-right">
-            <img v-if="item.menuPic" :src="item.menuPic" class="menu-thumb" />
+            <!-- 수정된 부분: getImageUrl 적용 -->
+            <img v-if="item.menuPic" :src="getImageUrl(item.menuPic)" class="menu-thumb" />
             <div v-else class="menu-thumb-empty">🍽️</div>
             <div class="menu-btns">
               <button class="btn-sm btn-edit" @click="openEditMenu(item)">수정</button>
@@ -229,9 +258,7 @@ const formatPrice = (price) => Number(price).toLocaleString() + '원'
       <p class="sub">메뉴를 추가해 보세요!</p>
     </div>
 
-    <!-- ════════════════════════════════ -->
-    <!--  메뉴 추가 / 수정 모달           -->
-    <!-- ════════════════════════════════ -->
+    <!-- 메뉴 추가 / 수정 모달 -->
     <div v-if="showMenuModal" class="overlay" @click.self="showMenuModal = false">
       <div class="modal">
         <div class="modal-head">
@@ -271,7 +298,9 @@ const formatPrice = (price) => Number(price).toLocaleString() + '원'
 
         <div class="field">
           <label>메뉴 사진</label>
-          <input v-model="menuForm.menuPic" type="text" placeholder="이미지 URL을 입력하세요" />
+          <input type="file" accept="image/*" @change="handleImageUpload" />
+          <img v-if="menuForm.previewUrl" :src="menuForm.previewUrl"
+               style="width:100px; height:100px; object-fit:cover; margin-top:8px; border-radius:8px;" />
         </div>
 
         <div class="modal-foot">
@@ -281,9 +310,7 @@ const formatPrice = (price) => Number(price).toLocaleString() + '원'
       </div>
     </div>
 
-    <!-- ════════════════════════════════ -->
-    <!--  카테고리 관리 모달              -->
-    <!-- ════════════════════════════════ -->
+    <!-- 카테고리 관리 모달 -->
     <div v-if="showCategoryModal" class="overlay" @click.self="showCategoryModal = false">
       <div class="modal modal-cat">
         <div class="modal-head">
@@ -291,7 +318,6 @@ const formatPrice = (price) => Number(price).toLocaleString() + '원'
           <button class="modal-x" @click="showCategoryModal = false">✕</button>
         </div>
 
-        <!-- 카테고리 목록 -->
         <div class="cat-list">
           <div v-for="cat in categories" :key="cat.categoryId" class="cat-item">
             <span class="cat-name">{{ cat.categoryName }}</span>
@@ -303,7 +329,6 @@ const formatPrice = (price) => Number(price).toLocaleString() + '원'
           <div v-if="!categories.length" class="empty-cat">등록된 카테고리가 없습니다.</div>
         </div>
 
-        <!-- 추가 / 수정 입력 -->
         <div class="cat-form">
           <input
             v-model="categoryForm.category"
@@ -328,8 +353,6 @@ const formatPrice = (price) => Number(price).toLocaleString() + '원'
   max-width: 900px;
   margin: 0 auto;
 }
-
-/* ── 상단 탭바 ── */
 .menu-topbar {
   display: flex;
   align-items: center;
@@ -378,11 +401,7 @@ const formatPrice = (price) => Number(price).toLocaleString() + '원'
   transition: background 0.15s;
 }
 .btn-add-menu:hover { background: #8a0a09; }
-
-/* ── 카테고리 그룹 ── */
-.category-group {
-  margin-bottom: 32px;
-}
+.category-group { margin-bottom: 32px; }
 .category-title {
   font-size: 16px;
   font-weight: 700;
@@ -391,8 +410,6 @@ const formatPrice = (price) => Number(price).toLocaleString() + '원'
   border-bottom: 1.5px solid #eee;
   margin-bottom: 12px;
 }
-
-/* ── 메뉴 행 ── */
 .menu-row {
   display: flex;
   align-items: center;
@@ -404,20 +421,9 @@ const formatPrice = (price) => Number(price).toLocaleString() + '원'
   margin-bottom: 10px;
   transition: box-shadow 0.15s;
 }
-.menu-row:hover {
-  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
-}
-
-.menu-text {
-  flex: 1;
-  min-width: 0;
-}
-.menu-name {
-  font-size: 16px;
-  font-weight: 700;
-  color: #1a1a1a;
-  margin-bottom: 4px;
-}
+.menu-row:hover { box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
+.menu-text { flex: 1; min-width: 0; }
+.menu-name { font-size: 16px; font-weight: 700; color: #1a1a1a; margin-bottom: 4px; }
 .menu-desc {
   font-size: 13px;
   color: #888;
@@ -427,12 +433,7 @@ const formatPrice = (price) => Number(price).toLocaleString() + '원'
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
-.menu-price {
-  font-size: 15px;
-  font-weight: 700;
-  color: #A40C0B;
-}
-
+.menu-price { font-size: 15px; font-weight: 700; color: #A40C0B; }
 .menu-right {
   display: flex;
   align-items: center;
@@ -440,12 +441,7 @@ const formatPrice = (price) => Number(price).toLocaleString() + '원'
   margin-left: 20px;
   flex-shrink: 0;
 }
-.menu-thumb {
-  width: 72px;
-  height: 72px;
-  border-radius: 10px;
-  object-fit: cover;
-}
+.menu-thumb { width: 72px; height: 72px; border-radius: 10px; object-fit: cover; }
 .menu-thumb-empty {
   width: 72px;
   height: 72px;
@@ -456,12 +452,7 @@ const formatPrice = (price) => Number(price).toLocaleString() + '원'
   justify-content: center;
   font-size: 28px;
 }
-.menu-btns {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
+.menu-btns { display: flex; flex-direction: column; gap: 6px; }
 .btn-sm {
   padding: 6px 14px;
   border-radius: 6px;
@@ -471,37 +462,13 @@ const formatPrice = (price) => Number(price).toLocaleString() + '원'
   transition: all 0.15s;
   white-space: nowrap;
 }
-.btn-edit {
-  background: #fff;
-  border: 1.5px solid #ddd;
-  color: #555;
-}
+.btn-edit { background: #fff; border: 1.5px solid #ddd; color: #555; }
 .btn-edit:hover { border-color: #A40C0B; color: #A40C0B; }
-.btn-del {
-  background: #fff;
-  border: 1.5px solid #A40C0B;
-  color: #A40C0B;
-}
+.btn-del { background: #fff; border: 1.5px solid #A40C0B; color: #A40C0B; }
 .btn-del:hover { background: #A40C0B; color: #fff; }
-
-/* ── 상태 메시지 ── */
-.state-msg {
-  text-align: center;
-  padding: 60px 0;
-  color: #888;
-  font-size: 15px;
-}
+.state-msg { text-align: center; padding: 60px 0; color: #888; font-size: 15px; }
 .state-msg .sub { font-size: 13px; color: #bbb; margin-top: 8px; }
-.empty-cat {
-  text-align: center;
-  color: #bbb;
-  padding: 20px 0;
-  font-size: 13px;
-}
-
-/* ══════════════════════════════ */
-/*  공통 모달                     */
-/* ══════════════════════════════ */
+.empty-cat { text-align: center; color: #bbb; padding: 20px 0; font-size: 13px; }
 .overlay {
   position: fixed;
   inset: 0;
@@ -522,31 +489,11 @@ const formatPrice = (price) => Number(price).toLocaleString() + '원'
   flex-direction: column;
   gap: 16px;
 }
-.modal-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
+.modal-head { display: flex; align-items: center; justify-content: space-between; }
 .modal-head h3 { font-size: 18px; font-weight: 700; }
-.modal-x {
-  background: none;
-  border: none;
-  font-size: 20px;
-  cursor: pointer;
-  color: #888;
-}
-
-/* 필드 */
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-.field label {
-  font-size: 13px;
-  font-weight: 600;
-  color: #444;
-}
+.modal-x { background: none; border: none; font-size: 20px; cursor: pointer; color: #888; }
+.field { display: flex; flex-direction: column; gap: 6px; }
+.field label { font-size: 13px; font-weight: 600; color: #444; }
 .field input,
 .field textarea,
 .field select {
@@ -563,36 +510,13 @@ const formatPrice = (price) => Number(price).toLocaleString() + '원'
 }
 .field input:focus,
 .field textarea:focus,
-.field select:focus {
-  border-color: #A40C0B;
-  background: #fff;
-}
-.field textarea {
-  height: 90px;
-  resize: none;
-}
-.cnt {
-  align-self: flex-end;
-  font-size: 11px;
-  color: #bbb;
-}
-.price-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
+.field select:focus { border-color: #A40C0B; background: #fff; }
+.field textarea { height: 90px; resize: none; }
+.cnt { align-self: flex-end; font-size: 11px; color: #bbb; }
+.price-row { display: flex; align-items: center; gap: 8px; }
 .price-row input { flex: 1; }
-.unit {
-  font-size: 14px;
-  font-weight: 600;
-  color: #444;
-}
-
-.modal-foot {
-  display: flex;
-  gap: 10px;
-  margin-top: 6px;
-}
+.unit { font-size: 14px; font-weight: 600; color: #444; }
+.modal-foot { display: flex; gap: 10px; margin-top: 6px; }
 .btn-cancel {
   flex: 1;
   padding: 13px;
@@ -616,13 +540,7 @@ const formatPrice = (price) => Number(price).toLocaleString() + '원'
   cursor: pointer;
 }
 .btn-save:hover { background: #8a0a09; }
-
-/* ══════════════════════════════ */
-/*  카테고리 모달                  */
-/* ══════════════════════════════ */
-.modal-cat {
-  width: 420px;
-}
+.modal-cat { width: 420px; }
 .cat-list {
   display: flex;
   flex-direction: column;
@@ -641,15 +559,8 @@ const formatPrice = (price) => Number(price).toLocaleString() + '원'
   background: #fafafa;
   border-radius: 8px;
 }
-.cat-name {
-  font-size: 14px;
-  font-weight: 600;
-  color: #333;
-}
-.cat-actions {
-  display: flex;
-  gap: 6px;
-}
+.cat-name { font-size: 14px; font-weight: 600; color: #333; }
+.cat-actions { display: flex; gap: 6px; }
 .btn-xs {
   padding: 5px 10px;
   font-size: 11px;
@@ -664,12 +575,7 @@ const formatPrice = (price) => Number(price).toLocaleString() + '원'
 .btn-xs:hover { border-color: #A40C0B; color: #A40C0B; }
 .btn-xs-del { border-color: #A40C0B; color: #A40C0B; }
 .btn-xs-del:hover { background: #A40C0B; color: #fff; }
-
-.cat-form {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
+.cat-form { display: flex; gap: 8px; align-items: center; }
 .cat-form input {
   flex: 1;
   padding: 10px 14px;

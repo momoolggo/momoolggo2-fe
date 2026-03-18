@@ -1,7 +1,7 @@
 <script setup>
 import { ref } from 'vue'
-import { useUserStore } from '@/stores/userStore'  // ✅ 추가
-import cartService from '@/services/cartService'   // ✅ 추가
+import { useUserStore } from '@/stores/userStore'
+import cartService from '@/services/cartService'
 
 const props = defineProps({
   menu: Object,
@@ -9,15 +9,20 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['close', 'add-to-cart'])
-const userStore = useUserStore()  // ✅ 추가
+const userStore = useUserStore()
 const quantity = ref(1)
+
+const getImageUrl = (path) => {
+  if (!path) return '/images/default-menu.png'
+  if (path.startsWith('http') || path.startsWith('blob')) return path
+  return `http://localhost:8080${path}`
+}
 
 const updateQuantity = (val) => {
   if (quantity.value + val < 1) return
   quantity.value += val
 }
 
-//장바구니 담기
 const handleAddCart = async () => {
   try {
     const cartData = {
@@ -25,18 +30,13 @@ const handleAddCart = async () => {
       menuId: props.menu.menuId,
       quantity: quantity.value,
     }
-
-    const res = await cartService.addToCart(cartData)
-
+    await cartService.addToCart(cartData)
     alert('장바구니에 담겼습니다! 🛒')
     quantity.value = 1
     emit('close')
-    
   } catch (error) {
-    // 409: 다른 매장 메뉴 존재
     if (error.response?.status === 409) {
       const confirmed = confirm('다른 매장의 메뉴가 장바구니에 있습니다.\n기존 장바구니를 비우고 담을까요?')
-
       if (confirmed) {
         await cartService.clearAndAdd({
           userNo: userStore.state.userNo,
@@ -52,7 +52,6 @@ const handleAddCart = async () => {
     }
   }
 }
-
 </script>
 
 <template>
@@ -64,12 +63,15 @@ const handleAddCart = async () => {
       </div>
 
       <div class="image-area">
-        <img :src="menu.pic || '/images/default-menu.png'" alt="메뉴 이미지" />
+        <!-- menu.pic → menu.menuPic 으로 수정 + getImageUrl 적용 -->
+        <img :src="getImageUrl(menu.menuPic)" alt="메뉴 이미지" />
       </div>
 
       <div class="info-area">
-        <h2 class="menu-name">{{ menu.name }}</h2>
-        <p class="menu-desc">{{ menu.desc }}</p>
+        <!-- menu.name → menu.menuName 으로 수정 -->
+        <h2 class="menu-name">{{ menu.menuName }}</h2>
+        <!-- menu.desc → menu.menuInfo 으로 수정 -->
+        <p class="menu-desc">{{ menu.menuInfo }}</p>
         <div class="price-row">
           <span class="price">{{ menu.price?.toLocaleString() }}원</span>
         </div>
@@ -90,8 +92,6 @@ const handleAddCart = async () => {
     </div>
   </div>
 </template>
-
-
 
 <style scoped>
 .modal-overlay {
@@ -132,13 +132,11 @@ const handleAddCart = async () => {
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
   cursor: pointer;
 }
-
 .image-area img {
   width: 100%;
   height: 250px;
   object-fit: cover;
 }
-
 .info-area {
   padding: 20px;
   border-bottom: 1px solid #eee;
@@ -158,7 +156,6 @@ const handleAddCart = async () => {
   justify-content: space-between;
   font-weight: bold;
 }
-
 .footer-area {
   padding: 20px;
 }
@@ -184,7 +181,6 @@ const handleAddCart = async () => {
 .counter span {
   padding: 0 10px;
 }
-
 .min-price-info {
   text-align: center;
   font-size: 0.8rem;

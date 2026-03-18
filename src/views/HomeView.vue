@@ -117,7 +117,6 @@ function goCategory(label) {
   max-width: 480px;
   margin: 0 auto;
   min-height: 100vh;
-  /* 배경을 이미지와 유사한 선명한 오렌지/레드 계열로 변경 */
   background: #C44101; 
   display: flex;
   flex-direction: column;
@@ -180,7 +179,7 @@ function goCategory(label) {
 .banner-nav-btn:active { background: rgba(255, 255, 255, 1); }
 
 
-/* ── 인디케이터 ── */
+/*인디케이터*/
 .dots {
   display: flex;
   gap: 6px;
@@ -198,7 +197,7 @@ function goCategory(label) {
   background: #fff;
 }
 
-/* ── 카테고리 섹션 ── */
+/*카테고리 섹션*/
 .category-section {
   width: 92%; 
   margin-top: 15px;
@@ -208,7 +207,7 @@ function goCategory(label) {
 .category-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 12px; /* 카드 사이 간격 */
+  gap: 12px; 
 }
 
 .category-item {

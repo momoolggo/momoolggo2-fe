@@ -151,4 +151,5 @@ const update = async () => {
 .success_msg { color: #16a34a; font-size: 13px; text-align: center; }
 .radio_group { display: flex; gap: 20px; }
 .radio_label { font-size: 14px; color: var(--gray-dark); cursor: pointer; display: flex; align-items: center; gap: 4px; }
+.btn_primary { margin-bottom: 10px;}
 </style>

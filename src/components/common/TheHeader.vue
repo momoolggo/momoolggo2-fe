@@ -172,7 +172,7 @@ const isOwner = computed(() => userStore.state.role === 'OWNER')
 
 /* 고객 헤더 (480px 고정)*/
 .header {
-  position: sticky;
+  position: relative;
   top: 0;
   z-index: 100;
   width: 100%;

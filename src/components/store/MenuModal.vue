@@ -6,6 +6,7 @@ import cartService from '@/services/cartService'
 const props = defineProps({
   menu: Object,
   isOpen: Boolean,
+  minPrice: { type: Number, default: 0 },  // 추가
 })
 
 const emit = defineEmits(['close', 'add-to-cart'])
@@ -63,14 +64,11 @@ const handleAddCart = async () => {
       </div>
 
       <div class="image-area">
-        <!-- menu.pic → menu.menuPic 으로 수정 + getImageUrl 적용 -->
         <img :src="getImageUrl(menu.menuPic)" alt="메뉴 이미지" />
       </div>
 
       <div class="info-area">
-        <!-- menu.name → menu.menuName 으로 수정 -->
         <h2 class="menu-name">{{ menu.menuName }}</h2>
-        <!-- menu.desc → menu.menuInfo 으로 수정 -->
         <p class="menu-desc">{{ menu.menuInfo }}</p>
         <div class="price-row">
           <span class="price">{{ menu.price?.toLocaleString() }}원</span>
@@ -86,7 +84,8 @@ const handleAddCart = async () => {
             <button @click="updateQuantity(1)">+</button>
           </div>
         </div>
-        <p class="min-price-info">배달 최소주문금액 15,000원</p>
+        <!-- 하드코딩 → DB 데이터로 수정 -->
+        <p class="min-price-info">배달 최소주문금액 {{ (minPrice || 0).toLocaleString() }}원</p>
         <button class="add-cart-btn" @click="handleAddCart">장바구니 담기</button>
       </div>
     </div>
@@ -141,52 +140,15 @@ const handleAddCart = async () => {
   padding: 20px;
   border-bottom: 1px solid #eee;
 }
-.menu-name {
-  font-size: 1.4rem;
-  margin-bottom: 10px;
-}
-.menu-desc {
-  font-size: 0.9rem;
-  color: #777;
-  line-height: 1.5;
-  margin-bottom: 20px;
-}
-.price-row {
-  display: flex;
-  justify-content: space-between;
-  font-weight: bold;
-}
-.footer-area {
-  padding: 20px;
-}
-.quantity-control {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 15px;
-}
-.counter {
-  border: 1px solid #ddd;
-  border-radius: 5px;
-  display: flex;
-  align-items: center;
-}
-.counter button {
-  padding: 5px 15px;
-  border: none;
-  background: none;
-  font-size: 1.2rem;
-  cursor: pointer;
-}
-.counter span {
-  padding: 0 10px;
-}
-.min-price-info {
-  text-align: center;
-  font-size: 0.8rem;
-  color: #999;
-  margin-bottom: 10px;
-}
+.menu-name { font-size: 1.4rem; margin-bottom: 10px; }
+.menu-desc { font-size: 0.9rem; color: #777; line-height: 1.5; margin-bottom: 20px; }
+.price-row { display: flex; justify-content: space-between; font-weight: bold; }
+.footer-area { padding: 20px; }
+.quantity-control { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+.counter { border: 1px solid #ddd; border-radius: 5px; display: flex; align-items: center; }
+.counter button { padding: 5px 15px; border: none; background: none; font-size: 1.2rem; cursor: pointer; }
+.counter span { padding: 0 10px; }
+.min-price-info { text-align: center; font-size: 0.8rem; color: #999; margin-bottom: 10px; }
 .add-cart-btn {
   width: 100%;
   padding: 15px;

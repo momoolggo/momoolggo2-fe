@@ -16,8 +16,8 @@ class OwnerService {
     }
 
     // 가게 운영정보 수정 (영업중/휴무 등)
-    async updateStoreStatus(statusData) {
-        const res = await axios.patch(`${this.#url}/store/status`, statusData);
+        async updateStoreStatus(statusData) {
+        const res = await axios.put(`${this.#url}/store/status`, statusData);
         return res.data;
     }
 

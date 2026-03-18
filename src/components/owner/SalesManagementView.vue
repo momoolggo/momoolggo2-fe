@@ -1,41 +1,125 @@
 <script setup>
-import Sidebar from '@/components/owner/Sidebar.vue';
-import { ref } from 'vue';
-// import SalesChart from '@/components/SalesChart.vue';
-// import SalesRankingTable from '@/components/SalesRankingTable.vue';
+import { ref, onMounted, watch, computed } from 'vue'
+import ownerService from '@/services/ownerService'
+import { Bar } from 'vue-chartjs'
+import {
+  Chart as ChartJS, CategoryScale, LinearScale,
+  BarElement, Title, Tooltip, Legend
+} from 'chart.js'
 
-const activeTab = ref('일간');
-const tabs = ['일간', '주간', '월간', '연간'];
+ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend)
+
+const activeTab = ref('일간')
+const tabs = ['일간', '주간', '월간', '연간']
+const periodMap = { '일간': 'day', '주간': 'week', '월간': 'month', '연간': 'year' }
+
+const stats = ref({ orderCount: 0, totalSales: 0 })
+const ranking = ref([])
+const loading = ref(false)
+
+const loadData = async () => {
+  loading.value = true
+  try {
+    const period = periodMap[activeTab.value]
+    const [statsRes, rankingRes] = await Promise.all([
+      ownerService.getSalesStats(period),
+      ownerService.getSalesRanking(period),
+    ])
+    stats.value = statsRes.resultData || { orderCount: 0, totalSales: 0 }
+    ranking.value = rankingRes.resultData || []
+  } catch (e) {
+    console.error('매출 데이터 로드 실패:', e)
+  } finally {
+    loading.value = false
+  }
+}
+
+onMounted(loadData)
+watch(activeTab, loadData)
+
+// 차트 - 첫번째 막대만 빨간색, 나머지 회색
+const chartData = computed(() => ({
+  labels: ranking.value.map(r => r.menuName),
+  datasets: [{
+    label: '판매개수',
+    data: ranking.value.map(r => r.totalQuantity),
+    backgroundColor: ranking.value.map((_, i) => i === 0 ? '#A40C0B' : '#D9D9D9'),
+    borderRadius: 6,
+    borderSkipped: false,
+  }]
+}))
+
+// 막대 위에 숫자 표시 플러그인
+const chartOptions = {
+  responsive: true,
+  plugins: {
+    legend: { display: false },
+    tooltip: { enabled: true },
+    datalabels: { display: false },
+  },
+  scales: {
+    y: {
+      display: false,
+      beginAtZero: true,
+    },
+    x: {
+      grid: { display: false },
+      ticks: { font: { size: 11 } }
+    }
+  },
+  layout: { padding: { top: 30 } }
+}
+
+// 막대 위 숫자 표시 커스텀 플러그인
+const topLabelPlugin = {
+  id: 'topLabel',
+  afterDatasetsDraw(chart) {
+    const { ctx, data } = chart
+    chart.getDatasetMeta(0).data.forEach((bar, i) => {
+      const value = data.datasets[0].data[i]
+      ctx.save()
+      ctx.font = 'bold 12px sans-serif'
+      ctx.fillStyle = '#555'
+      ctx.textAlign = 'center'
+      ctx.fillText(value, bar.x, bar.y - 6)
+      ctx.restore()
+    })
+  }
+}
+
+ChartJS.register(topLabelPlugin)
+
+const formatPrice = (price) => Number(price).toLocaleString() + '원'
 </script>
 
 <template>
-  <div class="owner-layout">
-  
+  <div class="sales-wrap">
 
-    <main class="main-content">
-      <header class="content-header">
-        <div class="header-left">
-          <h2>매출 현황</h2>
-          <div class="tabs">
-            <span 
-              v-for="tab in tabs" 
-              :key="tab"
-              :class="{ active: activeTab === tab }"
-              @click="activeTab = tab"
-            >
-              {{ tab }}
-            </span>
-          </div>
-        </div>
-      </header>
+    <!-- 헤더 -->
+    <div class="sales-header">
+      <h2>매출 현황</h2>
+      <div class="tabs">
+        <span
+          v-for="tab in tabs"
+          :key="tab"
+          :class="{ active: activeTab === tab }"
+          @click="activeTab = tab"
+        >{{ tab }}</span>
+      </div>
+    </div>
 
-      <section class="chart-section">
-        <div class="chart-placeholder">
-          <p>차트가 들어갈 자리입니다 (디자인 참고하여 구현)</p>
-        </div>
-      </section>
+    <div v-if="loading" class="loading">불러오는 중...</div>
 
-      <section class="ranking-section">
+    <template v-else>
+
+      <!-- 차트 -->
+      <div class="chart-box">
+        <Bar v-if="ranking.length" :data="chartData" :options="chartOptions" />
+        <div v-else class="empty">데이터가 없습니다.</div>
+      </div>
+
+      <!-- 상품 매출 순위 -->
+      <div class="ranking-box">
         <h3>상품 매출순위</h3>
         <table class="sales-table">
           <thead>
@@ -48,38 +132,122 @@ const tabs = ['일간', '주간', '월간', '연간'];
             </tr>
           </thead>
           <tbody>
-            <tr>
-              <td>1</td>
-              <td>참돔 오차즈케</td>
-              <td>42개 <span class="down">-12개</span></td>
-              <td>546,000원 <span class="up">+89,000원(5.2%)</span></td>
-              <td>546,000원</td>
+            <tr v-if="!ranking.length">
+              <td colspan="5" class="empty-row">데이터가 없습니다.</td>
             </tr>
-            </tbody>
+            <tr v-for="(item, index) in ranking" :key="index">
+              <td>{{ index + 1 }}</td>
+              <td>{{ item.menuName }}</td>
+              <td>
+                {{ item.totalQuantity }}개
+                <span v-if="item.prevQuantity != null" :class="item.totalQuantity >= item.prevQuantity ? 'up' : 'down'">
+                  {{ item.totalQuantity >= item.prevQuantity ? '+' : '' }}{{ item.totalQuantity - (item.prevQuantity || 0) }}개
+                </span>
+              </td>
+              <td>
+                {{ formatPrice(item.totalSales) }}
+                <span v-if="item.prevSales != null" :class="item.totalSales >= item.prevSales ? 'up' : 'down'">
+                  {{ item.totalSales >= item.prevSales ? '+' : '' }}{{ formatPrice(item.totalSales - (item.prevSales || 0)) }}
+                </span>
+              </td>
+              <td>{{ formatPrice(item.totalSales) }}</td>
+            </tr>
+          </tbody>
         </table>
-      </section>
-    </main>
+      </div>
+
+    </template>
   </div>
 </template>
 
 <style scoped>
-.owner-layout { display: flex; background-color: #f9f9f9; min-height: 100vh; }
-.main-content { flex: 1; padding: 40px; }
+.sales-wrap {
+  flex: 1;
+  padding: 40px;
+  background: #f9f9f9;
+  min-height: 100vh;
+}
 
-.content-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
-.header-left { display: flex; align-items: center; gap: 40px; }
-.header-left h2 { font-size: 22px; font-weight: bold; }
+/* 헤더 */
+.sales-header {
+  display: flex;
+  align-items: center;
+  gap: 40px;
+  margin-bottom: 30px;
+}
+.sales-header h2 {
+  font-size: 20px;
+  font-weight: 800;
+  color: #1a1a1a;
+  white-space: nowrap;
+}
+.tabs {
+  display: flex;
+  gap: 24px;
+}
+.tabs span {
+  font-size: 14px;
+  font-weight: 600;
+  color: #bbb;
+  cursor: pointer;
+  padding-bottom: 4px;
+  border-bottom: 2px solid transparent;
+  transition: all 0.15s;
+}
+.tabs span.active {
+  color: #A40C0B;
+  border-bottom: 2px solid #A40C0B;
+}
+.tabs span:hover { color: #A40C0B; }
 
-.tabs { display: flex; gap: 20px; color: #bbb; cursor: pointer; font-weight: bold; }
-.tabs span.active { color: #333; border-bottom: 2px solid #333; }
+/* 차트 */
+.chart-box {
+  background: #fff;
+  border-radius: 16px;
+  padding: 30px;
+  margin-bottom: 30px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  min-height: 260px;
+}
 
-.chart-section { background: #fff; padding: 30px; border-radius: 20px; margin-bottom: 40px; min-height: 300px; }
+/* 순위 테이블 */
+.ranking-box {
+  background: #fff;
+  border-radius: 16px;
+  padding: 30px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+.ranking-box h3 {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 20px;
+}
+.sales-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.sales-table th {
+  padding: 12px 16px;
+  border-bottom: 2px solid #eee;
+  color: #888;
+  font-size: 13px;
+  text-align: center;
+  white-space: nowrap;
+}
+.sales-table td {
+  padding: 16px;
+  text-align: center;
+  border-bottom: 1px solid #f5f5f5;
+  font-size: 14px;
+  color: #333;
+}
+.sales-table tr:last-child td { border-bottom: none; }
+.sales-table tr:hover td { background: #fafafa; }
 
-.ranking-section h3 { font-size: 20px; font-weight: bold; margin-bottom: 20px; }
-.sales-table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 20px; overflow: hidden; }
-.sales-table th { padding: 15px; border-bottom: 1px solid #eee; color: #666; font-size: 14px; }
-.sales-table td { padding: 20px; text-align: center; border-bottom: 1px solid #eee; }
+.up { color: #ff4d4f; font-size: 12px; margin-left: 6px; }
+.down { color: #1890ff; font-size: 12px; margin-left: 6px; }
 
-.up { color: #ff4d4f; font-size: 12px; }
-.down { color: #1890ff; font-size: 12px; }
+.loading { text-align: center; padding: 60px; color: #888; }
+.empty { text-align: center; padding: 40px; color: #bbb; }
+.empty-row { text-align: center; padding: 30px; color: #bbb; }
 </style>

@@ -132,6 +132,7 @@ const isOwner = computed(() => userStore.state.role === 'OWNER')
   box-shadow: 0 1px 6px rgba(0,0,0,0.07);
   display: flex;
   justify-content: center;
+  margin: 0 auto;
 }
 
 /* 고객 헤더 전체 래퍼 */

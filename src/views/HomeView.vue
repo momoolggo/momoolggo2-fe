@@ -30,12 +30,20 @@ const banners = [
 
 // 현재 배너(인디케이터용)
 const currentBanner = ref(0)
+const bannerWrap = ref(null)
 
-// 스와이프 스크롤 → 인디케이터 업데이트
-function onScroll(e) {
-  const el = e.target
-  const index = Math.round(el.scrollLeft / el.offsetWidth)
-  currentBanner.value = index
+// 인디케이터 
+const slideBanner = (direction) => {
+  const total = banners.length
+  if (direction === 'left') {
+    currentBanner.value = (currentBanner.value - 1 + total) % total
+  } else {
+    currentBanner.value = (currentBanner.value + 1) % total
+  }
+  bannerWrap.value?.scrollTo({
+    left: currentBanner.value * bannerWrap.value.offsetWidth,
+    behavior: 'smooth',
+  })
 }
 
 // 배너 클릭하면 라우트 이동
@@ -53,17 +61,23 @@ function goCategory(label) {
   <div class="home-page">
 
     <!-- 배너 슬라이더 (스와이프) -->
-    <div class="banner-wrap" @scroll="onScroll">
-      <div
-        v-for="(banner, i) in banners"
-        :key="i"
-        class="banner-item"
-        @click="onBannerClick(banner.route)"
-      >
-        <img :src="banner.img" :alt="`배너 ${i + 1}`" />
+    <div class="banner-container">
+      <button class="banner-nav-btn left" @click="slideBanner('left')">〈</button>
+ 
+      <div class="banner-wrap" ref="bannerWrap">
+        <div
+          v-for="(banner, i) in banners"
+          :key="i"
+          class="banner-item"
+          @click="onBannerClick(banner.route)"
+        >
+          <img :src="banner.img" :alt="`배너 ${i + 1}`" />
+        </div>
       </div>
+ 
+      <button class="banner-nav-btn right" @click="slideBanner('right')">〉</button>
     </div>
-
+ 
     <!-- 인디케이터 -->
     <div class="dots">
       <span
@@ -113,11 +127,19 @@ function goCategory(label) {
  
 }
 
+/* ── 배너 컨테이너 ── */
+.banner-container {
+  position: relative;
+  width: 100%;
+  display: flex;
+  align-items: center;
+}
+
 /* 배너 슬라이더 */
 .banner-wrap {
   width: 100%;
   display: flex;
-  overflow-x: scroll;
+  overflow-x: hidden;
   scroll-snap-type: x mandatory;
   scrollbar-width: none;
 }
@@ -134,6 +156,30 @@ function goCategory(label) {
   object-fit: cover;
 }
 
+/* ── 화살표 버튼 ── */
+.banner-nav-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.8);
+  color: #333;
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+.banner-nav-btn.left  { left: 8px;  }
+.banner-nav-btn.right { right: 8px; }
+.banner-nav-btn:active { background: rgba(255, 255, 255, 1); }
+ 
+
 /* ── 인디케이터 ── */
 .dots {
   display: flex;
@@ -141,8 +187,8 @@ function goCategory(label) {
   margin: 12px 0;
 }
 .dot {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.4);
 }
@@ -217,16 +263,6 @@ function goCategory(label) {
   background: #f0f0f0;
 }
 
-.banner-wrap {
-  display: flex;
-  overflow-x: auto; 
-  scroll-snap-type: x mandatory; 
-  -webkit-overflow-scrolling: touch; /* iOS 부드러운 스크롤 */
-}
 
-.banner-item {
-  flex: 0 0 100%; 
-  scroll-snap-align: start; 
-}
 
 </style>

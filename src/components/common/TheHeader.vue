@@ -2,12 +2,10 @@
 import { useRouter, useRoute } from 'vue-router'
 import { computed, ref, onMounted, watch } from 'vue'
 import { useUserStore } from '@/stores/userStore'
-import addressService from '@/services/addressService'
+
 
 const router = useRouter()
-const route = useRoute()
 const userStore = useUserStore()
-const searchText = ref('')
 
 defineProps({
   isSignedIn: {
@@ -27,8 +25,7 @@ const defaultAddress = ref('주소를 설정해 주세요')
 
 const loadDefaultAddress = async () => {
   try {
-    const res = await addressService.findAll()
-    const list = res.resultData || res
+    const list = await addressService.findAll()
     const def = list.find(a => a.defaultAd === 1) ?? list[0] ?? null
     if (def) {
       defaultAddress.value = def.addressDetail
@@ -44,19 +41,9 @@ const loadDefaultAddress = async () => {
 
 onMounted(loadDefaultAddress)
 
-// 배송지 페이지에서 돌아왔을 때 갱신
-watch(() => route.path, () => {
-  loadDefaultAddress()
-})
-
-const goCart     = () => router.push('/cart')
-const goSignin   = () => router.push('/signin')
+const goCart    = () => router.push('/cart')
+const goSignin  = () => router.push('/signin')
 const goAddress  = () => router.push('/mypage/address')
-const goSearchstore = () => {
-  const text = searchText.value.trim()
-  if (!text) return
-  router.push({ path: '/searchstore', query: { search_text: text } })
-}
 
 const logoLink = computed(() => {
   const role = userStore.state.role
@@ -87,6 +74,7 @@ const isOwner = computed(() => userStore.state.role === 'OWNER')
     <template v-else>
       <div class="header_inner">
 
+        <!--로고 + 장바구니/로그인 -->
         <div class="row-top">
           <router-link :to="logoLink" class="logo_link">
             <img src="@/assets/로고수정.png" alt="뭐물꼬" class="header_logo" />
@@ -109,20 +97,22 @@ const isOwner = computed(() => userStore.state.role === 'OWNER')
           </div>
         </div>
 
+        <!--현재 주소 -->
         <button class="row-address" @click="goAddress">
           <i class="bi bi-geo-alt-fill address-pin"></i>
           <span class="address-text">{{ defaultAddress }}</span>
           <i class="bi bi-chevron-right address-arrow"></i>
         </button>
 
-        <form class="row-search" @submit.prevent="goSearchstore">
-          <label class="search-bar">
-            <input type="search" v-model="searchText" placeholder="가게·메뉴 검색" maxlength="30">
-            <button type="submit" class="search_icon">
-              <i class="bi bi-search"></i>
-            </button>
-          </label>
-        </form>
+
+        <!--검색창 -->
+        <div class="row-search">
+          <div class="search-bar">
+            <span class="search-placeholder">가게 · 메뉴 검색</span>
+            <i class="bi bi-search search-icon"></i>
+          </div>
+        </div>
+
       </div>
     </template>
 
@@ -145,6 +135,7 @@ const isOwner = computed(() => userStore.state.role === 'OWNER')
   margin: 0 auto;
 }
 
+/* 고객 헤더 전체 래퍼 */
 .header_inner {
   width: 100%;
   max-width: 480px;
@@ -155,6 +146,7 @@ const isOwner = computed(() => userStore.state.role === 'OWNER')
   gap: 6px;
 }
 
+/*로고 + 우측 버튼 */
 .row-top {
   position: relative;
   display: flex;
@@ -204,8 +196,10 @@ const isOwner = computed(() => userStore.state.role === 'OWNER')
   cursor: pointer;
   display: flex;
   align-items: center;
+  
 }
 .nav_text_btn:active { color: #d63031; }
+
 
 .nav_username {
   font-size: 13px;
@@ -214,6 +208,8 @@ const isOwner = computed(() => userStore.state.role === 'OWNER')
   padding: 0 4px;
 }
 
+
+/*주소 */
 .row-address {
   margin-top: 10px;
   display: flex;
@@ -229,9 +225,10 @@ const isOwner = computed(() => userStore.state.role === 'OWNER')
 }
 .row-address:active .address-text,
 .row-address:active .address-pin,
-.row-address:active .address-arrow {
+.row-address:active .address-arrow{
   color: #d63031;
 }
+
 
 .address-pin {
   font-size: 13px;
@@ -248,6 +245,9 @@ const isOwner = computed(() => userStore.state.role === 'OWNER')
   text-overflow: ellipsis;
 }
 
+/*검색창 */
+/* .row-search {} */
+
 .search-bar {
   margin-top: 10px;
   display: flex;
@@ -262,33 +262,18 @@ const isOwner = computed(() => userStore.state.role === 'OWNER')
 }
 .search-bar:active { border-color: #d63031; }
 
-.search_icon {
+.search-placeholder {
+  font-size: 13px;
+  color: #aaa;
+  font-family: 'Pretendard', 'Noto Sans KR', sans-serif;
+}
+
+.search-icon {
   font-size: 15px;
   color: #888;
-  border: none;
-  background: transparent;
-  padding: 0;
-  margin: 0;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
-input[type="search"] {
-  background: transparent;
-  outline: none;
-  border: none;
-}
-
-input[type="search"]::-webkit-search-decoration,
-input[type="search"]::-webkit-search-cancel-button,
-input[type="search"]::-webkit-search-results-button,
-input[type="search"]::-webkit-search-results-decoration {
-  display: none;
-}
-
-/* 사장님 헤더 */
+/*사장님 헤더*/
 .owner_header_inner {
   display: flex;
   align-items: center;

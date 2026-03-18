@@ -4,7 +4,6 @@ const router = useRouter()
 
 const goAbout      = () => router.push('/about')
 const goPrivacy    = () => router.push('/privacy')
-const goPartner    = () => router.push('/owner/addstore')
 const goTerms      = () => router.push('/terms')
 const goNotice     = () => router.push('/notice')
 
@@ -19,8 +18,6 @@ const goNotice     = () => router.push('/notice')
                 <span @click="goAbout">회사 소개</span>
                 &nbsp;
                 <span @click="goPrivacy">개인정보처리방침</span>
-                &nbsp;
-                <span @click="goPartner">사장님 입점문의</span>
                 &nbsp;
                 <span @click="goTerms">이용약관</span>
                 &nbsp;

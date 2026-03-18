@@ -255,7 +255,7 @@ const signup = async () => {
 .back_link a:hover { color: var(--primary); }
 .terms_box { border: 1.5px solid #e8e8e8; border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 12px; background: #fafafa;}
  
-/* 전체 동의 */
+/* 약관 동의 */
 .terms_all { display: flex; align-items: center; gap: 10px; cursor: pointer; user-select: none; }
 .terms_all_text { font-size: 15px; font-weight: 700; color: #566572; }
 .terms_divider { height: 1px; background: #e8e8e8; margin: 0 -4px; }

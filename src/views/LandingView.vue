@@ -79,25 +79,27 @@ const goOrder = () => {
       </div>
     </section>
 
-    <!-- ────────────── 섹션: 라이더 신청 ────────────── -->
+  <!--라이더 신청-->
     <section class="section section_rider">
-      <div class="section_inner section_inner_reverse">
-        <div class="section_text">
-          <span class="section_tag">라이더를 위한 서비스</span>
-          <h2 class="section_title">배달 파트너<br/>신청하기</h2>
-          <p class="section_desc">
-            자유로운 시간에 원하는 만큼 일하세요.<br/>
-            빠른 정산과 안전한 배달 환경을 제공합니다.
-          </p>
-          <router-link to="/rider/signin" class="btn_section">라이더 신청하기 →</router-link>
-        </div>
+      <div class="section_inner">
         <div class="section_img_wrap">
           <div class="section_img_placeholder rider_img">
             <span>🛵</span>
           </div>
         </div>
+        <div class="section_text">
+          <span class="section_tag">라이더를 위한 서비스</span>
+          <h2 class="section_title">배달 파트너<br/>신청하기</h2>
+          <p class="section_desc">
+            자유로운 시간에 원하는 만큼 일하세요.<br/>
+            빠른 정산과 안전한 배달 환경을 제공합니다
+          </p>
+          <router-link to="/rider/signin" class="btn_section">라이더 신청하기 →</router-link>
+        </div>
       </div>
     </section>
+
+   
 
     <!-- ────────────── 푸터 ────────────── -->
     <footer class="footer">
@@ -341,7 +343,7 @@ const goOrder = () => {
   max-width: 1200px;
   margin: 0 auto;
 }
-.footer_logo { height: 36px; margin-bottom: 20px; filter: brightness(0) invert(1); opacity: 0.7; }
+.footer_logo { height: 60px; margin-bottom: 10px;}
 .footer_company { font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 8px; }
 .footer_info { font-size: 13px; line-height: 2; }
 .footer_copy { margin-top: 24px; font-size: 12px; opacity: 0.5; }

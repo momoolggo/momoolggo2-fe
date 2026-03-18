@@ -67,6 +67,13 @@ watch(
 
 <style scoped>
 
+.search-container {
+    max-width: 480px;
+    margin: 0 auto;
+    margin-top: 25px;
+    margin-bottom: 10px;
+}
+
 .no-result{
     display: flex; 
     flex-direction: column; 

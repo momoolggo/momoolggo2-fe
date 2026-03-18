@@ -238,6 +238,7 @@ const open = () => {
   padding: 32px 20px 28px;
   text-align: center;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+  margin-bottom: 120px;
 }
 
 .agent-greeting {

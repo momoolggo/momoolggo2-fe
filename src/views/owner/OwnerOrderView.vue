@@ -5,6 +5,7 @@ import OrderCard from '@/components/owner/OrderCard.vue';
 import OrderList from '@/components/owner/OrderList.vue';
 import OwnerMenu from '@/components/owner/OwnerMenu.vue';
 import salesManagementView from '@/components/owner/SalesManagementView.vue';
+import StoreManagementView from '@/components/owner/StoreManagementView.vue';
 import AddStoreView from '@/views/owner/AddStoreView.vue';
 import ownerService from '@/services/ownerService';
 import { useStore } from '@/stores/useStore';
@@ -71,6 +72,11 @@ const formattedDate = computed(() => {
       <!-- 입점신청 (가게 없을 때) -->
       <template v-if="currentMenu === 'addstore'">
         <AddStoreView />
+      </template>
+
+      <!-- 가게관리 화면 -->  <!-- ← 추가 -->
+      <template v-if="currentMenu === 'store'">
+        <StoreManagementView />
       </template>
 
     </main>

@@ -343,7 +343,7 @@ const goOrder = () => {
   max-width: 1200px;
   margin: 0 auto;
 }
-.footer_logo { height: 36px; margin-bottom: 20px; filter: brightness(0) invert(1); opacity: 0.7; }
+.footer_logo { height: 60px; margin-bottom: 10px;}
 .footer_company { font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 8px; }
 .footer_info { font-size: 13px; line-height: 2; }
 .footer_copy { margin-top: 24px; font-size: 12px; opacity: 0.5; }

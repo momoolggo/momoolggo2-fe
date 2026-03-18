@@ -1,19 +1,20 @@
 <script setup>
-
 import { useRouter } from 'vue-router';
-
+import { computed } from 'vue';
+import { useUserStore } from '@/stores/userStore';
 
 const router = useRouter();
+const userStore = useUserStore();
+
+const isOwner = computed(() => userStore.state.role === 'OWNER');
 
 const goTo = (page) => {
-  console.log(`${page} 페이지로 이동`);
   router.push(`/${page}`);
 };
-
 </script>
 
 <template>
-<nav class="bottom-nav">
+  <nav v-if="!isOwner" class="bottom-nav">
     <div class="nav-item" @click="goTo('home')">
       <i class="icon-home"></i> <span>홈</span>
     </div>
@@ -38,16 +39,14 @@ const goTo = (page) => {
 
 <style scoped>
 .bottom-nav {
-  /* 핵심: 하단 고정 설정 */
   position: fixed;
   bottom: 0;
-  left: 0;
-  right: 0;
+  left: 50%;
+  transform: translateX(-50%);
   z-index: 999;
 
-
-  max-width: 480px; /* home-page와 동일한 너비 설정 */
-  margin: 0 auto;
+  max-width: 480px;
+  width: 100%;
   height: 70px;
   background-color: #ffffff;
   border-top: 1px solid #eeeeee;

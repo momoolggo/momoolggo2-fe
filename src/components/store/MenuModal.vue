@@ -6,7 +6,7 @@ import cartService from '@/services/cartService'
 const props = defineProps({
   menu: Object,
   isOpen: Boolean,
-  minPrice: { type: Number, default: 0 },  // 추가
+  minPrice: { type: Number, default: 0 },
 })
 
 const emit = defineEmits(['close', 'add-to-cart'])
@@ -15,6 +15,7 @@ const quantity = ref(1)
 
 const getImageUrl = (path) => {
   if (!path) return '/images/default-menu.png'
+  if (path.startsWith('data:')) return path      // ← Base64 data URI 지원 추가
   if (path.startsWith('http') || path.startsWith('blob')) return path
   return `http://localhost:8080${path}`
 }
@@ -84,7 +85,6 @@ const handleAddCart = async () => {
             <button @click="updateQuantity(1)">+</button>
           </div>
         </div>
-        <!-- 하드코딩 → DB 데이터로 수정 -->
         <p class="min-price-info">배달 최소주문금액 {{ (minPrice || 0).toLocaleString() }}원</p>
         <button class="add-cart-btn" @click="handleAddCart">장바구니 담기</button>
       </div>
@@ -93,53 +93,12 @@ const handleAddCart = async () => {
 </template>
 
 <style scoped>
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-}
-.modal-content {
-  width: 90%;
-  max-width: 450px;
-  background: white;
-  border-radius: 20px;
-  overflow: hidden;
-  position: relative;
-}
-.modal-header {
-  position: absolute;
-  top: 0;
-  width: 100%;
-  display: flex;
-  justify-content: space-between;
-  padding: 15px;
-  z-index: 10;
-}
-.modal-header button {
-  background: white;
-  border-radius: 50%;
-  width: 35px;
-  height: 35px;
-  border: none;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-  cursor: pointer;
-}
-.image-area img {
-  width: 100%;
-  height: 250px;
-  object-fit: cover;
-}
-.info-area {
-  padding: 20px;
-  border-bottom: 1px solid #eee;
-}
+.modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); display: flex; justify-content: center; align-items: center; z-index: 1000; }
+.modal-content { width: 90%; max-width: 450px; background: white; border-radius: 20px; overflow: hidden; position: relative; }
+.modal-header { position: absolute; top: 0; width: 100%; display: flex; justify-content: space-between; padding: 15px; z-index: 10; }
+.modal-header button { background: white; border-radius: 50%; width: 35px; height: 35px; border: none; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); cursor: pointer; }
+.image-area img { width: 100%; height: 250px; object-fit: cover; }
+.info-area { padding: 20px; border-bottom: 1px solid #eee; }
 .menu-name { font-size: 1.4rem; margin-bottom: 10px; }
 .menu-desc { font-size: 0.9rem; color: #777; line-height: 1.5; margin-bottom: 20px; }
 .price-row { display: flex; justify-content: space-between; font-weight: bold; }
@@ -149,15 +108,5 @@ const handleAddCart = async () => {
 .counter button { padding: 5px 15px; border: none; background: none; font-size: 1.2rem; cursor: pointer; }
 .counter span { padding: 0 10px; }
 .min-price-info { text-align: center; font-size: 0.8rem; color: #999; margin-bottom: 10px; }
-.add-cart-btn {
-  width: 100%;
-  padding: 15px;
-  background: #2ac1bc;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-size: 1.1rem;
-  font-weight: bold;
-  cursor: pointer;
-}
+.add-cart-btn { width: 100%; padding: 15px; background: #2ac1bc; color: white; border: none; border-radius: 8px; font-size: 1.1rem; font-weight: bold; cursor: pointer; }
 </style>

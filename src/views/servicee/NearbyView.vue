@@ -88,7 +88,7 @@ const goToDetail = (id) => {
 
 <style scoped>
 .nearby-wrap {
-  max-width: 600px;
+  max-width: 480px;
   margin: 0 auto;
   background: #f8f8f8;
   min-height: 100vh;

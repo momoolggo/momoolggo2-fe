@@ -9,6 +9,7 @@ defineEmits(['click'])
 
 const getImageUrl = (path) => {
   if (!path) return null
+  if (path.startsWith('data:')) return path      // ← Base64 data URI 지원 추가
   if (path.startsWith('http') || path.startsWith('blob')) return path
   return `http://localhost:8080${path}`
 }

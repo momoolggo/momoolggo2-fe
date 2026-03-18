@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, inject, watch } from 'vue';
 import { useStore } from '@/stores/useStore';
 import ownerService from '@/services/ownerService';
 import OrderDetailModal from '@/components/owner/OrderDetailModal.vue';
@@ -9,29 +9,51 @@ const orders = ref([]);
 const modalOpen = ref(false);
 const selectedOrder = ref(null);
 
+// 부모에서 provide한 날짜와 갱신 함수
+const selectedDate = inject('selectedDate', ref(null));
+const refreshStats = inject('refreshStats', () => {});
+
 const fetchOrders = async () => {
   if (!storeInfo.myStoreId) return;
   try {
-    const response = await ownerService.getOrders(storeInfo.myStoreId, null);
+    const response = await ownerService.getOrders(
+      storeInfo.myStoreId,
+      null,
+      selectedDate.value || undefined
+    );
     orders.value = response.resultData ?? [];
   } catch (error) {
     console.error("주문 조회 실패:", error);
   }
 };
 
+// 날짜가 변경되면 주문 목록도 갱신
+watch(selectedDate, () => {
+  fetchOrders();
+});
+
 const openModal = (order) => {
   selectedOrder.value = order;
   modalOpen.value = true;
 };
 
+// 모달 닫힐 때 목록 + 통계 모두 갱신
+const onModalClose = () => {
+  modalOpen.value = false;
+  fetchOrders();
+  refreshStats();
+};
+
 const getStatusInfo = (status) => {
   const statusInfo = {
-    'WAITING':  { text: '주문 수락 대기', class: 'waiting'  },
-    'PROGRESS': { text: '주문 진행 중',   class: 'progress' },
-    'SHIPPING': { text: '배달 중',        class: 'shipping' },
-    'CANCEL':   { text: '주문취소',       class: 'cancel'   }
+    '0': { text: '주문 수락 대기', class: 'waiting' },
+    '1': { text: '주문 진행 중', class: 'progress' },
+    '2': { text: '라이더배차 진행중', class: 'rider' },
+    '3': { text: '배달 중', class: 'shipping' },
+    '4': { text: '배달 완료', class: 'completed' },
+    '5': { text: '주문취소', class: 'cancel' }
   };
-  return statusInfo[status] || { text: '알 수 없음', class: 'waiting' };
+  return statusInfo[String(status)] || { text: '알 수 없음', class: 'waiting' };
 };
 
 onMounted(fetchOrders);
@@ -53,13 +75,13 @@ onMounted(fetchOrders);
       <span class="col-status">상태</span>
     </div>
 
-    <div v-for="(order, index) in orders" :key="index" class="order-item" @click="openModal(order)">
-      <span class="col-no">{{ order.orderId }}</span>
+    <div v-for="order in orders" :key="order.orderId" class="order-item" @click="openModal(order)">
+      <span class="col-no">{{ index + 1 }}</span>
       <span class="col-time">{{ order.orderDate }}</span>
       <span class="col-duration">-</span>
       <span class="col-addr">{{ order.address }}</span>
       <span class="col-menu">{{ order.menuList }}</span>
-      <span class="col-price">{{ order.totalPrice }}</span>
+      <span class="col-price">{{ Number(order.totalPrice).toLocaleString() }}원</span>
       <span class="col-status">
         <button class="status-btn" :class="getStatusInfo(order.state).class">
           {{ getStatusInfo(order.state).text }}
@@ -74,7 +96,7 @@ onMounted(fetchOrders);
     <OrderDetailModal
       v-if="modalOpen"
       :order="selectedOrder"
-      @close="modalOpen = false"
+      @close="onModalClose"
     />
   </div>
 </template>
@@ -122,7 +144,7 @@ onMounted(fetchOrders);
 .col-status { flex: 1.5; display: flex; justify-content: center; }
 
 .status-btn {
-  width: 110px;
+  width: 130px;
   padding: 7px 0;
   border: none;
   border-radius: 8px;
@@ -131,10 +153,12 @@ onMounted(fetchOrders);
   color: #fff;
 }
 
-.waiting  { background-color: #e2e4e8; color: #4f5e7b; }
-.progress { background-color: #4caf50; }
-.shipping { background-color: #5e2bed; }
-.cancel   { background-color: #e63911; }
+.waiting   { background-color: #e2e4e8; color: #4f5e7b; }
+.progress  { background-color: #4caf50; }
+.rider     { background-color: #ff9800; }
+.shipping  { background-color: #5e2bed; }
+.completed { background-color: #2ac1bc; }
+.cancel    { background-color: #e63911; }
 
 .no-data { text-align: center; padding: 50px; color: #aaa; }
 </style>

@@ -16,7 +16,7 @@ class OwnerService {
     }
 
     // 가게 운영정보 수정 (영업중/휴무 등)
-        async updateStoreStatus(statusData) {
+    async updateStoreStatus(statusData) {
         const res = await axios.put(`${this.#url}/store/status`, statusData);
         return res.data;
     }
@@ -27,15 +27,24 @@ class OwnerService {
         return res.data;
     }
 
-    // 가게 주문 조회 (state: 주문상태 필터)
-    async getOrders(storeId, state) {
-        const res = await axios.get(`${this.#url}/order`, { params: { store_id: storeId, state } });
+    // 가게 주문 조회 (날짜 필터 추가)
+    async getOrders(storeId, state, date) {
+        const params = { store_id: storeId };
+        if (state != null) params.state = state;
+        if (date) params.date = date;
+        const res = await axios.get(`${this.#url}/order`, { params });
         return res.data;
     }
 
-    // 주문 상태 수정
-    async updateOrderState(orderStateData) {
-        const res = await axios.patch(`${this.#url}/order/state`, orderStateData);
+    // 주문 상태 수정 (PUT으로 변경)
+    async updateOrderState(orderId, orderState) {
+        const res = await axios.put(`${this.#url}/order/${orderId}`, { orderState });
+        return res.data;
+    }
+
+    // 주문 삭제 (추가)
+    async deleteOrder(orderId) {
+        const res = await axios.delete(`${this.#url}/order/${orderId}`);
         return res.data;
     }
 
@@ -104,7 +113,6 @@ class OwnerService {
         return res.data;
     }
 
-    // ↓↓↓ 새로 추가된 부분 ↓↓↓
     // 메뉴 이미지 업로드
     async uploadMenuImage(formData) {
         const res = await axios.post(`${this.#url}/menu/image`, formData, {

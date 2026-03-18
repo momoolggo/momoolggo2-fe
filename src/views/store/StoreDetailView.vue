@@ -12,6 +12,7 @@ const userNo = userStore.state.userNo
 
 const getImageUrl = (path) => {
   if (!path) return null
+  if (path.startsWith('data:')) return path      // ← Base64 data URI 지원 추가
   if (path.startsWith('http') || path.startsWith('blob')) return path
   return `http://localhost:8080${path}`
 }
@@ -28,10 +29,7 @@ const state = reactive({
 
 const getStoreDetail = async () => {
   const storeId = Number(route.params.id)
-  const params = {
-    userNo: userNo,
-    storeId: storeId,
-  }
+  const params = { userNo: userNo, storeId: storeId }
   try {
     const res = await storeService.getStore(storeId)
     state.storeInfo = res.resultData
@@ -53,10 +51,7 @@ const getMenuList = async () => {
 }
 
 const toggleWish = async () => {
-  const params = {
-    userNo: userNo,
-    storeId: Number(route.params.id),
-  }
+  const params = { userNo: userNo, storeId: Number(route.params.id) }
   try {
     const result = await storeService.toggleFavorite(params)
     state.isWished = result.resultData
@@ -83,7 +78,6 @@ const groupedMenu = computed(() => {
 onMounted(() => {
   getStoreDetail()
   getMenuList()
-  // getReviewList();
 })
 
 const openMenuModal = (menu) => {
@@ -109,11 +103,7 @@ const handleAddToCart = (item) => {
     <section class="store-header-info">
       <div class="title-row">
         <h1>{{ state.storeInfo.storeName }}</h1>
-        <button
-          class="wish-btn"
-          :class="{ 'is-active': state.isWished }"
-          @click="toggleWish"
-        >
+        <button class="wish-btn" :class="{ 'is-active': state.isWished }" @click="toggleWish">
           <span class="heart-icon">{{ state.isWished ? '♥' : '♡' }}</span>
         </button>
       </div>
@@ -140,78 +130,35 @@ const handleAddToCart = (item) => {
     </section>
 
     <nav class="detail-tabs">
-      <button :class="{ active: state.activeTab === 'menu' }" @click="state.activeTab = 'menu'">
-        메뉴
-      </button>
-      <button :class="{ active: state.activeTab === 'info' }" @click="state.activeTab = 'info'">
-        가게정보
-      </button>
-      <button :class="{ active: state.activeTab === 'review' }" @click="state.activeTab = 'review'">
-        리뷰
-      </button>
+      <button :class="{ active: state.activeTab === 'menu' }" @click="state.activeTab = 'menu'">메뉴</button>
+      <button :class="{ active: state.activeTab === 'info' }" @click="state.activeTab = 'info'">가게정보</button>
+      <button :class="{ active: state.activeTab === 'review' }" @click="state.activeTab = 'review'">리뷰</button>
     </nav>
 
     <div class="tab-content-area">
       <div v-if="state.activeTab === 'menu'" class="menu-list-wrapper">
-        <MenuCategory
-          v-for="group in groupedMenu"
-          :key="group.name"
-          :category-name="group.name"
-          :items="group.items"
-          @click-menu="openMenuModal"
-        />
+        <MenuCategory v-for="group in groupedMenu" :key="group.name" :category-name="group.name" :items="group.items" @click-menu="openMenuModal" />
       </div>
-
       <div v-if="state.activeTab === 'info'" class="info-tab-wrapper">
         <StoreInfo :state="state.storeInfo" />
       </div>
-
       <div v-if="state.activeTab === 'review'" class="review-container">
         <div class="review-summary">
           <p v-if="state.review.length === 0">아직 작성된 리뷰가 없습니다.</p>
-          <p v-else>
-            총 <strong>{{ state.review.length }}</strong
-            >개의 리뷰가 있습니다.
-          </p>
+          <p v-else>총 <strong>{{ state.review.length }}</strong>개의 리뷰가 있습니다.</p>
         </div>
       </div>
     </div>
 
-    <MenuDetailModal
-    :menu="state.selectedMenu"
-    :is-open="state.isModalOpen"
-    :min-price="state.storeInfo.minPrice"
-    @close="state.isModalOpen = false"
-    @add-to-cart="handleAddToCart"
-    />
+    <MenuDetailModal :menu="state.selectedMenu" :is-open="state.isModalOpen" :min-price="state.storeInfo.minPrice" @close="state.isModalOpen = false" @add-to-cart="handleAddToCart" />
   </div>
 </template>
 
 <style scoped>
-/* 전체 컨테이너 */
-.store-detail-view {
-  width: 100%;
-  background: #fff;
-  min-height: 100vh;
-  max-width: 480px;
-  padding-bottom: 60px;
-  margin: 0 auto;
-}
+.store-detail-view { width: 100%; background: #fff; min-height: 100vh; max-width: 480px; padding-bottom: 60px; margin: 0 auto; }
 .store-cover { position: relative; width: 100%; height: 250px; }
 .cover-img { width: 100%; height: 100%; object-fit: cover; }
-.back-btn {
-  position: absolute;
-  top: 15px;
-  left: 15px;
-  background: rgba(0,0,0,0.3);
-  color: white;
-  border: none;
-  border-radius: 50%;
-  width: 36px;
-  height: 36px;
-  font-size: 1.2rem;
-  cursor: pointer;
-}
+.back-btn { position: absolute; top: 15px; left: 15px; background: rgba(0,0,0,0.3); color: white; border: none; border-radius: 50%; width: 36px; height: 36px; font-size: 1.2rem; cursor: pointer; }
 .store-header-info { padding: 24px 20px; text-align: left; }
 .title-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
 .title-row h1 { font-size: 1.6rem; font-weight: 800; margin: 0; color: #111; }

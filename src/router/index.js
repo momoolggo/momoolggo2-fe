@@ -29,6 +29,7 @@ import OrderView          from '@/views/servicee/OrderView.vue'
 import EventView          from '@/views/servicee/EventView.vue'
 import WhatKindView       from '@/views/servicee/WhatKindView.vue'
 import SearchStoreView    from '@/views/header/SearchStoreView.vue'
+import NearbyView from '@/views/servicee/NearbyView.vue'
 
 const routes = [
   { path: '/', name: 'Landing', component: LandingView },
@@ -65,6 +66,7 @@ const routes = [
   { path: '/searchstore', name: 'Searchstore', component: SearchStoreView, meta: { requiresAuth: true, role: 'CUSTOMER' } },
   {path: '/payment/success', name: 'PaymentSuccess', component: () => import('@/views/servicee/PaySuccess.vue'), meta: { requiresAuth: true, role: 'CUSTOMER' } },
   {path: '/payment/fail', name: 'PaymentFailure', component: () => import('@/views/servicee/PayFail.vue'), meta: { requiresAuth: true, role: 'CUSTOMER' } },
+  { path: '/nearby', name: 'Nearby', component: NearbyView, meta: { requiresAuth: true, role: 'CUSTOMER' } },
 
   // ── 사장님 전용
   { path: '/ownerservice', name: 'OwnerService', component: OwnerOrderView, meta: { requiresAuth: true, role: 'OWNER' } },

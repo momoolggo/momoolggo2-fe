@@ -18,7 +18,7 @@ const goTo = (page) => {
     <div class="nav-item" @click="goTo('home')">
       <i class="icon-home"></i> <span>홈</span>
     </div>
-    <div class="nav-item" @click="goTo('')">
+    <div class="nav-item" @click="goTo('nearby')">
       <i class="icon-map"></i>
       <span>주변 찾기</span>
     </div>

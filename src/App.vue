@@ -39,10 +39,7 @@ const signout = async () => {
       <router-view />
       <TokenExpiryModal />
       <MobileNavi 
-      v-if="showHeader"
-        :is-signed-in="userStore.state.isSignedIn"
-        :user-info="userStore.state"
-        @signout="signout"/>
+      v-if="userStore.state.isSignedIn"/>
     </div>
   </div>
 </template>

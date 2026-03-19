@@ -19,5 +19,18 @@ class OrderService {
       const res = await axios.post('/payment/confirm', paymentData);
       return res.data;
   }
+
+    // 주문 내역 조회 (마이페이지)
+    async getOrderHistory(params) {
+        const res = await axios.get(`${this.#url}/history`, { params });
+        return res.data;
+    }
+
+     // 주문 상세 조회 (마이페이지)
+    async getOrderDetail(orderId) {
+        const res = await axios.get(`${this.#url}/history/${orderId}`);
+        return res.data;
+    }
+
 }
 export default new OrderService();

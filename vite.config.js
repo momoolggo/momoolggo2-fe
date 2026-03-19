@@ -20,16 +20,10 @@ export default defineConfig({
       '/api': {
           target: 'http://localhost:8080',
           changeOrigin: true,
-          secure: false,        // ✅ 추가
-          configure: (proxy) => {
-            proxy.on('error', (err) => console.log('proxy error', err))
-            proxy.on('proxyReq', (_, req) => console.log('보내는 요청:', req.method, req.url))
-            proxy.on('proxyRes', (res) => console.log('받은 응답:', res.statusCode))
-          }
         },
       '/pic': {
       target: 'http://localhost:8080',
       }
     }
-  }
-})
+  }}
+)

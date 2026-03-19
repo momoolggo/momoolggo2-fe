@@ -141,7 +141,7 @@ const isOwner = computed(() => userStore.state.role === 'OWNER')
 
 .owner_header_inner {
   width: 100%;
-  max-width: 1200px;      
+  max-width: 1200px;
   margin: 0 auto;
   display: flex;
   align-items: center;

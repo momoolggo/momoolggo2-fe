@@ -18,7 +18,7 @@ const getImageUrl = (path) => {
 <template>
   <div class="store-card" :class="{ 'is_closed': store.state === 0 }"@click="$emit('click', store)">
     <div v-if="store.state === 0" class="closed-overlay">
-      <span class="closed-badge"> 준비중이예요!</span>
+      <span class="closed-badge"> 준비중이예요🤗</span>
     </div>
     <img
       :src="getImageUrl(store.pic) || '/images/default-store.png'"
@@ -68,24 +68,23 @@ const getImageUrl = (path) => {
 .closed-overlay {
   position: absolute;
   inset: 0;
-  border-radius: 12px;
-  background: rgba(0, 0, 0, 0.55);
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.6);
   z-index: 1;
   display: flex;
   align-items: center;
-  justify-content: flex-start;
-  padding-left: 12px;
+  justify-content: center
 }
 
 .closed-badge {
-  background: #990404;
-  border: 1.5px solid rgba(255, 255, 255, 0.4);
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.4);
   border-radius: 20px;
-  padding: 5px 12px;
-  color: #fff;
-  font-size: 0.85rem;
-  font-weight: 600;
-  letter-spacing: 2px;
+  padding: 4px 12px;
+  color: #383434;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
 }
 .store-card:hover { transform: translateY(-2px); }
 .store-thumbnail { width: 100px; height: 100px; border-radius: 12px; object-fit: cover; }

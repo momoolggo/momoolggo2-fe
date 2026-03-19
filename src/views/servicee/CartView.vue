@@ -3,6 +3,7 @@ import { reactive, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import cartService from '@/services/cartService';
 import { useUserStore } from '@/stores/userStore';
+import { showAlert, showConfirm } from '@/composables/useAlert'
 
 const router = useRouter();
 const userStore = useUserStore();
@@ -69,23 +70,26 @@ const changeQuantity = (item, delta) => {
 };
 
 const removeItem = async (item) => {
-    if (!confirm(`${item.menuName} 메뉴를 삭제하시겠습니까?`)) return;
+    const ok = await showConfirm(`${item.menuName} 메뉴를 삭제하시겠습니까?`, { title: '메뉴 삭제', type: 'warning' })
+    if (!ok) return
     try {
         await cartService.deleteCartItem(item.id);
         loadCart();
     } catch (e) {
-        alert('삭제 실패');
+        await showAlert('삭제에 실패했습니다.', { title: '오류', type: 'error' })
     }
 };
 
 const clearCart = async () => {
-    if (!confirm('장바구니를 완전히 비우시겠습니까?')) return;
+    // 변경
+    const ok = await showConfirm('장바구니를 완전히 비우시겠습니까?', { title: '장바구니 비우기', type: 'warning' })
+    if (!ok) return
     try {
         await cartService.clearCart(userNo.value);
         state.cartItems = [];
         state.storeName = '';
     } catch (e) {
-        alert('초기화 실패');
+        await showAlert('초기화에 실패했습니다.', { title: '오류', type: 'error' })
     }
 };
 

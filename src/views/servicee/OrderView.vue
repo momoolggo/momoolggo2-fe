@@ -5,6 +5,7 @@ import orderService from '@/services/orderService'
 import CartView from './CartView.vue'
 import { useUserStore } from '@/stores/userStore'
 import cartService from '@/services/cartService'
+import { showAlert } from '@/composables/useAlert'
 
 const userStore = useUserStore()
 const userNo = computed(() => userStore.state.userNo)
@@ -100,11 +101,11 @@ onMounted(loadOrderInfo)
 
 const handleOrder = async () => {
   if (!state.address) {
-    alert('배송지를 설정해주세요.')
+    await showAlert('배송지를 설정해주세요.', { title: '배송지 필요', type: 'warning' })
     return
   }
   if (!isWidgetReady.value) {
-    alert('결제 위젯이 아직 준비되지 않았습니다.')
+    await showAlert('결제 위젯이 아직 준비되지 않았습니다.', { title: '잠시만요', type: 'info' })
     return
   }
 
@@ -139,7 +140,7 @@ const handleOrder = async () => {
     })
   } catch (e) {
     console.error('결제 요청 실패:', e)
-    alert('결제 요청에 실패했습니다.')
+    await showAlert('결제 요청에 실패했습니다.', { title: '결제 오류', type: 'error' })
   }
 }
 </script>

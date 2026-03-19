@@ -70,6 +70,12 @@ const routes = [
   {path: '/payment/success', name: 'PaymentSuccess', component: () => import('@/views/servicee/PaySuccess.vue'), meta: { requiresAuth: true, role: 'CUSTOMER' } },
   {path: '/payment/fail', name: 'PaymentFailure', component: () => import('@/views/servicee/PayFail.vue'), meta: { requiresAuth: true, role: 'CUSTOMER' } },
   { path: '/nearby', name: 'Nearby', component: NearbyView, meta: { requiresAuth: true, role: 'CUSTOMER' } },
+  // 리뷰 수정 페이지 (기존 데이터 불러오기)
+  {
+    path: '/mypage/review/edit/:reviewId',
+    name: 'ReviewEdit',
+    component: () => import('@/views/mypage/ReviewEditView.vue')
+  },
 
   // ── 사장님 전용
   { path: '/ownerservice', name: 'OwnerService', component: OwnerOrderView, meta: { requiresAuth: true, role: 'OWNER' } },

@@ -32,12 +32,12 @@ const fetchStats = async () => {
     );
     const orders = response?.resultData ?? [];
 
-    stats.value = {
-      total: orders.length,
-      waiting: orders.filter(o => Number(o.state) === 0).length,
-      completed: orders.filter(o => Number(o.state) === 4).length,
-      cancel: orders.filter(o => Number(o.state) === 5).length
-    };
+      stats.value = {
+        total: orders.length,
+        waiting: orders.filter(o => Number(o.state) === 1).length,
+        completed: orders.filter(o => Number(o.state) === 6).length,
+        cancel: orders.filter(o => Number(o.state) === 2).length
+      };
   } catch (error) {
     console.error("통계 조회 실패:", error);
   }

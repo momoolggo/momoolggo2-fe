@@ -2,6 +2,7 @@
 import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import userService from '@/services/userService'
+import { showConfirm } from '@/composables/useAlert'
 
 const router = useRouter()
 
@@ -33,7 +34,8 @@ const editReview = (reviewId) => {
 }
 
 const deleteReview = async (reviewId) => {
-  if (!confirm('리뷰를 삭제하시겠습니까?')) return
+  const ok = await showConfirm('리뷰를 삭제하시겠습니까?', { title: '삭제 확인', type: 'warning' }) 
+  if (!ok) return
   await userService.deleteReview(reviewId)
   await loadReviews(currentPage.value)
 }

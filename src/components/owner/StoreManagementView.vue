@@ -2,6 +2,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import ownerService from '@/services/ownerService'
 import NaverMap from '@/components/common/NaverMap.vue'
+import { showAlert, showConfirm } from '@/composables/useAlert'
 
 const activeTab = ref('기본정보')
 const tabs = ['기본정보', '운영상태']
@@ -96,7 +97,7 @@ const onFileChange = async (e) => {
     const res = await ownerService.uploadMenuImage(formData)
     basicForm.storePic = res.resultData  // /uploads/menu/파일명.jpg
   } catch {
-    alert('이미지 업로드 실패')
+    await showAlert('이미지 업로드에 실패했습니다.', { title: '오류', type: 'error' })
     previewImage.value = null
   } finally {
     uploading.value = false
@@ -106,9 +107,9 @@ const onFileChange = async (e) => {
 const saveBasicInfo = async () => {
   try {
     await ownerService.updateStore({ ...basicForm })
-    alert('기본정보가 수정되었습니다.')
+    await showAlert('기본정보가 수정되었습니다.', { title: '수정 완료', type: 'success' })
   } catch {
-    alert('수정 실패')
+    await showAlert('수정에 실패했습니다.', { title: '오류', type: 'error' })
   }
 }
 
@@ -117,19 +118,20 @@ const saveStatus = async () => {
   statusForm.minPrice = Number(statusForm.minPrice)
   try {
     await ownerService.updateStoreStatus({ ...statusForm })
-    alert('운영정보가 수정되었습니다.')
+    await showAlert('운영정보가 수정되었습니다.', { title: '수정 완료', type: 'success' })
   } catch {
-    alert('수정 실패')
+    await showAlert('수정에 실패했습니다.', { title: '오류', type: 'error' })
   }
 }
 
 const deleteStore = async () => {
-  if (!confirm('정말 가게를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) return
+  const ok = await showConfirm('정말 가게를 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.', { title: '가게 삭제', type: 'warning' })
+  if (!ok) return
   try {
     await ownerService.deleteStore(basicForm.storeId)
-    alert('가게가 삭제되었습니다.')
+    await showAlert('가게가 삭제되었습니다.', { title: '삭제 완료', type: 'success' })
   } catch {
-    alert('삭제 실패')
+    await showAlert('삭제에 실패했습니다.', { title: '오류', type: 'error' })
   }
 }
 </script>

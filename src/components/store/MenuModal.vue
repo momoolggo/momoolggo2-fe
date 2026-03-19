@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 import { useUserStore } from '@/stores/userStore'
 import cartService from '@/services/cartService'
+import { showAlert, showConfirm } from '@/composables/useAlert'
 
 const props = defineProps({
   menu: Object,
@@ -33,24 +34,24 @@ const handleAddCart = async () => {
       quantity: quantity.value,
     }
     await cartService.addToCart(cartData)
-    alert('장바구니에 담겼습니다! 🛒')
+    await showAlert('장바구니에 담겼습니다! 🛒', { title: '장바구니', type: 'success' })
     quantity.value = 1
     emit('close')
   } catch (error) {
     if (error.response?.status === 409) {
-      const confirmed = confirm('다른 매장의 메뉴가 장바구니에 있습니다.\n기존 장바구니를 비우고 담을까요?')
+      const confirmed = await showConfirm('다른 매장의 메뉴가 장바구니에 있습니다.\n기존 장바구니를 비우고 담을까요?', { title: '장바구니 초기화', type: 'warning' })
       if (confirmed) {
         await cartService.clearAndAdd({
           userNo: userStore.state.userNo,
           menuId: props.menu.menuId,
           quantity: quantity.value,
         })
-        alert('장바구니에 담겼습니다! 🛒')
+        await showAlert('장바구니에 담겼습니다! 🛒', { title: '장바구니', type: 'success' })
         quantity.value = 1
         emit('close')
       }
     } else {
-      alert('장바구니 담기에 실패했습니다.')
+      await showAlert('장바구니 담기에 실패했습니다.', { title: '오류', type: 'error' })
     }
   }
 }

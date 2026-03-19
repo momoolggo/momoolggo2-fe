@@ -6,13 +6,15 @@ import StoreInfo from '@/components/store/StoreInfo.vue'
 import MenuDetailModal from '@/components/store/MenuModal.vue'
 import storeService from '@/services/storeService'
 import { useUserStore } from '@/stores/userStore'
+import { showAlert } from '@/composables/useAlert'
+
 const route = useRoute()
 const userStore = useUserStore()
 const userNo = userStore.state.userNo
 
 const getImageUrl = (path) => {
   if (!path) return null
-  if (path.startsWith('data:')) return path      // ← Base64 data URI 지원 추가
+  if (path.startsWith('data:')) return path
   if (path.startsWith('http') || path.startsWith('blob')) return path
   return `http://localhost:8080${path}`
 }
@@ -22,7 +24,7 @@ const state = reactive({
   menuList: [],
   activeTab: 'menu',
   selectedMenu: {},
-  review: [],
+  reviews: [],
   isModalOpen: false,
   isWished: false,
 })
@@ -50,6 +52,17 @@ const getMenuList = async () => {
   }
 }
 
+// 가게 리뷰 조회 추가
+const getReviewList = async () => {
+  const storeId = route.params.id
+  try {
+    const res = await storeService.getStoreReviews(storeId)
+    state.reviews = res.resultData || []
+  } catch (error) {
+    console.error('리뷰 데이터 로드 실패:', error)
+  }
+}
+
 const toggleWish = async () => {
   const params = { userNo: userNo, storeId: Number(route.params.id) }
   try {
@@ -57,7 +70,7 @@ const toggleWish = async () => {
     state.isWished = result.resultData
   } catch (error) {
     console.error('찜 처리 중 오류 발생:', error)
-    alert('요청 처리에 실패했습니다.')
+    await showAlert('요청 처리에 실패했습니다.', { title: '오류', type: 'error' })
   }
 }
 
@@ -78,6 +91,7 @@ const groupedMenu = computed(() => {
 onMounted(() => {
   getStoreDetail()
   getMenuList()
+  getReviewList()
 })
 
 const openMenuModal = (menu) => {
@@ -132,20 +146,46 @@ const handleAddToCart = (item) => {
     <nav class="detail-tabs">
       <button :class="{ active: state.activeTab === 'menu' }" @click="state.activeTab = 'menu'">메뉴</button>
       <button :class="{ active: state.activeTab === 'info' }" @click="state.activeTab = 'info'">가게정보</button>
-      <button :class="{ active: state.activeTab === 'review' }" @click="state.activeTab = 'review'">리뷰</button>
+      <button :class="{ active: state.activeTab === 'review' }" @click="state.activeTab = 'review'">
+        리뷰 {{ state.reviews.length > 0 ? `(${state.reviews.length})` : '' }}
+      </button>
     </nav>
 
     <div class="tab-content-area">
       <div v-if="state.activeTab === 'menu'" class="menu-list-wrapper">
         <MenuCategory v-for="group in groupedMenu" :key="group.name" :category-name="group.name" :items="group.items" @click-menu="openMenuModal" />
       </div>
+
       <div v-if="state.activeTab === 'info'" class="info-tab-wrapper">
         <StoreInfo :state="state.storeInfo" />
       </div>
+
+      <!-- 리뷰 탭 (수정됨) -->
       <div v-if="state.activeTab === 'review'" class="review-container">
-        <div class="review-summary">
-          <p v-if="state.review.length === 0">아직 작성된 리뷰가 없습니다.</p>
-          <p v-else>총 <strong>{{ state.review.length }}</strong>개의 리뷰가 있습니다.</p>
+        <div v-if="state.reviews.length === 0" class="review-empty">
+          <p>아직 작성된 리뷰가 없습니다.</p>
+        </div>
+
+        <div v-else class="review-list">
+          <div class="review-card" v-for="review in state.reviews" :key="review.reviewId">
+            <div class="review-top">
+              <span class="reviewer-name">{{ review.userName }}</span>
+              <span class="review-date">{{ review.date }}</span>
+            </div>
+            <div class="review-stars">
+              <img
+                v-for="idx in 5"
+                :key="idx"
+                :src="review.rating >= idx
+                  ? 'https://cdn-icons-png.flaticon.com/512/1828/1828884.png'
+                  : 'https://cdn-icons-png.flaticon.com/512/1828/1828970.png'"
+                class="star-img"
+              />
+            </div>
+            <p class="review-menu">{{ review.menuName }}</p>
+            <p class="review-text">{{ review.contents }}</p>
+            <img v-if="review.photo" :src="getImageUrl(review.photo)" class="review-photo" />
+          </div>
         </div>
       </div>
     </div>
@@ -176,5 +216,33 @@ const handleAddToCart = (item) => {
 .detail-tabs button { flex: 1; padding: 14px 0; border: none; background: none; color: #999; font-size: 1rem; font-weight: 500; cursor: pointer; }
 .detail-tabs button.active { color: #111; font-weight: 700; border-bottom: 3px solid #111; }
 .tab-content-area { background: #f8f9fa; }
-.review-summary { background: #fff; padding: 20px; text-align: center; color: #666; border-radius: 12px; }
+
+/* 리뷰 스타일 */
+.review-container { padding: 16px; }
+.review-empty { background: #fff; padding: 40px 20px; text-align: center; color: #999; border-radius: 12px; }
+.review-list { display: flex; flex-direction: column; gap: 12px; }
+.review-card {
+  background: #fff;
+  border-radius: 14px;
+  padding: 18px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+.review-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.reviewer-name { font-size: 15px; font-weight: 700; color: #111; }
+.review-date { font-size: 12px; color: #bbb; }
+.review-stars { display: flex; gap: 2px; margin-bottom: 8px; }
+.star-img { width: 16px; height: 16px; }
+.review-menu { font-size: 12px; color: #ff99aa; margin-bottom: 8px; }
+.review-text { font-size: 14px; color: #333; line-height: 1.6; margin-bottom: 8px; }
+.review-photo {
+  width: 100%;
+  max-height: 200px;
+  object-fit: cover;
+  border-radius: 10px;
+}
 </style>

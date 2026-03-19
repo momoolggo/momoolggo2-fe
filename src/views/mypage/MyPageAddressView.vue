@@ -2,6 +2,7 @@
 import { reactive, onMounted } from 'vue'
 import addressService from '@/services/addressService'
 import NaverMap from '@/components/common/NaverMap.vue'
+import { showAlert, showConfirm } from '@/composables/useAlert'
 
 const state = reactive({
   list: [],
@@ -56,7 +57,7 @@ const closeModal = () => {
 
 // ── 저장 (추가 or 수정)
 const saveAddress = async () => {
-  if (!state.modalForm.address) { alert('주소를 입력해 주세요.'); return }
+  if (!state.modalForm.address) { await showAlert('주소를 입력해 주세요.', { title: '입력 필요', type: 'warning' }); return }
   try {
     if (state.editMode) {
       await addressService.update(state.modalForm)
@@ -66,18 +67,19 @@ const saveAddress = async () => {
     closeModal()
     await loadList()
   } catch {
-    alert('저장 실패')
+    await showAlert('저장에 실패했습니다.', { title: '오류', type: 'error' })
   }
 }
 
 // ── 삭제
 const deleteAddress = async (addressId) => {
-  if (!confirm('삭제하시겠습니까?')) return
+  const ok = await showConfirm('삭제하시겠습니까?', { title: '주소 삭제', type: 'warning' })
+  if (!ok) return
   try {
     await addressService.delete(addressId)
     await loadList()
   } catch {
-    alert('삭제 실패')
+    await showAlert('삭제에 실패했습니다.', { title: '오류', type: 'error' })
   }
 }
 
@@ -87,7 +89,7 @@ const setDefault = async (addressId) => {
     await addressService.setDefault(addressId)
     await loadList()
   } catch {
-    alert('변경 실패')
+    await showAlert('변경에 실패했습니다.', { title: '오류', type: 'error' })
   }
 }
 </script>

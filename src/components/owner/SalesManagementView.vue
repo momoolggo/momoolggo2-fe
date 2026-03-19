@@ -7,6 +7,7 @@ import {
   BarElement, Title, Tooltip, Legend
 } from 'chart.js'
 
+
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend)
 
 const activeTab = ref('일간')

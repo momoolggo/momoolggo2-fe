@@ -54,6 +54,11 @@ class StoreService {
     async getNearbyStores(lat, lng) {
     const res = await axios.get(`${this.#url}/nearby`, { params: { lat, lng } });
     return res.data;
+    }
+
+    async getStoreReviews(storeId) {
+    const res = await axios.get(`${this.#url}/${storeId}/review`)
+    return res.data
 }
 }
 

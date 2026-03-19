@@ -223,5 +223,5 @@ const goStore = (storeId) => {
 /* 빈 목록 상태 */
 .empty-wish { text-align: center; padding: 80px 0; color: #bbb; }
 .empty-icon { font-size: 3rem; display: block; margin-bottom: 10px; }
-.go-main-btn { margin-top: 15px; padding: 10px 24px; background: #2ac1bc; color: #fff; border: none; border-radius: 8px; cursor: pointer; font-weight: 700; }
+.go-main-btn { margin-top: 15px; padding: 10px 24px; background:#a40C0b; color: #fff; border: none; border-radius: 8px; cursor: pointer; font-weight: 700; }
 </style>

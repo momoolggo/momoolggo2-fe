@@ -45,7 +45,6 @@ const deleteReview = async (reviewId) => {
       <h2 class="page-title">리뷰 관리</h2>
 
       <p class="total-count">총 {{ totalCount }}개</p>
-
       <div class="review-list">
         <div class="review-card" v-for="review in reviews" :key="review.reviewId">
 

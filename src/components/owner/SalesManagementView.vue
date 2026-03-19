@@ -23,8 +23,8 @@ const loadData = async () => {
   try {
     const period = periodMap[activeTab.value]
     const [statsRes, rankingRes] = await Promise.all([
-      ownerService.getSalesStats(period),
-      ownerService.getSalesRanking(period),
+      ownerService.getSalesStats(storeInfo.myStoreId, period),
+      ownerService.getSalesRanking(storeInfo.myStoreId, period),
     ])
     stats.value = statsRes.resultData || { orderCount: 0, totalSales: 0 }
     ranking.value = rankingRes.resultData || []

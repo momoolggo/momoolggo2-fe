@@ -1,5 +1,5 @@
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted, watch} from 'vue'
 import ownerService from '@/services/ownerService'
 import { useStore } from '@/stores/useStore'
 import { showAlert, showConfirm } from '@/composables/useAlert'
@@ -70,6 +70,8 @@ const loadAll = async () => {
 }
 
 onMounted(loadAll)
+
+watch(() => storeInfo.myStoreId, loadAll)
 
 // ══════════════════════════════════════
 //  메뉴 추가/수정 모달

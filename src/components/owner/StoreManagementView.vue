@@ -1,8 +1,11 @@
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, watch } from 'vue'
 import ownerService from '@/services/ownerService'
+import { useStore } from '@/stores/useStore'
 import NaverMap from '@/components/common/NaverMap.vue'
 import { showAlert, showConfirm } from '@/composables/useAlert'
+
+const storeInfo = useStore()
 
 const activeTab = ref('기본정보')
 const tabs = ['기본정보', '운영상태']
@@ -43,28 +46,29 @@ const getImageUrl = (path) => {
 }
 
 const loadStore = async () => {
+  if (!storeInfo.myStoreId) return
   loading.value = true
   try {
-    const res = await ownerService.getMyStore()
-    const data = res.resultData
-    if (!data) return
+    // 가게 목록에서 현재 선택된 가게 정보 가져오기
+    const found = storeInfo.myStores.find(s => s.storeId === storeInfo.myStoreId)
+    if (!found) return
 
-    basicForm.storeId = data.storeId
-    basicForm.storeName = data.storeName || ''
-    basicForm.location = data.location || ''
-    basicForm.storeTel = data.storeTel || ''
-    basicForm.businessNumber = data.businessNumber || ''
-    basicForm.storePic = data.storePic || ''
-    basicForm.storeInfo = data.storeInfo || ''
-    previewImage.value = data.storePic ? getImageUrl(data.storePic) : null
+    basicForm.storeId = found.storeId
+    basicForm.storeName = found.storeName || ''
+    basicForm.location = found.location || ''
+    basicForm.storeTel = found.storeTel || ''
+    basicForm.businessNumber = found.businessNumber || ''
+    basicForm.storePic = found.storePic || ''
+    basicForm.storeInfo = found.storeInfo || ''
+    previewImage.value = found.storePic ? getImageUrl(found.storePic) : null
 
-    statusForm.storeId = data.storeId
-    statusForm.state = data.state ?? 1
-    statusForm.notice = data.notice || ''
-    statusForm.holiday = data.holiday || ''
-    statusForm.minPrice = data.minPrice || 0
-    statusForm.businessHours = data.businessHours || ''
-    selectedHolidays.value = data.holiday ? data.holiday.split(',') : []
+    statusForm.storeId = found.storeId
+    statusForm.state = found.state ?? 1
+    statusForm.notice = found.notice || ''
+    statusForm.holiday = found.holiday || ''
+    statusForm.minPrice = found.minPrice || 0
+    statusForm.businessHours = found.businessHours || ''
+    selectedHolidays.value = found.holiday ? found.holiday.split(',') : []
   } catch (e) {
     console.error('가게 정보 로드 실패:', e)
   } finally {
@@ -74,28 +78,28 @@ const loadStore = async () => {
 
 onMounted(loadStore)
 
+// 가게 전환 시 데이터 다시 로드
+watch(() => storeInfo.myStoreId, loadStore)
+
 const onAddressSelect = ({ address, lat, lng }) => {
   basicForm.location = address
   basicForm.lat = lat
   basicForm.lng = lng
 }
 
-// 가게 사진 업로드 (서버에 저장)
 const triggerFileUpload = () => fileInput.value.click()
 const onFileChange = async (e) => {
   const file = e.target.files[0]
   if (!file) return
 
-  // 미리보기
   previewImage.value = URL.createObjectURL(file)
 
-  // 서버에 업로드
   uploading.value = true
   try {
     const formData = new FormData()
     formData.append('file', file)
-    const res = await ownerService.uploadMenuImage(formData)
-    basicForm.storePic = res.resultData  // /uploads/menu/파일명.jpg
+    const res = await ownerService.uploadStoreImage(formData)
+    basicForm.storePic = res.resultData
   } catch {
     await showAlert('이미지 업로드에 실패했습니다.', { title: '오류', type: 'error' })
     previewImage.value = null
@@ -108,6 +112,9 @@ const saveBasicInfo = async () => {
   try {
     await ownerService.updateStore({ ...basicForm })
     await showAlert('기본정보가 수정되었습니다.', { title: '수정 완료', type: 'success' })
+    // 가게 목록도 갱신
+    const res = await ownerService.getMyStores()
+    storeInfo.setStores(res.resultData || [])
   } catch {
     await showAlert('수정에 실패했습니다.', { title: '오류', type: 'error' })
   }
@@ -119,6 +126,9 @@ const saveStatus = async () => {
   try {
     await ownerService.updateStoreStatus({ ...statusForm })
     await showAlert('운영정보가 수정되었습니다.', { title: '수정 완료', type: 'success' })
+    // 가게 목록도 갱신
+    const res = await ownerService.getMyStores()
+    storeInfo.setStores(res.resultData || [])
   } catch {
     await showAlert('수정에 실패했습니다.', { title: '오류', type: 'error' })
   }
@@ -130,6 +140,15 @@ const deleteStore = async () => {
   try {
     await ownerService.deleteStore(basicForm.storeId)
     await showAlert('가게가 삭제되었습니다.', { title: '삭제 완료', type: 'success' })
+    // 가게 목록 갱신
+    const res = await ownerService.getMyStores()
+    const stores = res.resultData || []
+    storeInfo.setStores(stores)
+    if (stores.length > 0) {
+      storeInfo.setStore(stores[0].storeName, stores[0].storeId)
+    } else {
+      storeInfo.clearStore()
+    }
   } catch {
     await showAlert('삭제에 실패했습니다.', { title: '오류', type: 'error' })
   }
@@ -173,7 +192,6 @@ const deleteStore = async () => {
               placeholder="상세주소 입력 (동/호수 등)"
               class="detail-input"
             />
-            <!-- 선택된 주소 표시 크게 -->
             <div v-if="basicForm.location" class="selected-address-box">
               📍 {{ basicForm.location }}
               <span v-if="basicForm.addressDetail"> {{ basicForm.addressDetail }}</span>
@@ -292,83 +310,30 @@ const deleteStore = async () => {
 
 <style scoped>
 .store-wrap { flex: 1; padding: 40px; background: #f9f9f9; min-height: 100vh; }
-
 .tab-bar { display: flex; gap: 10px; margin-bottom: 24px; }
 .tab-btn { padding: 10px 22px; border-radius: 10px; border: 1.5px solid #ddd; background: #fff; font-size: 14px; font-weight: 600; color: #888; cursor: pointer; transition: all 0.15s; }
 .tab-btn.active { background: #A40C0B; color: #fff; border-color: #A40C0B; }
 .tab-btn:hover:not(.active) { border-color: #A40C0B; color: #A40C0B; }
-
 .form-box { background: #fff; border-radius: 20px; padding: 36px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
 .form-box h2 { font-size: 20px; font-weight: 800; margin-bottom: 30px; }
-
 .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 30px; }
 .status-grid { display: flex; flex-direction: column; gap: 24px; margin-bottom: 30px; }
 .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
-
 .field { display: flex; flex-direction: column; gap: 8px; }
 .field label { font-size: 13px; font-weight: 600; color: #444; }
-.field input,
-.field textarea {
-  padding: 11px 14px;
-  border: 1.5px solid #e5e3dc;
-  border-radius: 10px;
-  font-size: 14px;
-  outline: none;
-  background: #fafafa;
-  transition: border-color 0.15s;
-  font-family: inherit;
-  box-sizing: border-box;
-  width: 100%;
-}
+.field input, .field textarea { padding: 11px 14px; border: 1.5px solid #e5e3dc; border-radius: 10px; font-size: 14px; outline: none; background: #fafafa; transition: border-color 0.15s; font-family: inherit; box-sizing: border-box; width: 100%; }
 .field input:focus, .field textarea:focus { border-color: #A40C0B; background: #fff; }
 .field textarea { height: 90px; resize: none; }
 .cnt { align-self: flex-end; font-size: 11px; color: #bbb; }
-
-/* 주소 표시 박스 */
 .detail-input { margin-top: 8px; }
-.selected-address-box {
-  margin-top: 8px;
-  padding: 12px 16px;
-  background: #fff4f4;
-  border: 1.5px solid #A40C0B;
-  border-radius: 10px;
-  font-size: 15px;
-  font-weight: 600;
-  color: #333;
-  line-height: 1.5;
-}
-
-/* 이미지 업로드 */
-.img-upload-box {
-  border: 2px dashed #ddd;
-  border-radius: 12px;
-  height: 200px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  overflow: hidden;
-  position: relative;
-  transition: border-color 0.15s;
-}
+.selected-address-box { margin-top: 8px; padding: 12px 16px; background: #fff4f4; border: 1.5px solid #A40C0B; border-radius: 10px; font-size: 15px; font-weight: 600; color: #333; line-height: 1.5; }
+.img-upload-box { border: 2px dashed #ddd; border-radius: 12px; height: 200px; display: flex; align-items: center; justify-content: center; cursor: pointer; overflow: hidden; position: relative; transition: border-color 0.15s; }
 .img-upload-box:hover { border-color: #A40C0B; }
 .store-thumb { width: 100%; height: 100%; object-fit: cover; }
-.img-change-overlay {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: rgba(0,0,0,0.4);
-  color: #fff;
-  text-align: center;
-  padding: 8px;
-  font-size: 13px;
-}
+.img-change-overlay { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.4); color: #fff; text-align: center; padding: 8px; font-size: 13px; }
 .img-placeholder { text-align: center; color: #bbb; }
 .plus { font-size: 28px; }
 .upload-text { color: #888; font-size: 14px; }
-
-/* 토글 */
 .toggle-row { display: flex; align-items: center; gap: 12px; }
 .toggle-label { font-size: 14px; font-weight: 600; color: #333; min-width: 40px; }
 .toggle { position: relative; display: inline-block; width: 48px; height: 26px; }
@@ -377,20 +342,14 @@ const deleteStore = async () => {
 .slider:before { content: ''; position: absolute; width: 20px; height: 20px; left: 3px; bottom: 3px; background: white; border-radius: 50%; transition: 0.3s; }
 .toggle input:checked + .slider { background: #A40C0B; }
 .toggle input:checked + .slider:before { transform: translateX(22px); }
-
-/* 휴무일 */
 .holiday-row { display: flex; gap: 10px; flex-wrap: wrap; }
 .day-check { cursor: pointer; }
 .day-check input { display: none; }
 .day-badge { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 50%; border: 1.5px solid #ddd; font-size: 14px; font-weight: 600; color: #888; transition: all 0.15s; }
 .day-badge.selected { background: #A40C0B; border-color: #A40C0B; color: #fff; }
-
-/* 가격 */
 .price-row { display: flex; align-items: center; gap: 8px; }
 .price-row input { flex: 1; }
 .unit { font-size: 14px; font-weight: 600; color: #444; }
-
-/* 버튼 */
 .btn-row { display: flex; justify-content: flex-end; gap: 10px; }
 .btn-delete { padding: 12px 22px; background: #fff; border: 1.5px solid #A40C0B; color: #A40C0B; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; margin-right: auto; }
 .btn-delete:hover { background: #A40C0B; color: #fff; }
@@ -398,6 +357,5 @@ const deleteStore = async () => {
 .btn-cancel:hover { background: #e8e8e8; }
 .btn-save { padding: 12px 22px; background: #A40C0B; color: #fff; border: none; border-radius: 10px; font-size: 14px; font-weight: 700; cursor: pointer; }
 .btn-save:hover { background: #8a0a09; }
-
 .loading { text-align: center; padding: 60px; color: #888; }
 </style>

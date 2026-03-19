@@ -56,7 +56,10 @@ const getStatusInfo = (status) => {
   return statusInfo[String(status)] || { text: '알 수 없음', class: 'waiting' };
 };
 
+watch(() => storeInfo.myStoreId, fetchOrders);
+
 onMounted(fetchOrders);
+
 </script>
 
 <template>
@@ -75,7 +78,7 @@ onMounted(fetchOrders);
       <span class="col-status">상태</span>
     </div>
 
-    <div v-for="order in orders" :key="order.orderId" class="order-item" @click="openModal(order)">
+    <div v-for="(order, index) in orders" :key="order.orderId" class="order-item" @click="openModal(order)">
       <span class="col-no">{{ index + 1 }}</span>
       <span class="col-time">{{ order.orderDate }}</span>
       <span class="col-duration">-</span>

@@ -67,19 +67,19 @@ class OwnerService {
     }
 
     // 로그인 후 가게 정보 조회
-    async getMyStore() {
+    async getMyStores() {
         const res = await axios.get(`${this.#url}/store`);
         return res.data;
     }
 
     // 매출관리
-    async getSalesStats(period) {
-        const res = await axios.get(`${this.#url}/sales/stats`, { params: { period } });
+    async getSalesStats(storeId, period) {
+        const res = await axios.get(`${this.#url}/sales/stats`, { params: { storeId, period } });
         return res.data;
     }
 
-    async getSalesRanking(period) {
-        const res = await axios.get(`${this.#url}/sales/ranking`, { params: { period } });
+    async getSalesRanking(storeId, period) {
+        const res = await axios.get(`${this.#url}/sales/ranking`, { params: { storeId, period } });
         return res.data;
     }
 

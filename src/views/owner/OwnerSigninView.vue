@@ -36,13 +36,17 @@ const signin = async () => {
     }
     userStore.signIn(data)
 
-    // 가게 정보 조회
-    const storeData = await ownerService.getMyStore()
-    console.log('storeData:', storeData)
-    if (storeData?.resultData?.storeName) {
-      store.setStore(storeData.resultData.storeName, storeData.resultData.storeId)
+    // 가게 목록 조회 (여러 가게 지원)
+    const storeData = await ownerService.getMyStores()
+    const stores = storeData?.resultData || []
+
+    if (stores.length > 0) {
+      // 가게 목록 저장 + 첫 번째 가게 자동 선택
+      store.setStores(stores)
+      store.setStore(stores[0].storeName, stores[0].storeId)
       router.push('/ownerservice')
     } else {
+      // 가게가 없으면 가게 추가 페이지로
       store.clearStore()
       router.push('/ownerservice/addstore')
     }

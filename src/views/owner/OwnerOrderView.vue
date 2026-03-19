@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, provide } from 'vue';
+import { ref, computed, onMounted, provide, watch } from 'vue';
 import Sidebar from '@/components/owner/Sidebar.vue';
 import OrderCard from '@/components/owner/OrderCard.vue';
 import OrderList from '@/components/owner/OrderList.vue';
@@ -47,6 +47,11 @@ const fetchStats = async () => {
 const onDateChange = () => {
   fetchStats();
 };
+
+// 가게 전환 시 자동 갱신
+watch(() => storeInfo.myStoreId, () => {
+  fetchStats();
+});
 
 // 자식 컴포넌트(OrderList)에서 사용
 provide('selectedDate', selectedDate);
@@ -120,7 +125,6 @@ const formattedDate = computed(() => {
 .main-content { flex: 1; padding: 40px; }
 .date-container { display: flex; justify-content: flex-end; margin-bottom: 30px; }
 
-/* ===== 달력 선택 영역 ===== */
 .date-picker-wrapper {
   position: relative;
   display: inline-flex;
@@ -141,7 +145,7 @@ const formattedDate = computed(() => {
   font-weight: bold;
   color: #333;
   font-size: 15px;
-  pointer-events: none;  /* 텍스트가 클릭을 가로채지 않음 */
+  pointer-events: none;
 }
 
 .date-input {
@@ -153,7 +157,6 @@ const formattedDate = computed(() => {
   opacity: 0;
   cursor: pointer;
   z-index: 2;
-  /* 전체 영역이 클릭 가능하도록 */
   -webkit-appearance: none;
   -moz-appearance: none;
   appearance: none;

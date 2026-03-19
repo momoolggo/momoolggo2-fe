@@ -240,7 +240,7 @@ const goStore = () => state.storeId ? router.push(`/store/${state.storeId}`) : r
 /* 하단 버튼 */
 .action-area { display: flex; flex-direction: column; gap: 12px; }
 .order-btn { width: 100%; padding: 18px; background: #4A90E2; color: #fff; border: none; border-radius: 12px; font-size: 1.1rem; font-weight: 700; cursor: pointer; }
-.clear-btn-box { width: 100%; padding: 14px; background: #fff; color: #ff4d4f; border: 1px solid #ff4d4f; border-radius: 12px; font-weight: 600; cursor: pointer; }
+.clear-btn-box { width: 100%; padding: 14px; background: #fff; color:#a40C0b; border: 1px solid#a40C0b; border-radius: 12px; font-weight: 600; cursor: pointer; }
 
 /* --- [수정] 비어있는 장바구니 스타일 (큼지막하게) --- */
 .empty-cart-wrapper {
@@ -271,7 +271,7 @@ const goStore = () => state.storeId ? router.push(`/store/${state.storeId}`) : r
 .go-shopping-btn {
   padding: 15px 60px;
   background: #ffffff;
-  color: #ef1935;
+  color:#a40C0b;
   border: none;
   border-radius: 20px;
   font-size: 1.2rem;

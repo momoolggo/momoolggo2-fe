@@ -210,8 +210,8 @@ const goStore = (storeId) => {
 
 /* 배달 정보 행 */
 .delivery-info { display: flex; align-items: center; font-size: 0.82rem; color: #777; white-space: nowrap; }
-.check-icon { color: #2ac1bc; font-weight: 800; margin-right: 4px; }
-.delivery-tip { color: #2ac1bc; font-weight: 700; }
+.check-icon { color: #169750; font-weight: 800; margin-right: 4px; }
+.delivery-tip { color: #169750; font-weight: 700; }
 .min-order { color: #888; }
 
 /* 페이징 스타일 */

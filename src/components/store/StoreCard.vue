@@ -38,7 +38,7 @@ const getImageUrl = (path) => {
       </div>
 
       <div class="delivery-info">
-        <span class="tip-badge">✅ 배달팁 무료</span>
+        <span class="tip-badge">✔ 배달팁 무료</span>
         <span class="divider">|</span>
         <span class="min-order">{{ (store.min || 0).toLocaleString() }}원 이상 배달</span>
       </div>
@@ -78,7 +78,7 @@ const getImageUrl = (path) => {
 }
 
 .closed-badge {
-  background: rgba(22, 221, 201, 0.75);
+  background: #990404;
   border: 1.5px solid rgba(255, 255, 255, 0.4);
   border-radius: 20px;
   padding: 5px 12px;
@@ -95,6 +95,6 @@ const getImageUrl = (path) => {
 .rating { color: #ffb800; font-weight: bold; }
 .highlight { color: #ff3d00; font-weight: 600; }
 .delivery-info { font-size: 0.9rem; color: #888; display: flex; align-items: center; }
-.tip-badge { color: #2ac1bc; font-weight: 600; }
+.tip-badge { color: #169750; font-weight: 600; }
 .divider { margin: 0 8px; color: #eee; font-size: 0.8rem; }
 </style>

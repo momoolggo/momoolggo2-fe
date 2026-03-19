@@ -45,7 +45,10 @@ const menus = [
 .mypage_wrap {
   max-width: 480px;
   margin: 40px auto;
-  padding: 0 16px;
+  padding: 0 16px; 
+  padding-bottom: 100px;
+  height: auto;
+  
 }
 .page_title {
   font-size: 22px;
@@ -70,6 +73,7 @@ const menus = [
   gap: 14px;
   cursor: pointer;
   transition: box-shadow 0.15s, border-color 0.15s;
+ 
 }
 .menu_card:hover {
   border-color: var(--primary);

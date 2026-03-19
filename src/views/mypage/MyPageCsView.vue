@@ -150,8 +150,8 @@ const open = () => {
 
 .tab-btn.active {
   background: #fff;
-  border-color:#e84040;
-  color: #e84040;
+  border-color:#a40C0b;
+  color: #a40C0b;
   font-weight: 700;
 }
 
@@ -189,7 +189,7 @@ const open = () => {
 .q-mark {
   font-size: 14px;
   font-weight: 800;
-  color: #e84040;
+  color: #a40C0b;
   flex-shrink: 0;
 }
 
@@ -257,8 +257,8 @@ const open = () => {
 .agent-btn {
   padding: 13px 48px;
   background: #fff;
-  color: #e84040;
-  border: 2px solid #e84040;
+  color: #a40C0b;
+  border: 2px solid #a40C0b;
   border-radius: 30px;
   font-size: 15px;
   font-weight: 700;
@@ -267,7 +267,7 @@ const open = () => {
 }
 
 .agent-btn:active {
-  background: #e84040;
+  background:#a40C0b;
   color: #fff;
 }
 </style>

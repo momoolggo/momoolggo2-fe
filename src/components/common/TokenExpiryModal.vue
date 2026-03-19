@@ -1,3 +1,76 @@
+<script setup>
+import { ref, watch, onUnmounted } from 'vue'
+import { useUserStore } from '@/stores/userStore'
+import { useRouter } from 'vue-router'
+import userService from '@/services/userService'
+import { showAlert } from '@/composables/useAlert'
+
+const userStore = useUserStore()
+const router = useRouter()
+const visible = ref(false)
+
+let warningTimer = null
+let logoutTimer  = null
+
+const clearTimers = () => {
+  clearTimeout(warningTimer)
+  clearTimeout(logoutTimer)
+  warningTimer = null
+  logoutTimer  = null
+}
+
+watch(
+  () => userStore.state.atExpiresAt,
+  (expiresAt) => {
+    clearTimers()
+    if (!expiresAt) return
+
+    const now = Date.now()
+    const msUntilWarning = expiresAt - now - 60 * 1000
+    const msUntilExpiry  = expiresAt - now
+
+    if (msUntilWarning > 0) {
+      warningTimer = setTimeout(() => { visible.value = true }, msUntilWarning)
+    } else if (msUntilExpiry > 0) {
+      visible.value = true
+    }
+
+    if (msUntilExpiry > 0) {
+      logoutTimer = setTimeout(() => { doLogout() }, msUntilExpiry)
+    }
+  },
+  { immediate: true }
+)
+
+const onExtend = async () => {
+  try {
+    await userService.reissue()
+    userStore.refreshExpiry()
+    visible.value = false
+  } catch (e) {
+    await showAlert('세션 연장 실패. 다시 로그인해주세요.', { title: '세션 만료', type: 'error' })
+    doLogout()
+  }
+}
+
+const onLogout = async () => {
+  try {
+    await userService.signout()
+  } finally {
+    doLogout()
+  }
+}
+
+const doLogout = () => {
+  clearTimers()
+  visible.value = false
+  userStore.signOut()
+  router.push('/customer/signin')
+}
+
+onUnmounted(() => clearTimers())
+</script>
+
 <template>
   <div v-if="visible" class="modal-overlay">
     <div class="modal-box">
@@ -10,82 +83,6 @@
     </div>
   </div>
 </template>
-
-<script setup>
-import { ref, watch, onUnmounted } from 'vue'
-import { useUserStore } from '@/stores/userStore'
-import { useRouter } from 'vue-router'
-import axios from 'axios'
-
-const userStore = useUserStore()
-const router = useRouter()
-const visible = ref(false)
-
-let warningTimer = null   // 만료 1분 전에 모달 띄우는 타이머
-let logoutTimer  = null   // 모달 뜨고 1분 후 자동 로그아웃 타이머
-
-const clearTimers = () => {
-  clearTimeout(warningTimer)
-  clearTimeout(logoutTimer)
-  warningTimer = null
-  logoutTimer  = null
-}
-// atExpiresAt이 바뀔 때마다 타이머 재설정
-watch(
-  () => userStore.state.atExpiresAt,
-  (expiresAt) => {
-    clearTimers()
-    if (!expiresAt) return
-
-    const now = Date.now()
-    const msUntilWarning = expiresAt - now - 60 * 1000  // 만료 1분 전
-    const msUntilExpiry  = expiresAt - now               // 만료 시각
-
-    if (msUntilWarning > 0) {
-      // 1분 전 → 모달 표시
-      warningTimer = setTimeout(() => { visible.value = true }, msUntilWarning)
-    } else if (msUntilExpiry > 0) {
-      // 이미 1분 이내 → 바로 모달 표시
-      visible.value = true
-    }
-
-    // 만료 시각 → 자동 로그아웃
-    if (msUntilExpiry > 0) {
-      logoutTimer = setTimeout(() => { doLogout() }, msUntilExpiry)
-    }
-  },
-  { immediate: true }
-)
-
-const onExtend = async () => {
-  try {
-    await axios.post('/api/user/reissue', {}, { withCredentials: true })
-    authStore.refreshExpiry()   // 만료시각 갱신 → watch가 타이머 재설정
-    visible.value = false
-  } catch (e) {
-    alert('세션 연장 실패. 다시 로그인해주세요.')
-    doLogout()
-  }
-}
-
-const onLogout = async () => {
-  try {
-    await axios.post('/api/user/logout', {}, { withCredentials: true })
-  } finally {
-    doLogout()
-  }
-}
-
-const doLogout = () => {
-  clearTimers()
-  visible.value = false
-  authStore.signOut()
-  router.push('/signin')
-}
-
-
-onUnmounted(() => clearTimers())
-</script>
 
 <style scoped>
 .modal-overlay {

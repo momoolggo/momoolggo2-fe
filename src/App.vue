@@ -1,20 +1,25 @@
 <script setup>
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import TheHeader from '@/components/common/TheHeader.vue'
 import { useUserStore } from '@/stores/userStore'
 import TokenExpiryModal from '@/components/common/TokenExpiryModal.vue'
 import MobileNavi from './components/common/MobileNavi.vue'
+import AlertModal from '@/components/common/AlertModal.vue'
+import { setAlertRef } from '@/composables/useAlert'
 
 const route  = useRoute()
 const router = useRouter()
 const userStore = useUserStore()
+
+const globalAlert = ref(null)
 
 // 헤더를 숨길 페이지
 const noHeaderPages = ['/', '/owner/signin', '/owner/signup', '/customer/signin', '/customer/signup']
 const showHeader = computed(() => !noHeaderPages.includes(route.path));
 
 onMounted(() => {
+  setAlertRef(globalAlert.value)
   userStore.checkAuth()
 })
 
@@ -23,8 +28,6 @@ const signout = async () => {
   await userStore.signOut()
   router.push('/signin')
 }
-
-
 </script>
 
 <template>
@@ -42,6 +45,7 @@ const signout = async () => {
       v-if="userStore.state.isSignedIn"/>
     </div>
   </div>
+  <AlertModal ref="globalAlert" />
 </template>
 
 <style scoped>

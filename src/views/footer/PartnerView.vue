@@ -1,5 +1,6 @@
 <script setup>
 import { reactive, ref } from 'vue'
+import { showAlert } from '@/composables/useAlert'
 
 const state = reactive({
   form: {
@@ -13,9 +14,9 @@ const state = reactive({
   submitted: false,
 })
 
-const submit = () => {
+const submit = async () => {
   if (!state.form.storeName || !state.form.name || !state.form.tel) {
-    alert('필수 항목을 입력해 주세요.')
+    await showAlert('필수 항목을 입력해 주세요.', { title: '입력 필요', type: 'warning' })
     return
   }
   state.submitted = true

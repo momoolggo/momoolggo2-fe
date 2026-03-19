@@ -3,6 +3,7 @@ import { onMounted, reactive } from 'vue';
 import { useRouter } from 'vue-router';
 import orderService from '@/services/orderService';
 import axios from 'axios';
+import { showAlert } from '@/composables/useAlert'
 
 const router = useRouter();
 const state = reactive({ paymentKey: '', orderId: '', amount: '' });
@@ -21,7 +22,7 @@ onMounted(async () => {
             payState: 1
         });
         console.log('성공 응답:', result) ;
-        alert('주문이 완료되었습니다! 🎉');
+        await showAlert('주문이 완료되었습니다! 🎉', { title: '주문 완료', type: 'success' })
         router.push('/home');
     } catch (e) {
         console.error('결제 승인 실패:', e);

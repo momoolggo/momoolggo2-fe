@@ -2,6 +2,7 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import ownerService from '@/services/ownerService'
 import { useStore } from '@/stores/useStore'
+import { showAlert, showConfirm } from '@/composables/useAlert'
 
 const storeInfo = useStore()
 
@@ -112,15 +113,15 @@ const handleImageUpload = async (e) => {
     const res = await ownerService.uploadMenuImage(formData)
     menuForm.menuPic = res.resultData  // /uploads/menu/파일명.jpg
   } catch {
-    alert('이미지 업로드 실패')
+    await showAlert('이미지 업로드에 실패했습니다.', { title: '업로드 오류', type: 'error' })
     menuForm.previewUrl = ''
   }
 }
 
 const saveMenu = async () => {
-  if (!menuForm.name) { alert('메뉴명을 입력해 주세요.'); return }
-  if (!menuForm.price) { alert('가격을 입력해 주세요.'); return }
-  if (!menuForm.categoryId) { alert('카테고리를 선택해 주세요.'); return }
+  if (!menuForm.name) { await showAlert('메뉴명을 입력해 주세요.', { title: '입력 필요', type: 'warning' }); return }
+  if (!menuForm.price) { await showAlert('가격을 입력해 주세요.', { title: '입력 필요', type: 'warning' }); return }
+  if (!menuForm.categoryId) { await showAlert('카테고리를 선택해 주세요.', { title: '입력 필요', type: 'warning' }); return }
 
   try {
     if (editMode.value) {
@@ -145,17 +146,18 @@ const saveMenu = async () => {
     showMenuModal.value = false
     await loadAll()
   } catch {
-    alert('저장 실패')
+    await showAlert('저장에 실패했습니다.', { title: '오류', type: 'error' })
   }
 }
 
 const deleteMenu = async (menuId) => {
-  if (!confirm('이 메뉴를 삭제하시겠습니까?')) return
+  const ok = await showConfirm('이 메뉴를 삭제하시겠습니까?', { title: '메뉴 삭제', type: 'warning' })
+  if (!ok) return
   try {
     await ownerService.deleteMenu(menuId)
     await loadAll()
   } catch {
-    alert('삭제 실패')
+    await showAlert('삭제에 실패했습니다.', { title: '오류', type: 'error' })
   }
 }
 
@@ -182,7 +184,7 @@ const cancelEditCategory = () => {
 }
 
 const saveCategory = async () => {
-  if (!categoryForm.category.trim()) { alert('카테고리명을 입력해 주세요.'); return }
+  if (!categoryForm.category.trim()) { await showAlert('카테고리명을 입력해 주세요.', { title: '입력 필요', type: 'warning' }); return }
   try {
     if (categoryForm.editMode) {
       await ownerService.updateCategory(categoryForm.categoryId, categoryForm.category.trim())
@@ -194,17 +196,18 @@ const saveCategory = async () => {
     categoryForm.editMode = false
     await loadAll()
   } catch {
-    alert('저장 실패')
+    await showAlert('저장에 실패했습니다.', { title: '오류', type: 'error' })
   }
 }
 
 const deleteCategory = async (categoryId) => {
-  if (!confirm('이 카테고리와 포함된 메뉴가 모두 삭제됩니다. 계속하시겠습니까?')) return
+  const ok = await showConfirm('이 카테고리와 포함된 메뉴가 모두 삭제됩니다. 계속하시겠습니까?', { title: '카테고리 삭제', type: 'warning' })
+  if (!ok) return
   try {
     await ownerService.deleteCategory(categoryId)
     await loadAll()
   } catch {
-    alert('삭제 실패')
+    await showAlert('삭제에 실패했습니다.', { title: '오류', type: 'error' })
   }
 }
 

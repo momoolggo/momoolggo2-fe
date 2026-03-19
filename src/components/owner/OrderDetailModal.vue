@@ -1,6 +1,7 @@
 <script setup>
 import { computed } from 'vue';
 import ownerService from '@/services/ownerService';
+import { showAlert, showConfirm } from '@/composables/useAlert'
 
 const props = defineProps(['order']);
 const emit = defineEmits(['close']);
@@ -13,40 +14,44 @@ const changeState = async (newState) => {
     await ownerService.updateOrderState(props.order.orderId, newState);
 
     const stateNames = {
-      1: '주문을 수락했습니다.',
-      2: '라이더 배차를 진행합니다.',
-      3: '배달이 시작되었습니다.',
-      4: '배달이 완료되었습니다.',
+      3: '주문을 수락했습니다.',
+      4: '라이더 배차를 진행합니다.',
+      5: '배달이 시작되었습니다.',
+      6: '배달이 완료되었습니다.',
     };
-    alert(stateNames[newState] || '상태가 변경되었습니다.');
+    await showAlert(stateNames[newState] || '상태가 변경되었습니다.', { title: '상태 변경', type: 'success' });
     emit('close');
   } catch (error) {
     console.error("상태 변경 실패:", error);
-    alert('상태 변경에 실패했습니다.');
+    await showAlert('상태 변경에 실패했습니다.', { title: '상태 변경', type: 'error' });
   }
 };
 
 // 주문 취소 (DB 삭제)
 const cancelOrder = async () => {
-  if (!confirm('정말 주문을 취소하시겠습니까?\n취소된 주문은 복구할 수 없습니다.')) return;
+  const confirmed = await showConfirm('정말 주문을 취소하시겠습니까?\n취소된 주문은 복구할 수 없습니다.', { title: '주문 취소', type: 'warning' });
+  if (!confirmed) return;
   try {
     await ownerService.deleteOrder(props.order.orderId);
-    alert('주문이 취소되었습니다.');
+    await showAlert('주문이 취소되었습니다.', { title: '주문 취소', type: 'success' });
     emit('close');
   } catch (error) {
     console.error("주문 취소 실패:", error);
-    alert('주문 취소에 실패했습니다.');
+    await showAlert('주문 취소에 실패했습니다.', { title: '주문 취소', type: 'error' });
   }
 };
 
 // 상태 단계 표시용 (5단계)
 const steps = [
-  { state: 0, label: '주문 대기' },
-  { state: 1, label: '주문 진행' },
-  { state: 2, label: '라이더 배차' },
-  { state: 3, label: '배달 중' },
-  { state: 4, label: '배달 완료' },
+  { state: 1, label: '주문 대기' },
+  { state: 3, label: '조리 중' },
+  { state: 5, label: '배달 중' },
+  { state: 6, label: '배달 완료' },
 ];
+
+// changeState 호출 부분
+// 상태 1(대기) → 3(조리중/수락)
+// 상태 3 → 4(라이더배차) → 5(배달중) → 6(배달완료)
 </script>
 
 <template>
@@ -104,32 +109,16 @@ const steps = [
       <!-- 액션 버튼 (상태에 따라 다르게 표시) -->
       <div class="modal-footer">
         <!-- 배달 완료 전까지만 취소 가능 -->
-        <button v-if="currentState < 4" class="btn cancel" @click="cancelOrder">
+        <button v-if="currentState < 6" class="btn cancel" @click="cancelOrder">
           주문 취소
         </button>
 
         <!-- 상태 0: 수락 대기 → 주문 수락 -->
-        <button v-if="currentState === 0" class="btn accept" @click="changeState(1)">
-          주문 수락
-        </button>
-
-        <!-- 상태 1: 진행 중 → 라이더 배차 -->
-        <button v-if="currentState === 1" class="btn rider" @click="changeState(2)">
-          라이더 배차
-        </button>
-
-        <!-- 상태 2: 배차 중 → 배달 시작 -->
-        <button v-if="currentState === 2" class="btn shipping" @click="changeState(3)">
-          배달 시작
-        </button>
-
-        <!-- 상태 3: 배달 중 → 배달 완료 -->
-        <button v-if="currentState === 3" class="btn complete" @click="changeState(4)">
-          배달 완료
-        </button>
-
-        <!-- 상태 4: 배달 완료 -->
-        <span v-if="currentState === 4" class="status-msg complete-msg">✅ 배달 완료</span>
+        <button v-if="currentState === 1" class="btn accept" @click="changeState(3)">주문 수락</button>
+        <button v-if="currentState === 3" class="btn rider" @click="changeState(4)">라이더 배차</button>
+        <button v-if="currentState === 4" class="btn shipping" @click="changeState(5)">배달 시작</button>
+        <button v-if="currentState === 5" class="btn complete" @click="changeState(6)">배달 완료</button>
+        <span v-if="currentState === 6" class="status-msg complete-msg">✅ 배달 완료</span>
       </div>
     </div>
   </div>

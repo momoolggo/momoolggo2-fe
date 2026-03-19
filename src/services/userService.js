@@ -77,6 +77,12 @@ class UserService {
     const res = await axios.delete(`${this.#url}/review/${reviewId}`)
     return res.data
   }
+
+  // 리뷰 단건 조회 (수정 시 기존 데이터 불러오기)
+    async getReviewDetail(reviewId) {
+        const res = await axios.get(`${this.#url}/review/${reviewId}`)
+        return res.data
+    }
 }
 
 export default new UserService()

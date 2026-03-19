@@ -12,6 +12,7 @@ const props = defineProps({
   totalPrice: Number,
   orderState: Number,
   orderId: Number,
+  hasReview: Number, // 리뷰 작성 여부 (0: 작성 가능, 1: 작성 완료)
 })
 
 // order_state 2 = 주문취소
@@ -46,7 +47,12 @@ const goToPost = () => {
         </div>
       </div>
       <div class="button-group">
-        <button class="btn-outline" @click="isCancelled ?  null: goToPost()">{{ isCancelled ? '재주문' : '리뷰 등록' }}</button>
+          <!-- 배달완료(6) + 리뷰 없을 때만 리뷰 등록 -->
+          <button v-if="orderState === 6 && !hasReview" class="btn-outline" @click="goToPost()">리뷰 등록</button>
+          <!-- 배달완료 + 리뷰 이미 있으면 -->
+          <button v-else-if="orderState === 6 && hasReview" class="btn-outline btn-done" disabled>리뷰 작성완료</button>
+          <!-- 주문 취소면 재주문 -->
+          <button v-else-if="isCancelled" class="btn-outline">재주문</button>
         <button class="btn-primary" @click="goToHistory">상세정보</button>
       </div>
     </div>
@@ -198,5 +204,10 @@ const goToPost = () => {
   color: #ef4444;
   font-size: 12px;
   margin-left: 4px;
+}
+.btn-done {
+  border-color: #ccc;
+  color: #ccc;
+  cursor: default;
 }
 </style>

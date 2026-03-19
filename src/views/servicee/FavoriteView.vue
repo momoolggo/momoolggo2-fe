@@ -3,6 +3,7 @@ import { reactive, computed, onMounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import storeService from '@/services/storeService';
 import { useUserStore } from '@/stores/userStore';
+import { showAlert } from '@/composables/useAlert'
 
 const router = useRouter();
 const userStore = useUserStore();
@@ -63,7 +64,7 @@ const toggleWish = async (store) => {
     store.isWished = res.resultData;
   } catch (e) {
     console.error('찜 해제 실패:', e);
-    alert('찜 해제 중 오류가 발생했습니다.');
+    await showAlert('찜 해제 중 오류가 발생했습니다.', { title: '오류', type: 'error' })
   }
 };
 

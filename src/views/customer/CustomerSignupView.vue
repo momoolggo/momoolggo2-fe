@@ -3,6 +3,7 @@ import { computed, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import userService from '@/services/userService'
 import NaverMap from '@/components/common/NaverMap.vue'
+import { showAlert } from '@/composables/useAlert'
 
 const router = useRouter()
 
@@ -92,7 +93,7 @@ const signup = async () => {
   try {
     state.errorMsg = ''
     await userService.signup({ ...state.form })
-    alert('회원가입이 완료되었습니다!')
+    await showAlert('회원가입이 완료되었습니다!', { title: '회원가입', type: 'success' })
     router.push('/customer/signin')
   } catch (err) {
     state.errorMsg = err.response?.data?.resultMessage ?? '회원가입에 실패했습니다.'

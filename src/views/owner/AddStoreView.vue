@@ -5,6 +5,7 @@ import { useStore } from '@/stores/useStore';
 import { useUserStore } from '@/stores/userStore';
 import ownerService from '@/services/ownerService';
 import NaverMap from '@/components/common/NaverMap.vue';
+import { showAlert } from '@/composables/useAlert'
 
 const router = useRouter();
 const store = useStore();
@@ -50,7 +51,7 @@ const onFileChange = (e) => {
 
 const submit = async () => {
   if (!state.form.storeName) {
-    alert("가게 상호명을 입력해주세요.");
+    await showAlert('가게 상호명을 입력해주세요.', { title: '입력 필요', type: 'warning' })
     return;
   }
   try {
@@ -72,11 +73,11 @@ const submit = async () => {
     await ownerService.registerStore(data);
 
     store.setStore(state.form.storeName);
-    alert("가게 등록이 완료되었습니다.");
+    await showAlert('가게 등록이 완료되었습니다.', { title: '등록 완료', type: 'success' })
     router.push('/ownerservice');
   } catch (err) {
     console.error(err);
-    alert("가게 등록에 실패했습니다.");
+    await showAlert('가게 등록에 실패했습니다.', { title: '오류', type: 'error' })
   }
 };
 </script>

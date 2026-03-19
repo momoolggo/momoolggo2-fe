@@ -46,12 +46,12 @@ const onModalClose = () => {
 
 const getStatusInfo = (status) => {
   const statusInfo = {
-    '0': { text: '주문 수락 대기', class: 'waiting' },
-    '1': { text: '주문 진행 중', class: 'progress' },
-    '2': { text: '라이더배차 진행중', class: 'rider' },
-    '3': { text: '배달 중', class: 'shipping' },
-    '4': { text: '배달 완료', class: 'completed' },
-    '5': { text: '주문취소', class: 'cancel' }
+    '1': { text: '주문 수락 대기', class: 'waiting' },
+    '2': { text: '주문 취소', class: 'cancel' },
+    '3': { text: '조리 중', class: 'progress' },
+    '4': { text: '라이더배차 진행중', class: 'rider' },
+    '5': { text: '배달 중', class: 'shipping' },
+    '6': { text: '배달 완료', class: 'completed' },
   };
   return statusInfo[String(status)] || { text: '알 수 없음', class: 'waiting' };
 };

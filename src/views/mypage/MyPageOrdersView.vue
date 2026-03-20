@@ -13,7 +13,17 @@ const orders = ref([])          // 화면에 표시될 주문 목록
 const currentPage = ref(1);      // 현재 페이지
 const pageSize = 5;         // 한 페이지당 아이템 수
 const totalPages = ref(5);       // 전체 페이지 수 (백엔드에서 받아와야 함)
-
+onMounted(async () => {
+  try {
+    const result = await orderService.getMaxHistory(userId);
+    if (result.resultData) {
+      totalPages.value = Math.ceil(result.resultData / pageSize);
+    }
+  }
+  catch (error) {
+    console.error("총 페이지 수 로드 실패:", error);
+  }
+})
 // 데이터 로드 함수
 const loadOrders = async (page) => {
   currentPage.value = page;
@@ -24,12 +34,7 @@ const loadOrders = async (page) => {
   };
   try {
     const result = await orderService.getOrderHistory(params);
-
-    // API 응답 구조에 따라 수정 필요 (예: response.list, response.totalPage)
     orders.value = result || [];
-    totalPages.value = result.totalPages || 5; //통신받아오기 전체페이지
-
-
 
     // 페이지 변경 시 상단으로 스크롤 이동
     window.scrollTo({ top: 0, behavior: 'smooth' });

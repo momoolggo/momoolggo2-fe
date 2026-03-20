@@ -203,7 +203,7 @@ function spinAgain() {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding-bottom: 60px;
+  padding-bottom: 150px;
 }
 
 /* ── 헤더 ── */

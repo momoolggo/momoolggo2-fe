@@ -16,7 +16,7 @@ const getImageUrl = (path) => {
 </script>
 
 <template>
-  <div class="store-card" :class="{ 'is_closed': store.state === 0 }"@click="$emit('click', store)">
+  <div class="store-card" :class="{ 'is_closed': store.state === 0 }" @click="$emit('click', store)">
     <div v-if="store.state === 0" class="closed-overlay">
       <span class="closed-badge"> 준비중이예요🤗</span>
     </div>

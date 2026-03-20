@@ -59,6 +59,7 @@ const routes = [
 { path: '/mypage/cs',      name: 'MyPageCs',      component: MyPageCsView,      meta: { requiresAuth: true, role: 'CUSTOMER' } },
 
 //고객 서비스
+  {path: '/mypage/pet', name: 'MyPagePet', component: () => import('@/views/servicee/PetView.vue'),  meta: { requiresAuth: true, role: 'CUSTOMER' } },
   {path: '/mypage/review/:id', name: 'ReviewDetail', component: () => import('@/views/mypage/ReviewPostView.vue'), meta: { requiresAuth: true} },
   {path: '/mypage/orders/:id', name: 'OrderDetail', component: () => import('@/views/mypage/OrderDetailView.vue'), meta: { requiresAuth: true, role: 'CUSTOMER' } },
   { path: '/cart',     name: 'Cart',     component: CartView,     meta: { requiresAuth: true, role: 'CUSTOMER' } },

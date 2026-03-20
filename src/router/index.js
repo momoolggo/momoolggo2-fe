@@ -5,6 +5,7 @@ import { useUserStore } from '@/stores/userStore'
 import LandingView from '@/views/LandingView.vue'
 import StoreListView from '@/views/store/StoreListView.vue'
 import StoreDetailView from '@/views/store/StoreDetailView.vue'
+import OwnerLandingView from '@/views/store/OwnerLandingView.vue'
 
 // ── 사장님
 import OwnerSigninView  from '@/views/owner/OwnerSigninView.vue'
@@ -33,6 +34,7 @@ import NearbyView from '@/views/servicee/NearbyView.vue'
 
 const routes = [
   { path: '/', name: 'Landing', component: LandingView },
+  { path: '/ownerlanding', name: 'OwnerLanding', component: OwnerLandingView},
   { path: '/storelist', name: 'StoreList', component: StoreListView, meta: { requiresAuth: true, role: 'CUSTOMER' } },
   { path: '/store/:id', name: 'StoreDetail', component: StoreDetailView, meta: { requiresAuth: true, role: 'CUSTOMER' } },
 

@@ -72,6 +72,7 @@ const submit = async () => {
 
     await ownerService.registerStore(data);
 
+    const res = await ownerService.getMyStores()
     store.setStore(state.form.storeName);
     await showAlert('가게 등록이 완료되었습니다.', { title: '등록 완료', type: 'success' })
     router.push('/ownerservice');

@@ -6,6 +6,9 @@ import {
   Chart as ChartJS, CategoryScale, LinearScale,
   BarElement, Title, Tooltip, Legend
 } from 'chart.js'
+import { useStore } from '@/stores/useStore'
+
+const storeInfo = useStore()
 
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend)

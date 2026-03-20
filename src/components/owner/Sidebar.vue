@@ -22,6 +22,7 @@ const toggleDropdown = () => {
 }
 
 const selectStore = (s) => {
+
   store.switchStore(s.storeId)
   showStoreDropdown.value = false
   // 가게 전환 후 주문관리로 이동
@@ -56,7 +57,7 @@ const goToAddStore = () => {
             v-for="s in store.myStores"
             :key="s.storeId"
             class="store-option"
-            :class="{ selected: s.storeId === store.myStoreId }"
+            :class="{ selected: s.storedId === store.myStoreId }"
             @click="selectStore(s)"
           >
             {{ s.storeName }}

@@ -38,7 +38,9 @@ const signin = async () => {
 
     // 가게 목록 조회 (여러 가게 지원)
     const storeData = await ownerService.getMyStores()
+    
     const stores = storeData?.resultData || []
+    
 
     if (stores.length > 0) {
       // 가게 목록 저장 + 첫 번째 가게 자동 선택

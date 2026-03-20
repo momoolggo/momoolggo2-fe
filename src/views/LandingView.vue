@@ -23,7 +23,7 @@ const goOrder = () => {
           <img src="@/assets/뭐물꼬_로고.png" alt="뭐올꼬" class="nav_logo" />
         </router-link>
         <nav class="nav_menu">
-          <router-link to="/owner/signin" class="nav_link">사장님 입점문의하기</router-link>
+          <router-link to="/ownerlanding" class="nav_link">사장님 입점문의하기</router-link>
           <router-link to="/rider/signin" class="nav_link">라이더 신청하기</router-link>
           <button class="nav_btn_order" @click="goOrder">주문하러 가기</button>
         </nav>
@@ -44,7 +44,7 @@ const goOrder = () => {
           </p>
           <div class="hero_btns">
             <button class="btn_main" @click="goOrder">지금 주문하기</button>
-            <router-link to="/owner/signin" class="btn_sub">사장님 입점 문의</router-link>
+            <router-link to="/ownerlanding" class="btn_sub">사장님 입점 문의</router-link>
           </div>
         </div>
         <div class="hero_image">
@@ -74,7 +74,7 @@ const goOrder = () => {
             뭐올꼬와 함께라면 배달 매출이 달라집니다.<br/>
             지금 바로 입점 신청하고 더 많은 고객을 만나보세요.
           </p>
-          <router-link to="/owner/signin" class="btn_section">입점 신청하기 →</router-link>
+          <router-link to="/ownerlanding" class="btn_section">입점 신청하기 →</router-link>
         </div>
       </div>
     </section>

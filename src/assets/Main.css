@@ -265,18 +265,18 @@ input[type="password"]::-webkit-textfield-decoration-container {
 
 @font-face {
   font-family: 'NanumSquareAC';
-  src: url('@/assets/fonts/NanumSquareACR.woff2') format('woff2');
+  src: url('@/assets/fonts/NanumSquare_acR.woff2') format('woff2');
   font-weight: 400;
 }
 
 @font-face {
   font-family: 'NanumSquareAC';
-  src: url('@/assets/fonts/NanumSquareACB.woff2') format('woff2');
+  src: url('@/assets/fonts/NanumSquare_acB.woff2') format('woff2');
   font-weight: 700;
 }
 
 @font-face {
   font-family: 'NanumSquareAC';
-  src: url('@/assets/fonts/NanumSquareACEB.woff2') format('woff2');
+  src: url('@/assets/fonts/NanumSquare_acEB.woff2') format('woff2');
   font-weight: 800;
 }

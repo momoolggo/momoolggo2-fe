@@ -138,7 +138,7 @@ const goToAddStore = () => {
 .check-icon { color: #3f51b5; font-size: 16px; }
 
 /* 메뉴 */
-.menu-container { flex: 1; display: flex; flex-direction: column; gap: 25px; margin-top: 60px; }
+.menu-container { flex: 1; display: flex; flex-direction: column; gap: 25px; margin-top: 20px; }
 .menu-item { width: 100%; padding: 10px; border-radius: 12px; border: 1px solid #c6c0d0; background: #fff; color: #5d5868; font-size: 16px; font-weight: bold; cursor: pointer; transition: all 0.3s ease; }
 .menu-item.active { background: linear-gradient(90deg, #6200ea, #3f51b5); color: #fff; border: none; }
 

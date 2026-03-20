@@ -34,7 +34,7 @@ const storeList = reactive({
         maxPage: 10,
     },
 });
-
+//가게조회
 const getStores = async () => {
     const params = {
         searchText: storeList.find.searchText,
@@ -43,36 +43,33 @@ const getStores = async () => {
         categoryId: storeList.find.categoryId,
     };
     try {
+        const maxResult = await storeService.getMaxStore(params);
+        storeList.find.maxPage = Math.ceil(maxResult.resultData / storeList.find.size);
         const result = await storeService.getStoreList(params);
         if (result && result.resultData) {
             // 서버 응답 구조가 { list: [], totalCount: n } 일 경우를 대비
             const data = result.resultData;
             storeList.list = data.list || data;
-
-            // maxPage 계산 로직 (전체 개수가 올 경우)
-            const totalCount = data.totalCount || 0;
-            if (totalCount > 0) {
-                storeList.find.maxPage = Math.ceil(totalCount / storeList.find.size);
-            } else {
-                storeList.find.maxPage = 10; // 테스트용 고정값 유지 원할 시
-            }
         }
     } catch (error) {
         console.error("가게 목록 조회 실패", error);
     }
 };
 
+//카테고리변경
 const changeCategory = (name) => {
   router.push({
     query: { ...route.query, category: name }
   });
 };
 
+//주소에있는 카테고리명 아이디로 변환
 const getCategoryIdByName = (name) => {
   const found = categories.find(c => c.name === name);
   return found ? found.id : 0;
 };
 
+//카테고리 바뀌면 새로 조회
 watch(() => route.query.category, (newCategory) => {
   storeList.find.categoryId = getCategoryIdByName(newCategory);
   storeList.find.currentPage = 1;
@@ -88,6 +85,7 @@ const scroll = (direction) => {
     }
 };
 
+//페이징처리
 const PAGE_GROUP_SIZE = 5;
 const pageRange = computed(() => {
     const max = storeList.find.maxPage;
@@ -102,6 +100,7 @@ const pageRange = computed(() => {
 
 onMounted(getStores);
 
+//페이지 변경
 const changePage = (page) => {
     if (page < 1 || page > storeList.find.maxPage) return;
     storeList.find.currentPage = page;
@@ -109,6 +108,7 @@ const changePage = (page) => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
 };
 
+//가게상세로이동
 const goToDetail = (store) => {
     if (store.state === 0){
         return
@@ -159,27 +159,32 @@ const currentCategoryName = computed(() => {
         등록된 가게가 없습니다.
     </div>
 
-    <div class="pagination" v-if="storeList.find.maxPage > 1">
-        <button
-            class="page-nav-btn"
-            :disabled="storeList.find.currentPage === 1"
-            @click="changePage(storeList.find.currentPage - 1)"
-        >이전</button>
+    <div class="pagination" v-if="storeList.find.maxPage >= 1">
 
-        <button
-            v-for="page in pageRange"
-            :key="page"
-            class="page-num"
-            :class="{ active: storeList.find.currentPage === page }"
-            @click="changePage(page)"
-        >{{ page }}</button>
+<!-- 이전 그룹 -->
+<button
+  class="page-nav-btn"
+  :disabled="storeList.find.currentPage <= PAGE_GROUP_SIZE"
+  @click="changePage(pageRange[0] - 1)"
+>이전</button>
 
-        <button
-            class="page-nav-btn"
-            :disabled="storeList.find.currentPage === storeList.find.maxPage"
-            @click="changePage(storeList.find.currentPage + 1)"
-        >다음</button>
-    </div>
+<!-- 페이지 번호들 -->
+<button
+  v-for="page in pageRange"
+  :key="page"
+  class="page-num"
+  :class="{ active: storeList.find.currentPage === page }"
+  @click="changePage(page)"
+>{{ page }}</button>
+
+<!-- 다음 그룹 -->
+<button
+  class="page-nav-btn"
+  :disabled="pageRange[pageRange.length - 1] >= storeList.find.maxPage"
+  @click="changePage(pageRange[pageRange.length - 1] + 1)"
+>다음</button>
+
+</div>
 
 </div>
 </template>

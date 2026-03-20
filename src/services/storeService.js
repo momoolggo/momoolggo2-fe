@@ -10,7 +10,7 @@ class StoreService {
     }
 
     // 가게 목록 최대 페이지 수
-    async getMaxPage(params) {
+    async getMaxStore(params) {
         const res = await axios.get(`${this.#url}/max_page`, { params });
         return res.data;
     }

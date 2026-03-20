@@ -109,5 +109,5 @@ const handleAddCart = async () => {
 .counter button { padding: 5px 15px; border: none; background: none; font-size: 1.2rem; cursor: pointer; }
 .counter span { padding: 0 10px; }
 .min-price-info { text-align: center; font-size: 0.8rem; color: #999; margin-bottom: 10px; }
-.add-cart-btn { width: 100%; padding: 15px; background: #2ac1bc; color: white; border: none; border-radius: 8px; font-size: 1.1rem; font-weight: bold; cursor: pointer; }
+.add-cart-btn { width: 100%; padding: 15px; background: #2e55e0; color: white; border: none; border-radius: 8px; font-size: 1.1rem; font-weight: bold; cursor: pointer; }
 </style>

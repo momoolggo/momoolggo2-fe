@@ -119,7 +119,7 @@ defineExpose({ show, confirm })
   transition: opacity 0.15s;
 }
 .alert-btn:hover { opacity: 0.85; }
-.confirm-btn { background: #2ac1bc; color: #fff; }
+.confirm-btn { background: #2e55e0; color: #fff; }
 .cancel-btn { background: #f5f5f5; color: #666; }
 .alert-btn.full { width: 100%; }
 .modal-enter-active { transition: opacity 0.2s; }

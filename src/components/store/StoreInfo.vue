@@ -88,12 +88,14 @@ const formattedNotice = computed(() => {
   color: #333;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   letter-spacing: -0.01em;
+  max-width: 680px;        /* 추가: 최대 너비 고정 */
+  margin: 0 auto;
 }
 
 .store-info-container {
-  display: grid;
-  grid-template-columns: 1.2fr 1fr;
-  gap: 80px;
+  display: flex;
+  flex-direction: column; /* grid → 세로 스택으로 변경 */
+  gap: 40px;
   margin-bottom: 50px;
 }
 

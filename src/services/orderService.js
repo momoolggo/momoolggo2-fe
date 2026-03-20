@@ -32,5 +32,11 @@ class OrderService {
         return res.data;
     }
 
+    //주문내역 맥스페이지
+    async getMaxHistory(userId) {
+      const res = await axios.get(`${this.#url}/history/max/${userId}`);
+      return res.data;
+  }
+
 }
 export default new OrderService();

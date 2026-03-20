@@ -4,6 +4,7 @@ import { ref, computed, onMounted } from 'vue'
 import orderService from '@/services/orderService';
 import { useRoute } from 'vue-router';
 
+
 const route = useRoute();
 const id = route.params.id;
 
@@ -13,6 +14,7 @@ const order = ref({
   date: '',
   storeName: '',
   storeImage: null,
+  storeId: '',
   items: [],
   deliveryFee: 0,
   orderState: 1     // 기본값: 주문수락전(1)
@@ -42,7 +44,7 @@ const statusMap = {
   3: { index: 1, msg: '음식이 맛있게 만들어지고 있습니다.' }, // 조리중
   4: { index: 1, msg: '음식이 맛있게 만들어지고 있습니다.' }, // 조리중 (4번도 1번 인덱스)
   5: { index: 2, msg: '라이더가 음식을 가지고 출발했습니다!' },
-  6: { index: 3, msg: '배달이 완료되었습니다! 맛있게 드세요.' },
+  6: { index: 3, msg: '배달이 완료되었습니다!' },
 }
 
 const steps = computed(() => {
@@ -100,7 +102,7 @@ const progressWidth = computed(() => (currentStepIndex.value / (steps.value.leng
           </div>
         </div>
 
-        <div class="store-info">
+        <div class="store-info"  @click="router.push(`/store/${order.storeId}`)">
           <img :src="order.storeImage || 'https://via.placeholder.com/45'" class="store-thumb" />
           <span class="store-name">{{ order.storeName }}</span>
         </div>
@@ -109,7 +111,7 @@ const progressWidth = computed(() => (currentStepIndex.value / (steps.value.leng
 
         <div class="menu-list">
           <div class="menu-item" v-for="item in order.items" :key="item.name">
-            <span class="name">{{ item.name }}</span>
+            <span class="name" >{{ item.name }}</span>
             <span class="count">{{ item.count }}개</span>
             <span class="price">{{ item.price.toLocaleString() }}원</span>
           </div>
@@ -152,7 +154,7 @@ const progressWidth = computed(() => (currentStepIndex.value / (steps.value.leng
             <div class="step-time" v-if="step.time && currentStepIndex >= index">
               {{ step.time }}
             </div>
-            <div class="step-time" v-if="index==3">도착예정 <span> {{ step.time }}</span></div>
+            <div class="step-time" v-if="index==3&& currentStepIndex<3">도착예정 <span> {{ step.time }}</span></div>
           </div>
         </div>
 
@@ -165,7 +167,7 @@ const progressWidth = computed(() => (currentStepIndex.value / (steps.value.leng
             ></div>
           </div>
           <div class="bike-icon" :style="{ left: progressWidth }">
-            <img src="https://cdn-icons-png.flaticon.com/512/2972/2972185.png" alt="bike" />
+            <img src="/src/assets/배달 현황 이모티콘.png" alt="bike" />
           </div>
         </div>
 
@@ -256,6 +258,10 @@ const progressWidth = computed(() => (currentStepIndex.value / (steps.value.leng
 .store-name {
   font-size: 19px;
   font-weight: 800;
+}
+.store-info :hover {
+  color: #4a80da;
+  cursor: pointer;
 }
 .divider {
   height: 1px;

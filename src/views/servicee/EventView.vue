@@ -412,6 +412,7 @@ function triggerConfetti() {
   max-width: 480px;
   margin: 0 auto;
   position: relative;
+  padding-bottom: 200px;
 }
 
 /* ── CONFETTI ── */

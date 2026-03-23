@@ -155,9 +155,9 @@ const goToDetail = (id) => {
 }
 
 .page-btn.active {
-  background-color: #3b82f6;
+  background-color: #B21F1F;
   color: white;
-  border-color: #3b82f6;
+  border-color:#B21F1F;
   font-weight: bold;
 }
 
@@ -168,14 +168,14 @@ const goToDetail = (id) => {
 }
 
 .page-btn:hover:not(:disabled) {
-  background-color: #f0f4ff;
-  border-color: #3b82f6;
-  color: #3b82f6;
+  background-color: #ffffff;
+  border-color:#B21F1F;
+  color:#B21F1F;
 }
 
 .btn-continue-order {
   width: 100%;
-  background-color: #3b82f6;
+  background-color:#B21F1F;
   color: white;
   border: none;
   padding: 16px;

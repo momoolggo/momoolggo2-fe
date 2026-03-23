@@ -286,9 +286,9 @@ const deleteReview = async (reviewId) => {
 }
 
 .page-btn.active {
-  background: #3b82f6;
+  background: #B21F1F;
   color: white;
-  border-color: #3b82f6;
+  border-color: #B21F1F;
   font-weight: bold;
 }
 
@@ -299,8 +299,8 @@ const deleteReview = async (reviewId) => {
 }
 
 .page-btn:hover:not(:disabled) {
-  background: #f0f4ff;
-  border-color: #3b82f6;
-  color: #3b82f6;
+  background: #ffffff;
+  border-color: #B21F1F;
+  color:#B21F1F;
 }
 </style>

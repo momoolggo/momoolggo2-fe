@@ -97,7 +97,7 @@ const setDefault = async (addressId) => {
 <template>
   <div class="address_wrap">
     <div class="page_header">
-      <h2 class="page_title">배송지 관리</h2>
+      <h2 class="page_title">주소 관리</h2>
       <button class="btn_primary btn_sm" @click="openAdd">+ 추가</button>
     </div>
 

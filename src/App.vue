@@ -41,8 +41,8 @@ const signout = async () => {
       />
       <router-view />
       <TokenExpiryModal />
-      <MobileNavi 
-      v-if="userStore.state.isSignedIn"/>
+      <MobileNavi
+      v-if="userStore.state.isSignedIn&& route.path !== '/mypage/pet'"/>
     </div>
   </div>
   <AlertModal ref="globalAlert" />
@@ -60,7 +60,7 @@ const signout = async () => {
 
 .app-wrapper{
   width: 100%;
-  
+
   margin: 0 auto;
   min-height: 100vh;
   position: relative;

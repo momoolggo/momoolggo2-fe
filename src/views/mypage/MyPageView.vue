@@ -13,7 +13,7 @@ const menus = [
   { icon: 'bi bi-ticket-perforated', label: '쿠폰함',       path: '/mypage/coupon', badge: '쿠폰 2차' },
   { icon: 'bi bi-receipt',           label: '주문 내역',    path: '/mypage/orders'  },
   { icon: 'bi bi-star',              label: '내 리뷰 관리', path: '/mypage/review'  },
-  { icon: 'bi bi-headset',           label: '고객센터',     path: '/mypage/cs'      },
+  { icon: 'bi bi-egg',           label: '내 펫',     path: '/mypage/pet'      },
 ]
 </script>
 
@@ -45,10 +45,10 @@ const menus = [
 .mypage_wrap {
   max-width: 480px;
   margin: 40px auto;
-  padding: 0 16px; 
+  padding: 0 16px;
   padding-bottom: 100px;
   height: auto;
-  
+
 }
 .page_title {
   font-size: 22px;
@@ -73,7 +73,7 @@ const menus = [
   gap: 14px;
   cursor: pointer;
   transition: box-shadow 0.15s, border-color 0.15s;
- 
+
 }
 .menu_card:hover {
   border-color: var(--primary);

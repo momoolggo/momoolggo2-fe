@@ -41,7 +41,7 @@
       <!-- ── INTRO ── -->
       <div class="intro-screen" v-if="gameState === 'intro'">
         <div class="intro-badge">🎮 미니게임</div>
-        <div class="intro-title">컵 야바위<br>푸드 챌린지</div>
+        <div class="intro-title">컵 섞기<br>푸드 챌린지</div>
         <div class="food-preview">
           <div class="food-bubble"><span>🍔</span></div>
           <div class="food-bubble"><span>🍗</span></div>

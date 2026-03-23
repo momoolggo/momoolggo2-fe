@@ -71,7 +71,7 @@ onUnmounted(() => {
 
 <style scoped>
 .ownerlanding{
-    background: linear-gradient(135deg, #e03400 0%, #ff6b35 50%, #ffab4e 100%);
+    background: linear-gradient(135deg, #e03400 0%, #A40C0B 50%, #ffab4e 100%);
 }
 
 .hero{
@@ -120,7 +120,7 @@ onUnmounted(() => {
     border-radius: 20px;
     background: rgba(228, 222, 219, 0.72);
     box-shadow: 0 5px 20px rgba(0,0,0,0.15);
-    backdrop-filter: blur(6px);
+    backdrop-filter: blur(-20px);
     -webkit-backdrop-filter: blur(6px);
 }
 
@@ -172,7 +172,7 @@ onUnmounted(() => {
     width: 100%;
     height: 120px;
     padding: 0 32px;
-    background: linear-gradient(135deg, #e03400 0%, #ff6b35 50%, #ffab4e 100%);
+    background: linear-gradient(135deg, #e03400 0%, #A40C0B 50%, #ffab4e 100%);
 }
 
 .bottom_icon{
@@ -194,7 +194,7 @@ onUnmounted(() => {
     min-height: 16px;
     min-width: 16px;
     background: white;
-    color: #e03400;
+    color: #A40C0B;
     border: none;
     border-radius: 12px;
     font-size: 14px;
@@ -205,7 +205,7 @@ onUnmounted(() => {
 }
 
 .signup_btn{
-    background: #e95a0c;
+    background: #A40C0B;
     color: white;
 }
 

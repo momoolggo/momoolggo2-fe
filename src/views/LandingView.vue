@@ -249,6 +249,7 @@ const goOrder = () => {
   display: flex;
   justify-content: center;
   align-items: flex-end;
+  backdrop-filter: blur(6px);
 }
 .mascot {
   width: 480px;

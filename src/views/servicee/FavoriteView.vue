@@ -120,7 +120,7 @@ const goStore = (storeId) => {
             <span class="check-icon">✓</span>
             <span class="delivery-tip">배달팁 1,500원</span>
             <span class="divider">|</span>
-            <span class="min-order">15,000원 이상 배달</span>
+            <span class="min-order">{{ (store.min || 0).toLocaleString() }}원 이상 배달</span>
           </div>
         </div>
       </div>

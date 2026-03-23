@@ -38,7 +38,7 @@ const getImageUrl = (path) => {
       </div>
 
       <div class="delivery-info">
-        <span class="tip-badge">✔ 배달팁 무료</span>
+        <span class="tip-badge">✔ 배달팁 1,500원</span>
         <span class="divider">|</span>
         <span class="min-order">{{ (store.min || 0).toLocaleString() }}원 이상 배달</span>
       </div>

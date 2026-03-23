@@ -6,6 +6,10 @@ import vueDevTools from 'vite-plugin-vue-devtools'
 
 // https://vite.dev/config/
 export default defineConfig({
+  build: {
+      outDir: 'C:\codding\project\momoolggo\src\main\resources\static'
+  },
+
   plugins: [
     vue(),
     vueDevTools(),

@@ -9,6 +9,7 @@ import StoreManagementView from '@/components/owner/StoreManagementView.vue';
 import AddStoreView from '@/views/owner/AddStoreView.vue';
 import ownerService from '@/services/ownerService';
 import { useStore } from '@/stores/useStore';
+import OwnerReviewView from './OwnerReviewView.vue'
 
 const storeInfo = useStore();
 
@@ -114,6 +115,11 @@ const formattedDate = computed(() => {
       <!-- 가게관리 화면 -->
       <template v-if="currentMenu === 'store'">
         <StoreManagementView />
+      </template>
+      
+      <!-- 리뷰관리 화면 -->
+      <template v-if="currentMenu === 'review'">
+        <OwnerReviewView />
       </template>
 
     </main>

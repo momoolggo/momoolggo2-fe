@@ -4,6 +4,10 @@ import { ref, onMounted, onUnmounted } from 'vue';
 import cafeImg from '@/assets/카페 사장.png'
 import chickenImg from '@/assets/치킨 사장.png'
 import bunsikImg from '@/assets/분식 사장.png'
+import bgImg    from '@/assets/bg_daegu.png'
+import moneyImg from '@/assets/icon_money.png'
+import towerImg from '@/assets/icon_tower.png'
+import storeImg from '@/assets/icon_store.png'
 
 const router = useRouter();
 
@@ -65,6 +69,32 @@ onUnmounted(() => {
         </div>
     </section>
 
+<section class="features" :style="{ backgroundImage: `url(${bgImg})` }">
+  <div class="features_inner">
+    <h2 class="features_title">뭐물꼬와 함께해야 하는 이유</h2>
+    <div class="features_grid">
+
+      <div class="feature_card">
+        <img :src="moneyImg" class="feature_img" />
+        <h3 class="feature_card_title">신규 입점 업주<br/>3개월 수수료 반값</h3>
+        <p class="feature_card_desc">처음 시작하는 사장님을 위해<br/>3개월간 수수료 50% 할인 혜택을 드립니다</p>
+      </div>
+
+      <div class="feature_card">
+        <img :src="towerImg" class="feature_img" />
+        <h3 class="feature_card_title">대구·경북 맞춤<br/>지역 서비스</h3>
+        <p class="feature_card_desc">대구·경북 지역 특성에 맞춘<br/>현지화된 배달 서비스를 제공합니다</p>
+      </div>
+
+      <div class="feature_card">
+        <img :src="storeImg" class="feature_img" />
+        <h3 class="feature_card_title">이유없는 별점 테러는 그만!<br/>업주 소명 창구</h3>
+        <p class="feature_card_desc">이유 없는 별점 테러에 대응하기 위해<br/>공식 창구를 운영합니다</p>
+      </div>
+
+    </div>
+  </div>
+</section>
 
 </div>
 </template>
@@ -211,5 +241,85 @@ onUnmounted(() => {
 
 .btn:hover{
     transform: translateY(-2px);
+}
+
+.features {
+  width: 100%;
+  padding: 100px 40px;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  position: relative;
+}
+
+/* 배경 살짝 밝게 오버레이 */
+.features::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 248, 235, 0.75);
+}
+
+.features_inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 1;
+}
+
+.features_title {
+  text-align: center;
+  font-size: 36px;
+  font-family: 'NanumSquareB', sans-serif;
+  color: #A40C0B;
+  margin-bottom: 60px;
+}
+
+.features_grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 32px;
+}
+
+.feature_card {
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 24px;
+  padding: 48px 32px;
+  text-align: center;
+  box-shadow: 0 8px 32px rgba(164, 12, 11, 0.08);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.feature_card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 16px 48px rgba(164, 12, 11, 0.15);
+}
+
+.feature_img {
+  width: 120px;
+  height: 120px;
+  object-fit: contain;
+  margin-bottom: 24px;
+}
+
+.feature_card_title {
+  font-size: 22px;
+  font-family: 'NanumSquareB', sans-serif;
+  color: #1a1a1a;
+  margin: 0 0 16px;
+  line-height: 1.4;
+}
+
+.feature_card_desc {
+  font-size: 15px;
+  color: #666;
+  line-height: 1.7;
+  margin: 0;
+  font-family: 'NanumSquareB', sans-serif;
+}
+
+@media (max-width: 768px) {
+  .features_grid { grid-template-columns: 1fr; }
+  .features_title { font-size: 26px; }
 }
 </style>

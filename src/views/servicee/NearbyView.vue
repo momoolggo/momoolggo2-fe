@@ -78,7 +78,7 @@ const goToDetail = (id) => {
       <div class="store-list">
         <div v-for="store in storeList" :key="store.id" class="store-item">
           <StoreCard :store="store" @click="goToDetail(store.id)" />
-          <div class="distance-badge">🚶 {{ store.distance }}km</div>
+          <div class="distance-badge">🚶 {{ Math.ceil(store.distance) }}km</div>
         </div>
       </div>
     </template>

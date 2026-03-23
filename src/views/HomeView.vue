@@ -23,7 +23,7 @@ const categories = [
 
 // 배너
 const banners = [
-  { img: '/src/assets/광고1.png', route: '/event'    },
+  { img: '/src/assets/배너.png', route: '/event'    },
   { img: '/src/assets/광고2.png', route: '/whatKind' },
   { img: '/src/assets/광고3.png', route: '/whatKind'},
 ]

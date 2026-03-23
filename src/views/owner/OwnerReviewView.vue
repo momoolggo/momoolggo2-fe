@@ -256,29 +256,29 @@ const submitReport = async () => {
 
 .owner_comment {
   background: #f8f8f8;
-  border-left: 3px solid #3f51b5;
+  border-left: 3px solid #2d61da;
   border-radius: 8px;
   padding: 12px 16px;
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
-.comment_label { font-size: 12px; font-weight: 700; color: #3f51b5; }
+.comment_label { font-size: 12px; font-weight: 700; color: #2d61da; }
 .comment_text { font-size: 14px; color: #555; margin: 0; line-height: 1.6; }
 
 .review_actions { display: flex; gap: 10px; margin-top: 4px; }
 .btn_comment {
   padding: 8px 18px;
-  border: 1.5px solid #3f51b5;
+  border: 1.5px solid #2d61da;
   border-radius: 8px;
   background: #fff;
-  color: #3f51b5;
+  color: #2d61da;
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.15s;
 }
-.btn_comment:hover { background: #3f51b5; color: #fff; }
+.btn_comment:hover { background: #2d61da; color: #ffffff; }
 
 .btn_report {
   padding: 8px 18px;
@@ -302,11 +302,11 @@ const submitReport = async () => {
 .modal_close { background: none; border: none; font-size: 18px; cursor: pointer; color: #aaa; }
 .modal_desc { font-size: 13px; color: #666; margin: 0; line-height: 1.6; }
 .modal_textarea { width: 100%; height: 120px; padding: 12px; border: 1.5px solid #ddd; border-radius: 12px; font-size: 14px; resize: none; box-sizing: border-box; font-family: inherit; }
-.modal_textarea:focus { outline: none; border-color: #3f51b5; }
+.modal_textarea:focus { outline: none; border-color: #2d61da; }
 .char_count { font-size: 12px; color: #bbb; text-align: right; margin-top: -8px; }
 .modal_footer { display: flex; gap: 10px; justify-content: flex-end; }
-.btn_cancel { padding: 10px 24px; border: 1.5px solid #ddd; border-radius: 10px; background: #fff; color: #666; font-size: 14px; cursor: pointer; }
-.btn_primary { padding: 10px 24px; border: none; border-radius: 10px; background: #3f51b5; color: #fff; font-size: 14px; font-weight: 600; cursor: pointer; }
+.btn_cancel { padding: 6px 24px; border: 1.5px solid #ddd; border-radius: 10px; background: #fff; color: #666; font-size: 14px; cursor: pointer; }
+.btn_primary { padding: 10px 24px; border: none; border-radius: 10px; background: #2d61da; color: #fff; font-size: 14px; font-weight: 600; cursor: pointer; }
 .btn_report_submit { padding: 10px 24px; border: none; border-radius: 10px; background: #ef4444; color: #fff; font-size: 14px; font-weight: 600; cursor: pointer; }
 
 /* 신고 사유 */

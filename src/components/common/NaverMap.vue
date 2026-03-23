@@ -118,6 +118,7 @@ import { nextTick } from 'vue'
 onMounted(async () => {
     try {
         const res = await axios.get('/map/key')
+        console.log(res.data.resultData);
         await loadNaverMapSdk(res.data.resultData)
 
         // 초기 좌표가 있으면 지도 바로 표시

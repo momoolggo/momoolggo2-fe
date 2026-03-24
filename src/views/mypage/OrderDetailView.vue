@@ -5,7 +5,7 @@ import orderService from '@/services/orderService';
 import { useRoute } from 'vue-router';
 
 const getImageUrl = (path) => {
-  if (!path) return '/images/default-store.png'  // ← 여기서 처리
+  if (!path) return 'https://via.placeholder.com/45'
   if (path.startsWith('data:')) return path
   if (path.startsWith('http') || path.startsWith('blob')) return path
   return `http://localhost:8080${path}`
@@ -109,7 +109,7 @@ const progressWidth = computed(() => (currentStepIndex.value / (steps.value.leng
         </div>
 
         <div class="store-info"  @click="router.push(`/store/${order.storeId}`)">
-            <img :src="getImageUrl(store.pic)" class="store-thumbnail" alt="가게 이미지" />
+          <img :src="getImageUrl(order.storeImage)" class="store-thumb" />
           <span class="store-name">{{ order.storeName }}</span>
         </div>
 

@@ -394,8 +394,8 @@ const progressWidth = computed(() => (currentStepIndex.value / (steps.value.leng
   margin-top: 10px;
 }
 .status-footer-text.done-text {
-  color: #004ba0;
-  font-size: 24px;
+  color: #584949;
+  font-size: 21px;
 }
 
 /* 버튼 스타일 */

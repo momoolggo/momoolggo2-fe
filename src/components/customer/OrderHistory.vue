@@ -5,7 +5,7 @@ import { useRouter } from 'vue-router'
 const getImageUrl = (path) => {
   if (!path) return '/images/default-store.png'
   if (path.startsWith('http') || path.startsWith('blob') || path.startsWith('data:')) return path
-  return `http://localhost:8080${path}`
+  return `${path}`
 }
 
 const router = useRouter();

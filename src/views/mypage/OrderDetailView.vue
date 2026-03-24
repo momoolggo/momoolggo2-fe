@@ -8,7 +8,7 @@ const getImageUrl = (path) => {
   if (!path) return 'https://via.placeholder.com/45'
   if (path.startsWith('data:')) return path
   if (path.startsWith('http') || path.startsWith('blob')) return path
-  return `http://localhost:8080${path}`
+  return `${path}`
 }
 
 const route = useRoute();

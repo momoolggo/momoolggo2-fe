@@ -42,7 +42,7 @@ const uploading = ref(false)
 const getImageUrl = (path) => {
   if (!path) return null
   if (path.startsWith('http') || path.startsWith('blob')) return path
-  return `http://localhost:8080${path}`
+  return `${path}`
 }
 
 const loadStore = async () => {

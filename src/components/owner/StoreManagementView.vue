@@ -257,7 +257,7 @@ const deleteStore = async () => {
         <div class="field">
           <label>영업 상태</label>
           <div class="toggle-row">
-            <span class="toggle-label">{{ statusForm.state === 1 ? '영업중' : '휴무' }}</span>
+            <span class="toggle-label">{{ statusForm.state === 1 ? '영업중' : '준비중' }}</span>
             <label class="toggle">
               <input type="checkbox" :checked="statusForm.state === 1"
                 @change="statusForm.state = $event.target.checked ? 1 : 0" />

@@ -117,14 +117,14 @@ const setDefault = async (addressId) => {
           <button class="btn_danger btn_xs" @click="deleteAddress(item.addressId)">삭제</button>
         </div>
       </div>
-      <p v-if="!state.list.length" class="empty_msg">등록된 배송지가 없습니다.</p>
+      <p v-if="!state.list.length" class="empty_msg">등록된 주소가 없습니다.</p>
     </div>
 
     <!-- 모달 -->
     <div v-if="state.showModal" class="modal_overlay" @click.self="closeModal">
       <div class="modal_box">
         <div class="modal_header">
-          <h3>{{ state.editMode ? '배송지 수정' : '배송지 추가' }}</h3>
+          <h3>{{ state.editMode ? '주소 수정' : '주소 추가' }}</h3>
           <button class="modal_close" @click="closeModal">✕</button>
         </div>
 
@@ -145,7 +145,7 @@ const setDefault = async (addressId) => {
 
         <label class="default_check">
           <input v-model="state.modalForm.defaultAd" type="checkbox" :true-value="1" :false-value="0" />
-          기본 배송지로 설정
+          기본 주소로 설정
         </label>
 
         <div class="modal_footer">

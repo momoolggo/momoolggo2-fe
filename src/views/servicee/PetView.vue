@@ -188,12 +188,12 @@ function addPoints(amount, reason) {
   ptsPopupAmount.value = amount
   ptsPopupReason.value = reason
   ptsPopupVisible.value = true
-  pointsHistory.unshift({ icon:'🪙', name: reason, date: todayDateStr(), value: '+' + amount + 'P' })
+  pointsHistory.unshift({ icon:'6️⃣', name: reason, date: todayDateStr(), value: '+' + amount + 'P' })
   clearTimeout(ptsPopupTimer)
   ptsPopupTimer = setTimeout(() => { ptsPopupVisible.value = false }, 2200)
 }
 function spendPoints(amount) {
-  if (points.value < amount) { showToast('포인트가 부족해요 🪙'); return false }
+  if (points.value < amount) { showToast('포인트가 부족해요 '); return false }
   points.value -= amount
   pointsHistory.unshift({ icon:'🛍️', name:'아이템 구매', date: todayDateStr(), value: '-' + amount + 'P' })
   return true
@@ -283,19 +283,19 @@ function levelUp() {
 
 // ── ATTENDANCE ────────────────────────────────────────────────────────────
 const attRewardSchedule = [
-  { day:1,  pts:30,  emoji:'🪙', special:false },
-  { day:2,  pts:30,  emoji:'🪙', special:false },
+  { day:1,  pts:30,  emoji:'🤍', special:false },
+  { day:2,  pts:30,  emoji:'🤍', special:false },
   { day:3,  pts:50,  emoji:'🧡', special:true  },
-  { day:4,  pts:30,  emoji:'🪙', special:false },
-  { day:5,  pts:30,  emoji:'🪙', special:false },
+  { day:4,  pts:30,  emoji:'🤍', special:false },
+  { day:5,  pts:30,  emoji:'🤍', special:false },
   { day:6,  pts:50,  emoji:'🧡', special:true  },
   { day:7,  pts:200, emoji:'🎁', special:true  },
-  { day:8,  pts:30,  emoji:'🪙', special:false },
-  { day:9,  pts:30,  emoji:'🪙', special:false },
+  { day:8,  pts:30,  emoji:'🤍', special:false },
+  { day:9,  pts:30,  emoji:'🤍', special:false },
   { day:10, pts:100, emoji:'✨', special:true  },
-  { day:11, pts:30,  emoji:'🪙', special:false },
-  { day:12, pts:30,  emoji:'🪙', special:false },
-  { day:13, pts:30,  emoji:'🪙', special:false },
+  { day:11, pts:30,  emoji:'🤍', special:false },
+  { day:12, pts:30,  emoji:'🤍', special:false },
+  { day:13, pts:30,  emoji:'🤍', special:false },
   { day:14, pts:50,  emoji:'🧡', special:true  },
   { day:15, pts:100, emoji:'✨', special:true  },
   { day:30, pts:500, emoji:'🎖️', special:true  },
@@ -420,7 +420,7 @@ onUnmounted(() => {
   <div class="top-nav">
     <div class="app-logo">🍱 뭐물꼬딜리버리</div>
     <div class="top-points" @click="activeView='reward'">
-      <span>🪙</span>
+      <span>💰</span>
       <span class="top-pts-val">{{ fmtPts }}</span>
       <span class="top-pts-p">P</span>
     </div>
@@ -469,7 +469,7 @@ onUnmounted(() => {
       <!-- Pat cooldown bar -->
       <div class="cooldown-row">
         <div class="cooldown-label">
-          <span>🫶 쓰다듬기 쿨타임</span>
+          <span>👋 쓰다듬기 쿨타임</span>
           <span class="cooldown-time" :class="{ ready: !patOnCooldown }">
             {{ patOnCooldown ? patRemainLabel + ' 후 가능' : '준비완료!' }}
           </span>
@@ -518,7 +518,7 @@ onUnmounted(() => {
         <div class="action-title">오늘 할 일</div>
         <div class="action-grid">
           <button class="action-btn btn-pet" :class="{ cooling: patOnCooldown }" @click="petPat">
-            <span class="btn-icon">🫶</span>
+            <span class="btn-icon">👋</span>
             쓰다듬기
             <span v-if="patOnCooldown" class="btn-sub cooldown-txt">{{ patRemainLabel }}</span>
             <span v-else class="btn-sub" style="color:#FF8C60">+5 친밀도</span>
@@ -628,7 +628,7 @@ onUnmounted(() => {
         <div class="shop-title">🛍️ 펫 상점</div>
         <div class="shop-subtitle">포인트로 특별한 아이템을 꾸며보세요</div>
         <div class="shop-pts-pill">
-          <span>🪙</span>
+          <span>💰</span>
           <span class="shop-pts-num">{{ fmtPts }}</span>
           <span class="shop-pts-label">P</span>
         </div>
@@ -662,7 +662,7 @@ onUnmounted(() => {
           </div>
 
           <div v-if="!ownedAcc.has(item.id)" class="shop-price">
-            <span>🪙</span><span class="price-val">{{ item.price.toLocaleString() }}P</span>
+            <span>💸</span><span class="price-val">{{ item.price.toLocaleString() }}P</span>
           </div>
           <button
             class="shop-btn"
@@ -693,7 +693,7 @@ onUnmounted(() => {
           <div class="item-desc">{{ item.desc }}</div>
 
           <div v-if="!ownedBg.has(item.id)" class="shop-price">
-            <span>🪙</span><span class="price-val">{{ item.price.toLocaleString() }}P</span>
+            <span>💸</span><span class="price-val">{{ item.price.toLocaleString() }}P</span>
           </div>
           <button
             class="shop-btn"
@@ -725,7 +725,7 @@ onUnmounted(() => {
           <div class="item-desc">{{ item.desc }}</div>
 
           <div v-if="!ownedGround.has(item.id)" class="shop-price">
-            <span>🪙</span><span class="price-val">{{ item.price.toLocaleString() }}P</span>
+            <span>💸</span><span class="price-val">{{ item.price.toLocaleString() }}P</span>
           </div>
           <button
             class="shop-btn"
@@ -765,7 +765,7 @@ onUnmounted(() => {
             </div>
 
             <div v-if="!ownedEffect.has(item.id)" class="shop-price">
-              <span>🪙</span><span class="price-val">{{ item.price.toLocaleString() }}P</span>
+              <span>💸</span><span class="price-val">{{ item.price.toLocaleString() }}P</span>
             </div>
             <button
               class="shop-btn"
@@ -811,7 +811,7 @@ onUnmounted(() => {
   <!-- POINTS POPUP -->
   <Transition name="popup">
     <div v-if="ptsPopupVisible" class="pts-popup">
-      <div class="pts-popup-emoji">{{ ptsPopupAmount >= 500 ? '🎉' : ptsPopupAmount >= 200 ? '🌟' : '🪙' }}</div>
+      <div class="pts-popup-emoji">{{ ptsPopupAmount >= 500 ? '🎉' : ptsPopupAmount >= 200 ? '🌟' : '💰' }}</div>
       <div class="pts-popup-title">{{ ptsPopupAmount >= 200 ? '보너스 포인트!' : '포인트 획득!' }}</div>
       <div class="pts-popup-pts">+{{ ptsPopupAmount.toLocaleString() }}P</div>
       <div class="pts-popup-sub">{{ ptsPopupReason }}</div>

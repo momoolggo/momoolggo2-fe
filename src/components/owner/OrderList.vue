@@ -157,11 +157,11 @@ onMounted(fetchOrders);
 }
 
 .waiting   { background-color: #e2e4e8; color: #4f5e7b; }
-.progress  { background-color: #4caf50; }
-.rider     { background-color: #ff9800; }
-.shipping  { background-color: #5e2bed; }
-.completed { background-color: #2ac1bc; }
-.cancel    { background-color: #e63911; }
+.progress  { background-color: #41c045; }
+.rider     { background-color: #ffb700; }
+.shipping  { background-color: #5024c6; }
+.completed { background-color: #1890ff; }
+.cancel    { background-color: #c42427; }
 
 .no-data { text-align: center; padding: 50px; color: #aaa; }
 </style>

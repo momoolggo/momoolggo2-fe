@@ -118,7 +118,7 @@ const steps = [
         <button v-if="currentState === 3" class="btn rider" @click="changeState(4)">라이더 배차</button>
         <button v-if="currentState === 4" class="btn shipping" @click="changeState(5)">배달 시작</button>
         <button v-if="currentState === 5" class="btn complete" @click="changeState(6)">배달 완료</button>
-        <span v-if="currentState === 6" class="status-msg complete-msg">✅ 배달 완료</span>
+        <span v-if="currentState === 6" class="status-msg complete-msg">배달 완료</span>
       </div>
     </div>
   </div>
@@ -202,7 +202,7 @@ const steps = [
 }
 
 .step.done .step-circle {
-  background: #2ac1bc;
+  background: #1890ff;
   color: white;
 }
 
@@ -213,7 +213,7 @@ const steps = [
 }
 
 .step.active .step-label { color: #4caf50; font-weight: bold; }
-.step.done .step-label { color: #2ac1bc; }
+.step.done .step-label { color: #1890ff; }
 
 .step-line {
   position: absolute;
@@ -282,11 +282,12 @@ const steps = [
 
 .btn:hover { opacity: 0.85; }
 
-.cancel   { background: #ff4d4f; }
-.accept   { background: #4caf50; }
-.rider    { background: #ff9800; }
-.shipping { background: #5e2bed; }
-.complete { background: #2ac1bc; }
+
+.cancel   { background: #c42427; }
+.accept   { background: #41c045; }
+.rider    { background: #ffb700; }
+.shipping { background: #5024c6; }
+.complete { background: #1890ff; }
 
 .status-msg {
   font-size: 15px;
@@ -294,5 +295,5 @@ const steps = [
   padding: 10px;
 }
 
-.complete-msg { color: #2ac1bc; }
+.complete-msg { color: #1890ff; }
 </style>

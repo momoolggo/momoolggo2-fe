@@ -32,6 +32,13 @@ import WhatKindView       from '@/views/servicee/WhatKindView.vue'
 import SearchStoreView    from '@/views/header/SearchStoreView.vue'
 import NearbyView from '@/views/servicee/NearbyView.vue'
 
+// ── 관리자
+import AdminHomeView from '@/views/admin/AdminHomeView.vue'
+import AdminNoticeView from '@/views/admin/AdminNoticeView.vue'
+import AdminFaqView from '@/views/admin/AdminFaqView.vue'
+import AdminSettlementView from '@/views/admin/AdminSettlementView.vue'
+import AdminBlindView from '@/views/admin/AdminBlindView.vue'
+
 const routes = [
   { path: '/', name: 'Landing', component: LandingView },
   { path: '/ownerlanding', name: 'OwnerLanding', component: OwnerLandingView},
@@ -48,6 +55,13 @@ const routes = [
 
   // ── 고객 전용
   { path: '/home', name: 'Home', component: HomeView, meta: { requiresAuth: true, role: 'CUSTOMER' } },
+
+  // ── 관리자 전용
+  { path: '/admin', name: 'AdminHome', component: AdminHomeView },
+  { path: '/admin/notice', name: 'AdminNotice', component: AdminNoticeView, meta: { requiresAuth: true, role: 'ADMIN' } },
+  { path: '/admin/faq', name: 'AdminFaq', component: AdminFaqView, meta: { requiresAuth: true, role: 'ADMIN' } },
+  { path: '/admin/settlement', name: 'AdminSettlement', component: AdminSettlementView, meta: { requiresAuth: true, role: 'ADMIN' } },
+  { path: '/admin/blind', name: 'AdminBlind', component: AdminBlindView, meta: { requiresAuth: true, role: 'ADMIN' } },
 
     // /mypage는 메뉴 페이지
 { path: '/mypage', name: 'MyPage', component: MyPageView, meta: { requiresAuth: true, role: 'CUSTOMER' } },
@@ -107,6 +121,7 @@ router.beforeEach(async (to, from, next) => {
   if (to.meta.guestOnly && isSignedIn) {
     if (role === 'OWNER') return next('/ownerservice')
     if (role === 'RIDER') return next('/riderservice')
+    if (role === 'ADMIN') return next('/admin')  // ← 추가
     return next('/home')
   }
 
@@ -114,12 +129,14 @@ router.beforeEach(async (to, from, next) => {
     if (!isSignedIn) {
       if (to.meta.role === 'OWNER') return next('/owner/signin')
       if (to.meta.role === 'RIDER') return next('/rider/signin')
+      if (to.meta.role === 'ADMIN') return next('/admin/signin')  // ← 추가
       return next('/customer/signin')
     }
 
     if (to.meta.role && to.meta.role !== role) {
       if (role === 'OWNER') return next('/ownerservice')
       if (role === 'RIDER') return next('/riderservice')
+      if (role === 'ADMIN') return next('/admin')  // ← 추가
       return next('/home')
     }
   }

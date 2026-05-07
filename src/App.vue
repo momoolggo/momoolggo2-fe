@@ -11,11 +11,12 @@ import { setAlertRef } from '@/composables/useAlert'
 const route  = useRoute()
 const router = useRouter()
 const userStore = useUserStore()
-
 const globalAlert = ref(null)
 
 // 헤더를 숨길 페이지
-const noHeaderPages = ['/','/ownerlanding' ,'/owner/signin', '/owner/signup', '/customer/signin', '/customer/signup']
+
+const noHeaderPages = ['/','/ownerlanding' ,'/owner/signin', '/owner/signup', '/customer/signin', '/customer/signup','/admin']
+
 const showHeader = computed(() => !noHeaderPages.includes(route.path));
 
 onMounted(() => {

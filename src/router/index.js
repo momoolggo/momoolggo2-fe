@@ -32,6 +32,11 @@ import WhatKindView       from '@/views/servicee/WhatKindView.vue'
 import SearchStoreView    from '@/views/header/SearchStoreView.vue'
 import NearbyView from '@/views/servicee/NearbyView.vue'
 
+// ── 라이더
+import RiderSignupView from '@/views/rider/RiderSignupView.vue'
+import RiderSigninView from '@/views/rider/RiderSigninView.vue'
+import RiderHomeView   from '@/views/rider/RiderHomeView.vue'
+
 const routes = [
   { path: '/', name: 'Landing', component: LandingView },
   { path: '/ownerlanding', name: 'OwnerLanding', component: OwnerLandingView},
@@ -83,6 +88,13 @@ const routes = [
   // ── 사장님 전용
   { path: '/ownerservice', name: 'OwnerService', component: OwnerOrderView, meta: { requiresAuth: true, role: 'OWNER' } },
   { path: '/ownerservice/addstore', name: 'AddStore', component: AddStoreView, meta: { requiresAuth: true, role: 'OWNER' } },
+
+  // ── 라이더 인증
+  { path: '/rider/signup', name: 'RiderSignup', component: RiderSignupView, meta: { guestOnly: true } },
+  { path: '/rider/signin', name: 'RiderSignin', component: RiderSigninView, meta: { guestOnly: true } },
+
+  // ── 라이더 전용
+  { path: '/riderservice', name: 'RiderService', component: RiderHomeView, meta: { requiresAuth: true, role: 'RIDER' } },
 
   // ── 404 → 랜딩으로
   { path: '/:pathMatch(.*)*', redirect: '/' },

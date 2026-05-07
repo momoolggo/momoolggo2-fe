@@ -28,6 +28,8 @@ const state = reactive({
   reviews: [],
   isModalOpen: false,
   isWished: false,
+  menuSearchText: '',
+  searchResults: [],
 })
 
 const getStoreDetail = async () => {
@@ -51,6 +53,17 @@ const getMenuList = async () => {
   } catch (error) {
     console.error('메뉴 데이터 로드 실패:', error)
   }
+}
+
+//가게 내 메뉴 검색 추가
+const searchMenu = async () => {
+  if (!state.menuSearchText.trim()) {
+    state.searchResults = []
+    return
+  }
+  const storeId = route.params.id
+  const res = await storeService.menuSearchInStore(storeId, state.menuSearchText)
+  state.searchResults = res.resultData || []
 }
 
 // 가게 리뷰 조회 추가
@@ -158,14 +171,33 @@ const handleAddToCart = (item) => {
 
     <div class="tab-content-area">
       <div v-if="state.activeTab === 'menu'" class="menu-list-wrapper">
-        <MenuCategory
-          v-for="group in groupedMenu"
-          :key="group.name"
-          :category-name="group.name"
-          :items="group.items"
-          @click-menu="openMenuModal"
-        />
-      </div>
+  <div class="menu-search-bar">
+    <input
+      v-model="state.menuSearchText"
+      type="text"
+      placeholder="메뉴를 검색하세요"
+      @keyup.enter="searchMenu"
+    />
+    <button @click="searchMenu">검색</button>
+  </div>
+
+  <template v-if="state.searchResults.length > 0">
+    <MenuCategory
+      category-name="검색 결과"
+      :items="state.searchResults"
+      @click-menu="openMenuModal"
+    />
+  </template>
+  <template v-else>
+    <MenuCategory
+      v-for="group in groupedMenu"
+      :key="group.name"
+      :category-name="group.name"
+      :items="group.items"
+      @click-menu="openMenuModal"
+    />
+  </template>
+</div>
 
       <div v-if="state.activeTab === 'info'" class="info-tab-wrapper">
         <StoreInfo :state="state.storeInfo" />

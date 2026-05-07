@@ -1,4 +1,5 @@
 <script setup>
+
 import { ref, onMounted } from 'vue'
 import AdminSidebar from '@/components/admin/AdminSidebar.vue'
 import adminService from '@/services/adminService'
@@ -71,9 +72,11 @@ const barHeightPercent = (val) => {
   if (maxBarValue.value === 0) return 0
   return (val / maxBarValue.value) * 100
 }
+
 </script>
 
 <template>
+
   <div class="admin_layout">
     <AdminSidebar />
 
@@ -184,10 +187,12 @@ const barHeightPercent = (val) => {
 
       </div>
     </div>
+f20cf1ad93c
   </div>
 </template>
 
 <style scoped>
+
 /* ─── 레이아웃 ─── */
 .admin_layout {
   display: flex;
@@ -456,4 +461,5 @@ const barHeightPercent = (val) => {
   white-space: nowrap;
   text-align: center;
 }
+
 </style>

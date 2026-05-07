@@ -59,11 +59,11 @@ const routes = [
   { path: '/home', name: 'Home', component: HomeView, meta: { requiresAuth: true, role: 'CUSTOMER' } },
 
   // ── 관리자 전용
-  { path: '/admin', name: 'AdminHome', component: AdminHomeView },
-  { path: '/admin/notice', name: 'AdminNotice', component: AdminNoticeView, meta: { requiresAuth: true, role: 'ADMIN' } },
-  { path: '/admin/faq', name: 'AdminFaq', component: AdminFaqView, meta: { requiresAuth: true, role: 'ADMIN' } },
-  { path: '/admin/settlement', name: 'AdminSettlement', component: AdminSettlementView, meta: { requiresAuth: true, role: 'ADMIN' } },
-  { path: '/admin/blind', name: 'AdminBlind', component: AdminBlindView, meta: { requiresAuth: true, role: 'ADMIN' } },
+  { path: '/admin', name: 'AdminHome', component: AdminHomeView /*,  meta: { requiresAuth: true, role: 'ADMIN' }*/ },
+  { path: '/admin/notice', name: 'AdminNotice', component: AdminNoticeView/*, meta: { requiresAuth: true, role: 'ADMIN' } */},
+  { path: '/admin/faq', name: 'AdminFaq', component: AdminFaqView/*, meta: { requiresAuth: true, role: 'ADMIN' } */},
+  { path: '/admin/settlement', name: 'AdminSettlement', component: AdminSettlementView/*, meta: { requiresAuth: true, role: 'ADMIN' }*/ },
+  { path: '/admin/blind', name: 'AdminBlind', component: AdminBlindView/*, meta: { requiresAuth: true, role: 'ADMIN' }*/ },
 
 
     // /mypage는 메뉴 페이지

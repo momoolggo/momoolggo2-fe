@@ -1,239 +1,465 @@
 <script setup>
-import { reactive, ref, onMounted } from 'vue'
 
-const activeTab = ref('reports')
+import { ref, onMounted } from 'vue'
+import AdminSidebar from '@/components/admin/AdminSidebar.vue'
+import adminService from '@/services/adminService'
 
-// 신고 목록 (백엔드 연동 시 API로 교체)
-const state = reactive({
-  reports: [],
-  loading: false,
+// 피그마 기준 stat 카드 4개
+const dashboard = ref({
+  memberCount: 0,
+  storeCount: 0,
+  reviewCount: 0,
+  reportCount: 0,
 })
 
-// 더미 데이터 (백엔드 연동 전 테스트용)
-const dummyReports = [
-  {
-    reportId: 1,
-    storeName: '맛있는 치킨',
-    reviewContent: '별로였어요 그냥',
-    score: 1,
-    reason: '이유 없는 1점 리뷰',
-    detail: '주문도 정상적으로 배달됐는데 이유없이 1점입니다.',
-    status: 'PENDING',
-    createdAt: '2026-03-20',
-    userName: '홍길동',
-  },
-  {
-    reportId: 2,
-    storeName: '행복한 분식',
-    reviewContent: '음식에 이물질이 있었어요',
-    score: 1,
-    reason: '허위 사실 기재',
-    detail: '절대 있을 수 없는 일입니다.',
-    status: 'PENDING',
-    createdAt: '2026-03-21',
-    userName: '김철수',
-  },
+// 차트 데이터 (주간 기본)
+const chartTab = ref('weekly')
+const chartMetric = ref('memberCount')
+const dropdownOpen = ref(false)
+
+const metricOptions = [
+  { key: 'memberCount', label: '가입자 수' },
+  { key: 'storeCount', label: '가게 등록 수' },
+  { key: 'reviewCount', label: '리뷰 등록 수' },
 ]
 
-onMounted(() => {
-  // TODO: API 연동 시 교체
-  state.reports = dummyReports
+// 주간 더미 데이터 (API 연동 전 UI 확인용)
+const weeklyData = ref([
+  { label: '4일(수)', value: 30, isToday: true },
+  { label: '5일(목)', value: 30, isToday: false },
+  { label: '6일(금)', value: 30, isToday: false },
+  { label: '7일(토)', value: 30, isToday: false },
+  { label: '8일(일)', value: 30, isToday: false },
+  { label: '9일(월)', value: 30, isToday: false },
+  { label: '10일(화)', value: 30, isToday: false },
+  { label: '11일(수)', value: 0, isToday: false },
+])
+
+const maxBarValue = ref(30)
+
+onMounted(async () => {
+  try {
+    const res = await adminService.getDashboard()
+    if (res?.resultData) {
+      dashboard.value = {
+        memberCount: res.resultData.memberCount ?? res.resultData.totalMembers ?? 143,
+        storeCount: res.resultData.storeCount ?? res.resultData.totalStores ?? 35,
+        reviewCount: res.resultData.reviewCount ?? res.resultData.totalReviews ?? 88,
+        reportCount: res.resultData.reportCount ?? res.resultData.totalReports ?? 7,
+      }
+    }
+  } catch (e) {
+    console.error('대시보드 조회 실패', e)
+    // 피그마 더미값 유지
+    dashboard.value = {
+      memberCount: 143,
+      storeCount: 35,
+      reviewCount: 88,
+      reportCount: 7,
+    }
+  }
 })
 
-const statusLabel = (status) => {
-  if (status === 'PENDING')  return '검토 중'
-  if (status === 'APPROVED') return '삭제 승인'
-  if (status === 'REJECTED') return '삭제 거절'
-  return status
+const selectedMetricLabel = () =>
+  metricOptions.find((m) => m.key === chartMetric.value)?.label ?? '가입자 수'
+
+const selectMetric = (key) => {
+  chartMetric.value = key
+  dropdownOpen.value = false
 }
 
-const statusClass = (status) => {
-  if (status === 'PENDING')  return 'badge_pending'
-  if (status === 'APPROVED') return 'badge_approved'
-  if (status === 'REJECTED') return 'badge_rejected'
-  return ''
+const barHeightPercent = (val) => {
+  if (maxBarValue.value === 0) return 0
+  return (val / maxBarValue.value) * 100
 }
 
-// 승인/거절 (백엔드 연동 시 API 호출로 교체)
-const approve = (report) => {
-  // TODO: await adminService.approveReport(report.reportId)
-  report.status = 'APPROVED'
-  alert(`신고 #${report.reportId} — 리뷰 삭제 승인 완료`)
-}
-
-const reject = (report) => {
-  // TODO: await adminService.rejectReport(report.reportId)
-  report.status = 'REJECTED'
-  alert(`신고 #${report.reportId} — 삭제 거절 완료`)
-}
 </script>
 
 <template>
-  <div class="admin_wrap">
-    <h1 class="admin_title">관리자 페이지</h1>
 
-    <!-- 탭 -->
-    <div class="tab_bar">
-      <button
-        class="tab_btn"
-        :class="{ active: activeTab === 'reports' }"
-        @click="activeTab = 'reports'"
-      >
-        리뷰 신고 목록
-        <span v-if="state.reports.filter(r => r.status === 'PENDING').length" class="badge">
-          {{ state.reports.filter(r => r.status === 'PENDING').length }}
-        </span>
-      </button>
-      <!-- 추후 탭 추가 가능 -->
-      <!-- <button class="tab_btn" :class="{ active: activeTab === 'users' }" @click="activeTab = 'users'">회원 관리</button> -->
-    </div>
+  <div class="admin_layout">
+    <AdminSidebar />
 
-    <!-- 리뷰 신고 목록 -->
-    <div v-if="activeTab === 'reports'" class="tab_content">
-
-      <div v-if="!state.reports.length" class="empty_msg">신고 내역이 없습니다.</div>
-
-      <div v-else class="report_list">
-        <div v-for="report in state.reports" :key="report.reportId" class="report_card">
-
-          <div class="report_top">
-            <div class="report_info">
-              <span class="store_name">🏪 {{ report.storeName }}</span>
-              <span :class="['status_badge', statusClass(report.status)]">{{ statusLabel(report.status) }}</span>
-            </div>
-            <span class="report_date">{{ report.createdAt }}</span>
-          </div>
-
-          <div class="report_review">
-            <div class="review_score">
-              <span class="stars">{{ '★'.repeat(report.score) }}{{ '☆'.repeat(5 - report.score) }}</span>
-              <span class="reviewer">{{ report.userName }}</span>
-            </div>
-            <p class="review_text">"{{ report.reviewContent }}"</p>
-          </div>
-
-          <div class="report_reason">
-            <span class="reason_label">신고 사유</span>
-            <span class="reason_text">{{ report.reason }}</span>
-          </div>
-
-          <div v-if="report.detail" class="report_detail">
-            <span class="reason_label">업주 소명</span>
-            <p class="detail_text">{{ report.detail }}</p>
-          </div>
-
-          <div v-if="report.status === 'PENDING'" class="report_actions">
-            <button class="btn_approve" @click="approve(report)">✓ 삭제 승인</button>
-            <button class="btn_reject"  @click="reject(report)">✕ 삭제 거절</button>
-          </div>
-
-          <div v-else class="report_done">
-            처리 완료 — {{ statusLabel(report.status) }}
-          </div>
-
+    <div class="main_content">
+      <!-- 헤더 -->
+      <header class="top_header">
+        <div class="header_left">
+          <img src="@/assets/로고수정.png" alt="logo" class="header_logo_img" />
+          <span class="header_title">관리자 서비스</span>
         </div>
+        <span class="admin_greeting">관리자 님 안녕하세요</span>
+      </header>
+
+      <!-- 본문 -->
+      <div class="content">
+
+        <!-- Today 통계 카드 4개 -->
+        <div class="today_section">
+          <p class="today_label">Today</p>
+          <div class="stats_grid">
+            <div class="stat_card">
+              <p class="stat_label">가입자 수</p>
+              <p class="stat_value">
+                {{ dashboard.memberCount }}<span class="stat_unit">명</span>
+              </p>
+            </div>
+            <div class="stat_card">
+              <p class="stat_label">가게등록수</p>
+              <p class="stat_value">
+                {{ dashboard.storeCount }}<span class="stat_unit">개</span>
+              </p>
+            </div>
+            <div class="stat_card">
+              <p class="stat_label">리뷰등록수</p>
+              <p class="stat_value">
+                {{ dashboard.reviewCount }}<span class="stat_unit">개</span>
+              </p>
+            </div>
+            <div class="stat_card">
+              <p class="stat_label">신고수</p>
+              <p class="stat_value">
+                {{ dashboard.reportCount }}<span class="stat_unit">개</span>
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- 현황 차트 -->
+        <div class="chart_section">
+          <div class="chart_header">
+            <div class="chart_title_row">
+              <span class="chart_title">현황 차트</span>
+              <div class="tab_group">
+                <button
+                  class="tab_btn"
+                  :class="{ active: chartTab === 'weekly' }"
+                  @click="chartTab = 'weekly'"
+                >주간</button>
+                <button
+                  class="tab_btn"
+                  :class="{ active: chartTab === 'monthly' }"
+                  @click="chartTab = 'monthly'"
+                >월간</button>
+                <button
+                  class="tab_btn"
+                  :class="{ active: chartTab === 'yearly' }"
+                  @click="chartTab = 'yearly'"
+                >연간</button>
+              </div>
+            </div>
+
+            <!-- 드롭다운 -->
+            <div class="dropdown_wrap">
+              <button class="dropdown_btn" @click="dropdownOpen = !dropdownOpen">
+                {{ selectedMetricLabel() }}
+                <span class="dropdown_arrow">▼</span>
+              </button>
+              <div v-if="dropdownOpen" class="dropdown_menu">
+                <button
+                  v-for="opt in metricOptions"
+                  :key="opt.key"
+                  class="dropdown_item"
+                  @click="selectMetric(opt.key)"
+                >{{ opt.label }}</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 바 차트 -->
+          <div class="bar_chart">
+            <div
+              v-for="(item, idx) in weeklyData"
+              :key="idx"
+              class="bar_col"
+            >
+              <span class="bar_val">{{ item.value }}</span>
+              <div class="bar_wrapper">
+                <div
+                  class="bar"
+                  :class="{ today: item.isToday }"
+                  :style="{ height: barHeightPercent(item.value) + '%' }"
+                ></div>
+              </div>
+              <span class="bar_label">{{ item.label }}</span>
+            </div>
+          </div>
+        </div>
+
       </div>
     </div>
-
+f20cf1ad93c
   </div>
 </template>
 
 <style scoped>
-.admin_wrap { padding: 40px; max-width: 900px; margin: 0 auto; }
-.admin_title { font-size: 28px; font-weight: 700; color: #333; margin-bottom: 32px; }
 
-/* 탭 */
-.tab_bar { display: flex; gap: 8px; border-bottom: 2px solid #eee; margin-bottom: 32px; }
-.tab_btn {
-  padding: 12px 24px;
-  border: none;
-  background: none;
+/* ─── 레이아웃 ─── */
+.admin_layout {
+  display: flex;
+  min-height: 100vh;
+  background:rgb(255, 255, 255)0;
+  font-family: 'Noto Sans KR', sans-serif;
+}
+
+.main_content {
+  margin-left: 220px;   /* AdminSidebar 너비에 맞게 */
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ─── 헤더 ─── */
+.top_header {
+  background: #9b1b1b;
+  padding: 14px 32px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.header_left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.header_logo_img {
+  width: 80px;
+  height: auto;
+}
+
+.header_title {
+  font-size: 22px;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: 0.5px;
+}
+
+.admin_greeting {
+  font-size: 13px;
+  color: #fff;
+}
+
+/* ─── 본문 ─── */
+.content {
+  padding: 28px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* ─── Today 섹션 ─── */
+.today_section {
+  background: #fff;
+  border-radius: 12px;
+  padding: 24px 28px;
+}
+
+.today_label {
+  font-size: 16px;
+  font-weight: 700;
+  color: #222;
+  margin-bottom: 16px;
+}
+
+.stats_grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+.stat_card {
+  background: #f5f5f5;
+  border-radius: 10px;
+  padding: 18px 20px;
+}
+
+.stat_label {
+  font-size: 12px;
+  color: #777;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.stat_value {
+  font-size: 30px;
+  font-weight: 800;
+  color:#9b1b1b;
+  line-height: 1;
+}
+
+.stat_unit {
   font-size: 15px;
   font-weight: 600;
+  color: #444;
+  margin-left: 2px;
+}
+
+/* ─── 차트 섹션 ─── */
+.chart_section {
+  background: #fff;
+  border-radius: 12px;
+  padding: 24px 28px;
+}
+
+.chart_header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.chart_title_row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.chart_title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #222;
+}
+
+/* 탭 */
+.tab_group {
+  display: flex;
+  gap: 4px;
+}
+
+.tab_btn {
+  background: none;
+  border: none;
+  font-size: 13px;
   color: #aaa;
   cursor: pointer;
-  border-bottom: 3px solid transparent;
-  margin-bottom: -2px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-weight: 500;
+  transition: color 0.15s;
+}
+
+.tab_btn.active {
+  color:#9b1b1b;
+  font-weight: 700;
+}
+
+.tab_btn:hover:not(.active) {
+  color: #666;
+}
+
+/* 드롭다운 */
+.dropdown_wrap {
+  position: relative;
+}
+
+.dropdown_btn {
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 13px;
+  color: #333;
+  cursor: pointer;
   display: flex;
   align-items: center;
   gap: 8px;
-  transition: all 0.15s;
-}
-.tab_btn.active { color: #3f51b5; border-bottom-color: #3f51b5; }
-.badge {
-  background: #ef4444;
-  color: #fff;
-  font-size: 11px;
-  font-weight: 700;
-  padding: 2px 7px;
-  border-radius: 20px;
+  min-width: 110px;
+  justify-content: space-between;
 }
 
-.empty_msg { text-align: center; color: #aaa; padding: 60px 0; font-size: 15px; }
+.dropdown_arrow {
+  font-size: 10px;
+  color: #999;
+}
 
-/* 신고 카드 */
-.report_list { display: flex; flex-direction: column; gap: 20px; }
-.report_card {
+.dropdown_menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
   background: #fff;
-  border: 1.5px solid #eee;
-  border-radius: 20px;
-  padding: 28px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  min-width: 130px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  z-index: 20;
+  overflow: hidden;
+}
+
+.dropdown_item {
+  display: block;
+  width: 100%;
+  padding: 9px 14px;
+  font-size: 13px;
+  color: #333;
+  background: none;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+.dropdown_item:hover {
+  background: #f5f5f5;
+}
+
+/* ─── 바 차트 ─── */
+.bar_chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 0;
+  height: 220px;
+  padding-bottom: 28px; /* label 공간 */
+  position: relative;
+}
+
+.bar_col {
+  flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+  align-items: center;
+  height: 100%;
+  position: relative;
+  justify-content: flex-end;
 }
 
-.report_top { display: flex; justify-content: space-between; align-items: center; }
-.report_info { display: flex; align-items: center; gap: 12px; }
-.store_name { font-size: 16px; font-weight: 700; color: #333; }
-.report_date { font-size: 13px; color: #bbb; }
+.bar_val {
+  font-size: 12px;
+  color: #888;
+  margin-bottom: 4px;
+  font-weight: 500;
+}
 
-.status_badge { font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 20px; }
-.badge_pending  { background: #fff7ed; color: #f59e0b; }
-.badge_approved { background: #f0fdf4; color: #16a34a; }
-.badge_rejected { background: #fef2f2; color: #ef4444; }
-
-.report_review { background: #f9f9f9; border-radius: 12px; padding: 16px; }
-.review_score { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
-.stars { color: #ef4444; font-size: 16px; }
-.reviewer { font-size: 13px; color: #888; }
-.review_text { font-size: 14px; color: #555; margin: 0; font-style: italic; line-height: 1.6; }
-
-.report_reason { display: flex; align-items: center; gap: 10px; }
-.reason_label { font-size: 12px; font-weight: 700; color: #666; background: #f0f0f0; padding: 3px 10px; border-radius: 6px; white-space: nowrap; }
-.reason_text { font-size: 14px; color: #333; }
-
-.report_detail { display: flex; flex-direction: column; gap: 6px; }
-.detail_text { font-size: 14px; color: #555; margin: 0; line-height: 1.6; padding-left: 4px; }
-
-.report_actions { display: flex; gap: 12px; }
-.btn_approve {
+.bar_wrapper {
+  width: 60%;
   flex: 1;
-  padding: 12px;
-  border: none;
-  border-radius: 10px;
-  background: #16a34a;
-  color: #fff;
-  font-size: 14px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: opacity 0.15s;
+  display: flex;
+  align-items: flex-end;
+  max-height: calc(100% - 40px);
 }
-.btn_approve:hover { opacity: 0.85; }
-.btn_reject {
-  flex: 1;
-  padding: 12px;
-  border: none;
-  border-radius: 10px;
-  background: #ef4444;
-  color: #fff;
-  font-size: 14px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: opacity 0.15s;
-}
-.btn_reject:hover { opacity: 0.85; }
 
-.report_done { text-align: center; font-size: 14px; color: #aaa; padding: 8px 0; }
+.bar {
+  width: 100%;
+  background: #d0d0d0;
+  border-radius: 4px 4px 0 0;
+  transition: height 0.3s ease;
+  min-height: 4px;
+}
+
+.bar.today {
+  background:#9b1b1b;
+}
+
+.bar_label {
+  position: absolute;
+  bottom: 0;
+  font-size: 11px;
+  color: #888;
+  white-space: nowrap;
+  text-align: center;
+}
+
 </style>

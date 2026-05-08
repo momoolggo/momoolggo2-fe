@@ -150,14 +150,14 @@ const goToAddStore = () => {
 }
 
 .status-btn.active {
-  background: #A40C0B;
-  border-color: #A40C0B;
+  background: #9b1b1b;
+  border-color: #9b1b1b;
   color: #fff;
 }
 
 .status-btn:hover:not(.active) {
-  border-color: #A40C0B;
-  color: #A40C0B;
+  border-color: #9b1b1b;
+  color: #9b1b1b;
 }
 
 /* 가게 정보 */
@@ -197,8 +197,8 @@ const goToAddStore = () => {
 
 .store-option { padding: 12px 16px; font-size: 14px; color: #333; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: background 0.15s; }
 .store-option:hover { background: #f5f5f5; }
-.store-option.selected { background: #fff4f4; color: #A40C0B; font-weight: 700; }
-.check-icon { color: #A40C0B; font-size: 16px; }
+.store-option.selected { background: #fff4f4; color:#9b1b1b; font-weight: 700; }
+.check-icon { color: #9b1b1b; font-size: 16px; }
 
 /* 메뉴 */
 .menu-container {
@@ -225,14 +225,14 @@ const goToAddStore = () => {
 }
 
 .menu-item:hover:not(.active):not(.add-store) {
-  border-color: #A40C0B;
-  color: #A40C0B;
+  border-color:#9b1b1b;
+  color:#9b1b1b;
 }
 
 .menu-item.active {
-  background: #A40C0B;
+  background:#9b1b1b;
   color: #fff;
-  border-color: #A40C0B;
+  border-color:#9b1b1b;
 }
 
 .add-store {
@@ -242,8 +242,8 @@ const goToAddStore = () => {
 }
 
 .add-store:hover {
-  border-color: #A40C0B;
-  color: #A40C0B;
+  border-color:#9b1b1b;
+  color:#9b1b1b;
   background: #fff4f4;
 }
 

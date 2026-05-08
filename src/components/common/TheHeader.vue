@@ -2,11 +2,13 @@
 import { useRouter, useRoute } from 'vue-router'
 import { computed, ref, onMounted, watch } from 'vue'
 import { useUserStore } from '@/stores/userStore'
+import { useCartStore } from '@/stores/cartStore'
 import addressService from '@/services/addressService'
 
 const router = useRouter()
 const route = useRoute()
 const userStore = useUserStore()
+const cartStore = useCartStore()
 const searchText = ref('')
 
 defineProps({
@@ -42,10 +44,20 @@ const loadDefaultAddress = async () => {
   }
 }
 
-onMounted(loadDefaultAddress)
+const loadCartCount = async () => {
+  if(userStore.state.isSignedIn && userStore.state.userNo) {
+    await cartStore.refreshCartCount(userStore.state.userNo)
+  }
+}
+
+onMounted(() => {
+  loadDefaultAddress()
+  loadCartCount()
+})
 
 watch(() => route.path, () => {
   loadDefaultAddress()
+  loadCartCount()
 })
 
 const goCart        = () => router.push('/cart')
@@ -102,8 +114,13 @@ const isOwner = computed(() => userStore.state.role === 'OWNER')
             <button class="nav_text_btn" @click="emit('signout')">로그아웃</button>
           </template>
 
-          <button class="nav_icon_btn" @click="goCart">
+          <button class="nav_icon_btn cart_btn" @click="goCart">
             <i class="bi bi-cart4"></i>
+            <span
+            v-if="cartStore.cartCount >0"
+            class="cart_badge">
+            {{  cartStore.cartCount > 99 ? '99+' :cartStore.cartCount }}
+          </span>
           </button>
         </div>
       </div>
@@ -330,4 +347,29 @@ input[type="search"]::-webkit-search-decoration,
 input[type="search"]::-webkit-search-cancel-button,
 input[type="search"]::-webkit-search-results-button,
 input[type="search"]::-webkit-search-results-decoration { display: none; }
+
+/* 장바구니 배지 */
+.cart_btn {
+  position: relative;
+}
+
+.cart_badge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  background: #d63031;
+  color: #fff;
+  border-radius: 9px;
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  line-height: 1;
+}
+
 </style>

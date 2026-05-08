@@ -43,6 +43,7 @@ import AdminNoticeView from '@/views/admin/AdminNoticeView.vue'
 import AdminFaqView from '@/views/admin/AdminFaqView.vue'
 import AdminSettlementView from '@/views/admin/AdminSettlementView.vue'
 import AdminBlindView from '@/views/admin/AdminBlindView.vue'
+import AdminCsView from '@/views/admin/AdminCsView.vue'
 
 
 const routes = [
@@ -68,6 +69,7 @@ const routes = [
   { path: '/admin/faq', name: 'AdminFaq', component: AdminFaqView/*, meta: { requiresAuth: true, role: 'ADMIN' } */},
   { path: '/admin/settlement', name: 'AdminSettlement', component: AdminSettlementView/*, meta: { requiresAuth: true, role: 'ADMIN' }*/ },
   { path: '/admin/blind', name: 'AdminBlind', component: AdminBlindView/*, meta: { requiresAuth: true, role: 'ADMIN' }*/ },
+  { path: '/admin/cs', name: 'AdminCs', component: AdminCsView },
 
 
     // /mypage는 메뉴 페이지

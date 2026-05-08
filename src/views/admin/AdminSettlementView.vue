@@ -487,7 +487,7 @@ const handleSearch = () => {
 .sort_arrow:hover { background: #ddd; }
 .th_dropdown_menu { position: absolute; top: calc(100% + 6px); left: 50%; transform: translateX(-50%); background: #fff; border: 1px solid #ddd; border-radius: 6px; min-width: 110px; box-shadow: 0 4px 12px rgba(0,0,0,0.12); z-index: 30; overflow: hidden; }
 .type_badge { border-radius: 4px; padding: 3px 10px; font-size: 11px; font-weight: 600; color: #fff; white-space: nowrap; }
-.badge_store { background: #4a90d9; }
+.badge_store { background: #7150db; }
 .badge_rider { background: #4caf50; }
 .status_badge { border-radius: 4px; padding: 3px 10px; font-size: 11px; font-weight: 600; white-space: nowrap; }
 .badge_complete { background: #e0e0e0; color: #555; }
@@ -545,11 +545,11 @@ const handleSearch = () => {
 }
 
 .modal_sub_title { font-size: 14px; font-weight: 700; color: #222; padding: 4px 28px 10px; }
-.modal_table_wrap { padding: 0 28px; overflow-x: auto; }
+.modal_table_wrap { padding: 0 28px 30px; overflow-x: auto; }
 .modal_table { width: 100%; border-collapse: collapse; font-size: 13px; }
 .modal_table thead tr { background: #f0f0f0; }
-.modal_table th { padding: 10px 12px; text-align: center; font-weight: 600; color: #444; border-bottom: 1px solid #ddd; }
-.modal_table td { padding: 10px 12px; text-align: center; color: #333; border-bottom: 1px solid #f5f5f5; }
+.modal_table th { padding: 10px 8px; text-align: center; font-weight: 600; color: #444; border-bottom: 1px solid #ddd; }
+.modal_table td { padding: 10px 8px; text-align: center; color: #333; border-bottom: 1px solid #f5f5f5; }
 .fee_text { font-size: 11px; color: #888; line-height: 1.5; }
 .modal_actions { display: flex; gap: 10px; padding: 20px 28px; justify-content: flex-end; }
 .action_hold { padding: 9px 24px; border: 1px solid #ddd; background: #fff; border-radius: 8px; font-size: 13px; color: #666; cursor: pointer; font-weight: 500; }

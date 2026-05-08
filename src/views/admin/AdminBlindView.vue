@@ -8,10 +8,14 @@ const activeTab = ref('all')
 const blindList = ref([])
 const loading = ref(false)
 
-// 모달
+// 블라인드 해제 모달
 const showReleaseModal = ref(false)
 const selectedBlindId = ref(null)
 const selectedStoreName = ref('')
+
+// 고객 상세 모달
+const showUserModal = ref(false)
+const selectedUser = ref(null)
 
 // 오늘 날짜 초기화
 const today = new Date()
@@ -83,9 +87,9 @@ const fetchList = async () => {
   } catch (e) {
     console.error('블라인드 목록 조회 실패', e)
     blindList.value = [
-      { blindId: 1, storeName: '숨은집', writer: '김블루', content: '이번 주만 세번째 배달입니다~! 그만큼 너무 맛있어요!!', rating: 4.8, createdAt: '2026-05-02', reason: 'ABUSE', status: 'BLINDED' },
-      { blindId: 2, storeName: '동성로 꾸꾸미', writer: '김그린', content: '맛있어요', rating: 3.3, createdAt: '2026-04-15', reason: 'FALSE_FACT', status: 'BLINDED' },
-      { blindId: 3, storeName: '피자헛', writer: '김레드', content: '맵기도 딱 좋고 양도 넉넉해서 아주 만족스런 한 끼 였습니다😀', rating: 4.5, createdAt: '2026-01-08', reason: 'AD', status: 'BLINDED' },
+      { blindId: 1, storeName: '숨은집', writer: '김블루', userName: '김블루', userTel: '010-1234-5678', content: '이번 주만 세번째 배달입니다~! 그만큼 너무 맛있어요!!', rating: 4.8, createdAt: '2026-05-02', reason: 'ABUSE', status: 'BLINDED' },
+      { blindId: 2, storeName: '동성로 꾸꾸미', writer: '김그린', userName: '김그린', userTel: '010-2345-6789', content: '맛있어요', rating: 3.3, createdAt: '2026-04-15', reason: 'FALSE_FACT', status: 'BLINDED' },
+      { blindId: 3, storeName: '피자헛', writer: '김레드', userName: '김레드', userTel: '010-3456-7890', content: '맵기도 딱 좋고 양도 넉넉해서 아주 만족스런 한 끼 였습니다😀', rating: 4.5, createdAt: '2026-01-08', reason: 'AD', status: 'BLINDED' },
     ]
   } finally {
     loading.value = false
@@ -99,6 +103,18 @@ const handleTabChange = (tab) => {
   fetchList()
 }
 
+// 작성자 클릭 → 고객 상세 모달
+const openUserModal = (item) => {
+  selectedUser.value = item
+  showUserModal.value = true
+}
+
+const closeUserModal = () => {
+  showUserModal.value = false
+  selectedUser.value = null
+}
+
+// 블라인드 해제 모달
 const openReleaseModal = (blindId, storeName) => {
   selectedBlindId.value = blindId
   selectedStoreName.value = storeName
@@ -235,7 +251,9 @@ const handleSearch = () => {
                 <template v-if="blindList.length > 0">
                   <tr v-for="item in blindList" :key="item.blindId">
                     <td>{{ item.storeName }}</td>
-                    <td>{{ item.writer }}</td>
+                    <td>
+                      <span class="writer_link" @click="openUserModal(item)">{{ item.writer }}</span>
+                    </td>
                     <td class="col_wide content_td">{{ item.content }}</td>
                     <td>{{ item.rating }}</td>
                     <td>{{ item.createdAt?.slice(0, 10).replaceAll('-', '.') }}</td>
@@ -265,7 +283,9 @@ const handleSearch = () => {
                 <template v-if="blindList.length > 0">
                   <tr v-for="item in blindList" :key="item.blindId">
                     <td>{{ item.storeName }}</td>
-                    <td>{{ item.writer }}</td>
+                    <td>
+                      <span class="writer_link" @click="openUserModal(item)">{{ item.writer }}</span>
+                    </td>
                     <td class="col_wide content_td">{{ item.content }}</td>
                     <td>{{ item.rating }}</td>
                     <td>{{ item.startAt?.slice(0, 10).replaceAll('-', '.') ?? item.createdAt?.slice(0, 10).replaceAll('-', '.') }}</td>
@@ -295,6 +315,47 @@ const handleSearch = () => {
           <button @click="currentPage > 1 && currentPage--">◀</button>
           <button v-for="p in totalPages" :key="p" :class="{ active: currentPage === p }" @click="currentPage = p">{{ p }}</button>
           <button @click="currentPage < totalPages && currentPage++">▶</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 고객 상세 모달 -->
+    <div v-if="showUserModal && selectedUser" class="modal_overlay" @click.self="closeUserModal">
+      <div class="user_modal">
+        <div class="user_modal_header">
+          <span class="user_modal_title">고객 상세정보 모달</span>
+          <button class="modal_close" @click="closeUserModal">✕</button>
+        </div>
+
+        <div class="user_modal_body">
+          <div class="user_info_row">
+            <span class="user_info_label">이름</span>
+            <span class="user_info_value">{{ selectedUser.userName ?? selectedUser.writer ?? '-' }}</span>
+          </div>
+          <div class="user_info_row">
+            <span class="user_info_label">전화번호</span>
+            <span class="user_info_value">{{ selectedUser.userTel ?? '-' }}</span>
+          </div>
+          <div class="user_info_row">
+            <span class="user_info_label">가게명</span>
+            <span class="user_info_value">{{ selectedUser.storeName ?? '-' }}</span>
+          </div>
+          <div class="user_info_row">
+            <span class="user_info_label">블라인드 사유</span>
+            <span class="user_info_value">{{ reasonLabel(selectedUser.reason) }}</span>
+          </div>
+          <div class="user_info_row">
+            <span class="user_info_label">회원 상태</span>
+            <span :class="['status_badge', statusLabel(selectedUser.status).class]">
+              {{ statusLabel(selectedUser.status).text }}
+            </span>
+          </div>
+          <!-- MainFeignClient 연동 후 추가 예정 -->
+          <p class="user_modal_note">※ 아이디, 주소, 가입일, 친환경점수는 추후 연동 예정</p>
+        </div>
+
+        <div class="user_modal_btns">
+          <button class="modal_cancel" @click="closeUserModal">닫기</button>
         </div>
       </div>
     </div>
@@ -353,48 +414,34 @@ const handleSearch = () => {
 .tab_row { display: flex; gap: 8px; }
 .tab_btn { padding: 6px 18px; border: 1px solid #ddd; background: #fff; border-radius: 6px; font-size: 13px; color: #666; cursor: pointer; font-weight: 500; }
 .tab_btn.active { background: #555; border-color: #555; color: #fff; font-weight: 700; }
-.tab_btn.blind_tab.active { background: #e8a000; border-color: #e8a000; color: #fff; }
+.tab_btn.blind_tab.active { background: #b2b2b2; border-color: #6b6b6b; color: #fff; }
 
 /* 테이블 */
 .table_wrap { background: #fff; border-radius: 10px; overflow: hidden; }
 .review_table { width: 100%; border-collapse: collapse; font-size: 13px; }
 .review_table thead tr { background: #e8e8e8; }
-.review_table th {
-  padding: 12px 14px;
-  text-align: center;
-  font-weight: 600;
-  color: #444;
-  border-bottom: 1px solid #ddd;
-  border-right: 1px solid #ddd;
-  white-space: nowrap;
-}
+.review_table th { padding: 12px 14px; text-align: center; font-weight: 600; color: #444; border-bottom: 1px solid #ddd; border-right: 1px solid #ddd; white-space: nowrap; }
 .review_table th:last-child { border-right: none; }
-.review_table td {
-  padding: 11px 14px;
-  text-align: center;
-  color: #333;
-  border-bottom: 1px solid #f0f0f0;
-  border-right: 1px solid #f0f0f0;
-}
+.review_table td { padding: 11px 14px; text-align: center; color: #333; border-bottom: 1px solid #f0f0f0; border-right: 1px solid #f0f0f0; }
 .review_table td:last-child { border-right: none; }
-
 .col_wide { width: 30%; text-align: center !important; }
 .content_td { max-width: 280px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .empty_row td { height: 38px; }
 
-.reason_badge { background: #f0f0f0; border-radius: 4px; padding: 4px 10px; font-size: 11px; color: #555; white-space: nowrap; display: inline-block; }
+/* 작성자 링크 */
+.writer_link {
+  color: #4a90d9;
+  cursor: pointer;
+  font-weight: 600;
+  text-decoration: underline;
+}
+.writer_link:hover { color: #2c6faa; }
 
+.reason_badge { background: #f0f0f0; border-radius: 4px; padding: 4px 10px; font-size: 11px; color: #555; white-space: nowrap; display: inline-block; }
 .release_btn { background: #fff; border: 1px solid #cc1f1f; color: #cc1f1f; border-radius: 4px; padding: 4px 10px; font-size: 11px; cursor: pointer; white-space: nowrap; }
 .release_btn:hover { background: #fff0f0; }
 
-.status_cell {
-  display: flex;
-  flex-direction: row;  /* column → row */
-  align-items: center;
-  gap: 4px;
-  justify-content: center;
-  flex-wrap: wrap;
-}
+.status_cell { display: flex; flex-direction: row; align-items: center; gap: 4px; justify-content: center; flex-wrap: wrap; }
 .status_badge { border-radius: 4px; padding: 3px 10px; font-size: 11px; font-weight: 600; white-space: nowrap; }
 .badge_blind { background: #cc1f1f; color: #fff; }
 .badge_released { background: #e0e0e0; color: #666; }
@@ -412,8 +459,64 @@ const handleSearch = () => {
 .pagination button.active { font-weight: 700; color: #cc1f1f; }
 .pagination button:hover { background: #f0f0f0; }
 
-/* 모달 */
+/* 모달 공통 */
 .modal_overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); display: flex; align-items: center; justify-content: center; z-index: 100; }
+.modal_close { background: none; border: none; font-size: 18px; color: #999; cursor: pointer; }
+.modal_close:hover { color: #333; }
+
+/* 고객 상세 모달 */
+.user_modal {
+  background: #fff;
+  border-radius: 14px;
+  width: 420px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+  overflow: hidden;
+}
+.user_modal_header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid #eee;
+}
+.user_modal_title { font-size: 16px; font-weight: 700; color: #222; }
+
+.user_modal_body {
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.user_info_row {
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+.user_info_label {
+  width: 110px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #555;
+  flex-shrink: 0;
+}
+.user_info_value {
+  font-size: 13px;
+  color: #222;
+}
+.user_modal_note {
+  font-size: 11px;
+  color: #aaa;
+  margin: 4px 0 0;
+}
+
+.user_modal_btns {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0 24px 20px;
+}
+
+/* 블라인드 해제 모달 */
 .modal { background: #fff; border-radius: 14px; padding: 36px 40px; width: 340px; text-align: center; box-shadow: 0 8px 32px rgba(0,0,0,0.15); }
 .modal_title { font-size: 17px; font-weight: 700; color: #222; margin-bottom: 14px; }
 .modal_desc { font-size: 14px; color: #555; line-height: 1.7; margin-bottom: 28px; }

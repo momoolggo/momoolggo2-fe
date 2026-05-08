@@ -69,5 +69,7 @@ export const useUserStore = defineStore('user', () => {
         state.isLoading = false
     }
 
+    
+
     return { state, checkAuth, signIn, signOut, refreshExpiry }
 })

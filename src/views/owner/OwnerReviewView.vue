@@ -26,8 +26,7 @@ const reportModal = reactive({
 const reportReasons = [
   '이유 없는 1점 리뷰',
   '허위 사실 기재',
-  '욕설/비방 포함',
-  '주문하지 않은 고객',
+  '부적절 콘텐츠(욕설 비방)',
   '기타',
 ]
 
@@ -175,7 +174,7 @@ const submitReport = async () => {
             {{ reason }}
           </label>
         </div>
-        <textarea v-model="reportModal.detail" class="modal_textarea" placeholder="추가 설명을 작성해주세요. (선택)" maxlength="200"></textarea>
+        <!--<textarea v-model="reportModal.detail" class="modal_textarea" placeholder="추가 설명을 작성해주세요. (선택)" maxlength="200"></textarea>-->
         <div class="modal_footer">
           <button class="btn_cancel" @click="closeReport">취소</button>
           <button class="btn_report_submit" @click="submitReport">신고 접수</button>

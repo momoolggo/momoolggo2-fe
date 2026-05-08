@@ -5,6 +5,8 @@ import { useStore } from '@/stores/useStore'
 import NaverMap from '@/components/common/NaverMap.vue'
 import { showAlert, showConfirm } from '@/composables/useAlert'
 
+const store = useStore()
+
 const storeInfo = useStore()
 
 const activeTab = ref('기본정보')
@@ -63,7 +65,7 @@ const loadStore = async () => {
     previewImage.value = found.storePic ? getImageUrl(found.storePic) : null
 
     statusForm.storeId = found.storeId
-    statusForm.state = found.state ?? 1
+    statusForm.state = store.storeState
     statusForm.notice = found.notice || ''
     statusForm.holiday = found.holiday || ''
     statusForm.minPrice = found.minPrice || 0
@@ -125,6 +127,7 @@ const saveStatus = async () => {
   statusForm.minPrice = Number(statusForm.minPrice)
   try {
     await ownerService.updateStoreStatus({ ...statusForm })
+    store.setStoreState(statusForm.state)
     await showAlert('운영정보가 수정되었습니다.', { title: '수정 완료', type: 'success' })
     // 가게 목록도 갱신
     const res = await ownerService.getMyStores()
@@ -257,10 +260,10 @@ const deleteStore = async () => {
         <div class="field">
           <label>영업 상태</label>
           <div class="toggle-row">
-            <span class="toggle-label">{{ statusForm.state === 1 ? '영업중' : '준비중' }}</span>
+            <span class="toggle-label">{{ store.storeState === 1 ? '영업중' : '준비중' }}</span>
             <label class="toggle">
-              <input type="checkbox" :checked="statusForm.state === 1"
-                @change="statusForm.state = $event.target.checked ? 1 : 0" />
+              <input type="checkbox" :checked="store.storeState === 1"
+              @change="store.setStoreState($event.target.checked ? 1 : 0)" />
               <span class="slider"></span>
             </label>
           </div>

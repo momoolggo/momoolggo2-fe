@@ -11,6 +11,8 @@ const isOwner = computed(() => userStore.state.role === 'OWNER');
 const goTo = (page) => {
   router.push(`/${page}`);
 };
+
+
 </script>
 
 <template>

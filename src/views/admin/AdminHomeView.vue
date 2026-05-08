@@ -1,7 +1,7 @@
 <script setup>
-
 import { ref, onMounted } from 'vue'
 import AdminSidebar from '@/components/admin/AdminSidebar.vue'
+import AdminHeader from '@/components/admin/AdminHeader.vue'
 import adminService from '@/services/adminService'
 
 // 피그마 기준 stat 카드 4개
@@ -72,23 +72,14 @@ const barHeightPercent = (val) => {
   if (maxBarValue.value === 0) return 0
   return (val / maxBarValue.value) * 100
 }
-
 </script>
 
 <template>
-
   <div class="admin_layout">
     <AdminSidebar />
 
     <div class="main_content">
-      <!-- 헤더 -->
-      <header class="top_header">
-        <div class="header_left">
-          <img src="@/assets/로고수정.png" alt="logo" class="header_logo_img" />
-          <span class="header_title">관리자 서비스</span>
-        </div>
-        <span class="admin_greeting">관리자 님 안녕하세요</span>
-      </header>
+      <AdminHeader />
 
       <!-- 본문 -->
       <div class="content">
@@ -165,87 +156,59 @@ const barHeightPercent = (val) => {
             </div>
           </div>
 
-          <!-- 바 차트 -->
-          <div class="bar_chart">
-            <div
-              v-for="(item, idx) in weeklyData"
-              :key="idx"
-              class="bar_col"
-            >
-              <span class="bar_val">{{ item.value }}</span>
-              <div class="bar_wrapper">
-                <div
-                  class="bar"
-                  :class="{ today: item.isToday }"
-                  :style="{ height: barHeightPercent(item.value) + '%' }"
-                ></div>
+           <!-- 바 차트 -->
+           <div class="bar_chart_wrap">
+            <div class="bar_chart">
+              <div
+                v-for="(item, idx) in weeklyData"
+                :key="idx"
+                class="bar_col"
+              >
+                <span class="bar_val">{{ item.value }}</span>
+                <div class="bar_wrapper">
+                  <div
+                    class="bar"
+                    :class="{ today: item.isToday }"
+                    :style="{ height: barHeightPercent(item.value) + '%' }"
+                  ></div>
+                </div>
               </div>
-              <span class="bar_label">{{ item.label }}</span>
+            </div>
+            <div class="bar_bottom_line"></div>
+            <div class="bar_labels">
+              <span
+                v-for="(item, idx) in weeklyData"
+                :key="idx"
+                class="bar_label"
+              >{{ item.label }}</span>
             </div>
           </div>
         </div>
-
+ 
       </div>
     </div>
-f20cf1ad93c
   </div>
 </template>
 
 <style scoped>
-
 /* ─── 레이아웃 ─── */
 .admin_layout {
   display: flex;
   min-height: 100vh;
-  background:rgb(255, 255, 255)0;
+  background: #ffffff;
   font-family: 'Noto Sans KR', sans-serif;
 }
 
 .main_content {
-  margin-left: 220px;   /* AdminSidebar 너비에 맞게 */
+  margin-left: 190px;   /* AdminSidebar 너비에 맞게 */
   flex: 1;
   display: flex;
   flex-direction: column;
 }
 
-/* ─── 헤더 ─── */
-.top_header {
-  background: #9b1b1b;
-  padding: 14px 32px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  position: sticky;
-  top: 0;
-  z-index: 10;
-}
-
-.header_left {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.header_logo_img {
-  width: 80px;
-  height: auto;
-}
-
-.header_title {
-  font-size: 22px;
-  font-weight: 700;
-  color: #fff;
-  letter-spacing: 0.5px;
-}
-
-.admin_greeting {
-  font-size: 13px;
-  color: #fff;
-}
-
 /* ─── 본문 ─── */
 .content {
-  padding: 28px 32px;
+  padding: 36px 60px;
   display: flex;
   flex-direction: column;
   gap: 24px;
@@ -253,7 +216,7 @@ f20cf1ad93c
 
 /* ─── Today 섹션 ─── */
 .today_section {
-  background: #fff;
+  background: transparent;
   border-radius: 12px;
   padding: 24px 28px;
 }
@@ -287,7 +250,7 @@ f20cf1ad93c
 .stat_value {
   font-size: 30px;
   font-weight: 800;
-  color:#9b1b1b;
+  color: #cc1f1f;
   line-height: 1;
 }
 
@@ -300,7 +263,7 @@ f20cf1ad93c
 
 /* ─── 차트 섹션 ─── */
 .chart_section {
-  background: #fff;
+  background: transparent;
   border-radius: 12px;
   padding: 24px 28px;
 }
@@ -343,7 +306,7 @@ f20cf1ad93c
 }
 
 .tab_btn.active {
-  color:#9b1b1b;
+  color: #cc1f1f;
   font-weight: 700;
 }
 
@@ -407,40 +370,41 @@ f20cf1ad93c
 }
 
 /* ─── 바 차트 ─── */
+.bar_chart_wrap {
+  display: flex;
+  flex-direction: column;
+}
+ 
 .bar_chart {
   display: flex;
   align-items: flex-end;
+  height: 200px;
   gap: 0;
-  height: 220px;
-  padding-bottom: 28px; /* label 공간 */
-  position: relative;
 }
-
+ 
 .bar_col {
   flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
   height: 100%;
-  position: relative;
   justify-content: flex-end;
 }
-
+ 
 .bar_val {
   font-size: 12px;
   color: #888;
   margin-bottom: 4px;
   font-weight: 500;
 }
-
+ 
 .bar_wrapper {
   width: 60%;
   flex: 1;
   display: flex;
   align-items: flex-end;
-  max-height: calc(100% - 40px);
 }
-
+ 
 .bar {
   width: 100%;
   background: #d0d0d0;
@@ -448,18 +412,28 @@ f20cf1ad93c
   transition: height 0.3s ease;
   min-height: 4px;
 }
-
+ 
 .bar.today {
-  background:#9b1b1b;
+  background: #cc1f1f;
 }
-
+ 
+.bar_bottom_line {
+  width: 100%;
+  height: 1px;
+  background: #ccc;
+  margin: 0;
+}
+ 
+.bar_labels {
+  display: flex;
+  margin-top: 8px;
+}
+ 
 .bar_label {
-  position: absolute;
-  bottom: 0;
+  flex: 1;
   font-size: 11px;
   color: #888;
   white-space: nowrap;
   text-align: center;
 }
-
 </style>

@@ -1,6 +1,7 @@
 <script setup>
 import { useDeliveryStore } from '@/stores/deliveryStore'
 import deliveryService from '@/services/deliveryService'
+import RiderDeliveryMap from '@/components/rider/RiderDeliveryMap.vue'
 import { ref } from 'vue'
 
 const deliveryStore = useDeliveryStore()
@@ -51,6 +52,14 @@ const formatFee = (fee) => `${(fee ?? 0).toLocaleString()}원`
           <h3>배달 상세</h3>
           <button class="x_btn" @click="selected = null">×</button>
         </div>
+        <RiderDeliveryMap
+          v-if="selected.pickupLat && selected.deliveryLat"
+          :pickup-lat="selected.pickupLat"
+          :pickup-lng="selected.pickupLng"
+          :delivery-lat="selected.deliveryLat"
+          :delivery-lng="selected.deliveryLng"
+          height="200px"
+        />
         <dl class="detail">
           <div><dt>배달번호</dt><dd>{{ selected.deliveryNo }}</dd></div>
           <div><dt>주문번호</dt><dd>{{ selected.orderId }}</dd></div>

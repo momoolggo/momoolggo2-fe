@@ -1,9 +1,13 @@
 <script setup>
 import { ref } from 'vue'
 import deliveryService from '@/services/deliveryService'
+import RiderDeliveryMap from '@/components/rider/RiderDeliveryMap.vue'
 
 const props = defineProps({
   deliveryNo: { type: String, required: true },
+  // Figma 박제 170148 — 전달완료 모달 + 지도 (배달지 좌표만 표시)
+  deliveryLat: { type: Number, default: null },
+  deliveryLng: { type: Number, default: null },
 })
 const emit = defineEmits(['close', 'completed'])
 
@@ -49,8 +53,14 @@ const submit = async () => {
         <button class="x_btn" @click="emit('close')">×</button>
       </div>
 
-      <!-- Step 1: 전달 방식 선택 (Image 170143/170148 모달 패턴) -->
+      <!-- Step 1: 전달 방식 선택 (Image 170148 모달 패턴, case-#31 정정 - 170143은 InProgress 분기) -->
       <div v-if="step === 1" class="step">
+        <RiderDeliveryMap
+          v-if="deliveryLat && deliveryLng"
+          :delivery-lat="deliveryLat"
+          :delivery-lng="deliveryLng"
+          height="160px"
+        />
         <p class="hint">고객에게 어떻게 전달하셨나요?</p>
         <ul class="radio_list">
           <li

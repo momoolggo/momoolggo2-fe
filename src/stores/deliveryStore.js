@@ -15,6 +15,9 @@ export const useDeliveryStore = defineStore('delivery', () => {
         loadingWaiting: false,
         loadingInProgress: false,
         lastSyncedAt: null,
+        // R6-FE-NaverMap: 라이더 자기 위치 single source of truth (useLocationTracker 갱신).
+        // RiderDeliveryMap이 watch로 마커 동기화.
+        myLocation: null,     // { lat, lng, ts } | null
     })
 
     const loadWaiting = async () => {
@@ -50,12 +53,18 @@ export const useDeliveryStore = defineStore('delivery', () => {
         state.currentTab = tab
     }
 
+    /** R6-FE-NaverMap: useLocationTracker가 5s tick마다 호출. RiderDeliveryMap watch source. */
+    const setMyLocation = (loc) => {
+        state.myLocation = loc
+    }
+
     const reset = () => {
         state.waiting = []
         state.inProgress = []
         state.currentTab = 'waiting'
         state.lastSyncedAt = null
+        state.myLocation = null
     }
 
-    return { state, loadWaiting, loadInProgress, currentDelivery, setTab, reset }
+    return { state, loadWaiting, loadInProgress, currentDelivery, setTab, setMyLocation, reset }
 })

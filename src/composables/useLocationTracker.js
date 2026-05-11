@@ -1,5 +1,6 @@
 import { ref, onUnmounted } from 'vue'
 import locationService from '@/services/locationService'
+import { useDeliveryStore } from '@/stores/deliveryStore'
 
 /**
  * 라이더 위치 자동 송신 — ADR-005 D6-b 5s 고정 (decision-#38 (가) 학원 발표용).
@@ -15,6 +16,7 @@ export function useLocationTracker() {
   const lastError = ref(null)
   const tracking = ref(false)
   const TICK_MS = 5000             // 학원 발표 5s 고정
+  const deliveryStore = useDeliveryStore()
 
   let watchId = null
   let intervalId = null
@@ -26,15 +28,17 @@ export function useLocationTracker() {
       return
     }
 
-    // 1) watchPosition: 위치 변경 시 lastPosition 갱신 (저장만, 송신 X)
+    // 1) watchPosition: 위치 변경 시 lastPosition + deliveryStore 갱신 (RiderDeliveryMap watch source)
     watchId = navigator.geolocation.watchPosition(
       (pos) => {
-        lastPosition.value = {
+        const loc = {
           lat: pos.coords.latitude,
           lng: pos.coords.longitude,
           accuracy: pos.coords.accuracy,
           ts: Date.now(),
         }
+        lastPosition.value = loc
+        deliveryStore.setMyLocation({ lat: loc.lat, lng: loc.lng, ts: loc.ts })
         lastError.value = null
       },
       (err) => {

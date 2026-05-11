@@ -4,6 +4,7 @@ import { useDeliveryStore } from '@/stores/deliveryStore'
 import deliveryService from '@/services/deliveryService'
 import CompleteModal from '@/components/rider/CompleteModal.vue'
 import CancelModal from '@/components/rider/CancelModal.vue'
+import RiderDeliveryMap from '@/components/rider/RiderDeliveryMap.vue'
 
 const deliveryStore = useDeliveryStore()
 
@@ -90,6 +91,15 @@ const statusLabel = (s) => ({
         <span class="fee">{{ formatFee(current) }}</span>
       </div>
 
+      <RiderDeliveryMap
+        v-if="current.pickupLat && current.deliveryLat"
+        :pickup-lat="current.pickupLat"
+        :pickup-lng="current.pickupLng"
+        :delivery-lat="current.deliveryLat"
+        :delivery-lng="current.deliveryLng"
+        height="220px"
+      />
+
       <div class="addr_block">
         <p class="addr_label">📍 픽업</p>
         <p class="addr">{{ current.pickupAddress ?? '주소 없음' }}</p>
@@ -130,6 +140,8 @@ const statusLabel = (s) => ({
     <CompleteModal
       v-if="completeOpen && current"
       :delivery-no="current.deliveryNo"
+      :delivery-lat="current.deliveryLat"
+      :delivery-lng="current.deliveryLng"
       @close="completeOpen = false"
       @completed="onCompleted"
     />

@@ -92,7 +92,7 @@ const statusLabel = (s) => ({
       </div>
 
       <RiderDeliveryMap
-        v-if="current.pickupLat && current.deliveryLat"
+        v-if="current.pickupLat && current.pickupLng && current.deliveryLat && current.deliveryLng"
         :pickup-lat="current.pickupLat"
         :pickup-lng="current.pickupLng"
         :delivery-lat="current.deliveryLat"

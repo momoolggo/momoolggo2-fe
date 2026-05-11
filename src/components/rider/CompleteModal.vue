@@ -112,6 +112,8 @@ const submit = async () => {
   padding: 20px;
   width: 100%;
   max-width: 360px;
+  max-height: 90vh; /* C-5 정정 — 소형 폰 (320px 미만) 잘림 회피 */
+  overflow-y: auto;
   display: flex; flex-direction: column; gap: 14px;
 }
 .modal_header { display: flex; justify-content: space-between; align-items: center; }

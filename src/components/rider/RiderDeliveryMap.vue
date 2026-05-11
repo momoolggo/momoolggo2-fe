@@ -3,6 +3,23 @@ import { ref, watch, onMounted, onUnmounted, nextTick } from 'vue'
 import axios from 'axios'
 import { useDeliveryStore } from '@/stores/deliveryStore'
 
+// W-1 정정 — module-level singleton로 다중 인스턴스 SDK 중복 주입 회피.
+// 탭 빠른 전환 시 WaitingTab → InProgressTab 마운트 사이 SDK 로드 중 시점에
+// 두 번째 script 태그 주입 (네이버 API 키 호출 2회) 발생 회피.
+let _sdkPromise = null
+const loadNaverMapSdk = (clientId) => {
+  if (!_sdkPromise) {
+    _sdkPromise = new Promise((resolve) => {
+      if (window.naver?.maps) { resolve(); return }
+      const script = document.createElement('script')
+      script.src = `https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=${clientId}&submodules=geocoder`
+      script.onload = resolve
+      document.head.appendChild(script)
+    })
+  }
+  return _sdkPromise
+}
+
 /**
  * R6-FE NaverMap (라이더 배달 지도, 표시 전용).
  *
@@ -25,23 +42,12 @@ const props = defineProps({
 
 const deliveryStore = useDeliveryStore()
 const containerId = `rider_map_${Math.random().toString(36).slice(2, 10)}`
-const ready = ref(false)
 const errorMsg = ref('')
 
 let naverMap = null
 let riderMarker = null
 let pickupMarker = null
 let deliveryMarker = null
-
-const loadNaverMapSdk = (clientId) => {
-  return new Promise((resolve) => {
-    if (window.naver && window.naver.maps) { resolve(); return }
-    const script = document.createElement('script')
-    script.src = `https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=${clientId}&submodules=geocoder`
-    script.onload = resolve
-    document.head.appendChild(script)
-  })
-}
 
 /** 지도 중심: 첫 가용한 좌표 (가게 → 배달지 → 라이더 → 대구 디폴트) */
 const pickCenter = () => {
@@ -58,7 +64,7 @@ const colorMarker = (color, label) => ({
             border:3px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,0.4);
             display:flex;align-items:center;justify-content:center;
             font-size:10px;color:#fff;font-weight:700;">${label}</div>`,
-  anchor: new window.naver.maps.Point(13, 13),
+  anchor: new window.naver.maps.Point(10, 10), // C-1 정정 — 20x20 마커 중심점
 })
 
 const initMap = () => {
@@ -98,7 +104,6 @@ const initMap = () => {
     })
   }
 
-  ready.value = true
 }
 
 // 라이더 위치 watch — 5s tick마다 store 갱신 시 marker 이동
@@ -117,8 +122,7 @@ const stopWatch = watch(
       })
     }
   },
-  { deep: true },
-)
+) // C-3 정정 — myLocation은 setMyLocation에서 새 객체 할당, deep 불필요
 
 onMounted(async () => {
   try {

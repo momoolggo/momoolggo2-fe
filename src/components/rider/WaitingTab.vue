@@ -53,7 +53,7 @@ const formatFee = (fee) => `${(fee ?? 0).toLocaleString()}원`
           <button class="x_btn" @click="selected = null">×</button>
         </div>
         <RiderDeliveryMap
-          v-if="selected.pickupLat && selected.deliveryLat"
+          v-if="selected.pickupLat && selected.pickupLng && selected.deliveryLat && selected.deliveryLng"
           :pickup-lat="selected.pickupLat"
           :pickup-lng="selected.pickupLng"
           :delivery-lat="selected.deliveryLat"

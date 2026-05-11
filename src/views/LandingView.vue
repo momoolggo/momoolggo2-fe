@@ -24,7 +24,7 @@ const goOrder = () => {
         </router-link>
         <nav class="nav_menu">
           <router-link to="/ownerlanding" class="nav_link">사장님 입점문의하기</router-link>
-          <router-link to="/rider/signin" class="nav_link">라이더 신청하기</router-link>
+          <router-link to="/riderlanding" class="nav_link">라이더 신청하기</router-link>
           <button class="nav_btn_order" @click="goOrder">주문하러 가기</button>
         </nav>
       </div>

@@ -169,6 +169,31 @@ class AdminService {
         const res = await axios.put(`${this.#url}/policy/${policyId}/deactivate`);
         return res.data;
     }
-}
+
+    // 배달 관제
+    async getDeliveryMonitor(status = null, page = 0) {
+        const params = { page };
+        if (status) params.status = status;
+        const res = await axios.get(`${this.#url}/delivery/monitor`, { params });
+        return res.data;
+    }
+
+    async sendRiderNotice(message) {
+        const res = await axios.post(`${this.#url}/delivery/notice`, { message });
+        return res.data;
+    }
+
+
+    async getRiderCount() {
+        const res = await axios.get(`${this.#url}/delivery/rider-count`)
+        return res.data
+    }
+    
+    async sendRiderNotice(payload) {
+        const res = await axios.post(`${this.#url}/delivery/notice`, payload)
+        return res.data
+    }
+
+    }
 
 export default new AdminService();

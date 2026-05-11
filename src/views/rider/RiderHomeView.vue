@@ -1,11 +1,13 @@
 <script setup>
 import { onMounted, computed } from 'vue'
 import { useDeliveryStore } from '@/stores/deliveryStore'
+import { useLocationTracker } from '@/composables/useLocationTracker'
 import WaitingTab from '@/components/rider/WaitingTab.vue'
 import InProgressTab from '@/components/rider/InProgressTab.vue'
 import CompletedTab from '@/components/rider/CompletedTab.vue'
 
 const deliveryStore = useDeliveryStore()
+const tracker = useLocationTracker()
 
 const tabs = [
   { key: 'waiting',    label: '대기' },
@@ -19,6 +21,7 @@ const inProgressCount = computed(() => deliveryStore.state.inProgress.length)
 onMounted(() => {
   deliveryStore.loadWaiting()
   deliveryStore.loadInProgress()
+  tracker.start() // 5s tick 위치 송신 (decision-#38 (가) 학원 발표용)
 })
 
 const switchTab = (key) => {

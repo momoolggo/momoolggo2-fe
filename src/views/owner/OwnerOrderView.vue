@@ -168,6 +168,10 @@ const formattedDate = computed(() => {
   appearance: none;
 }
 
+.date-input::-webkit-calendar-picker-indicator { display: none; }
+input[type="date"]::-webkit-clear-button { display: none; }
+input[type="date"]::-webkit-inner-spin-button { display: none; }
+
 .summary-container { display: flex; gap: 20px; margin-bottom: 50px; }
 .header-title { margin-bottom: 20px; }
 .chart-section { background: #fff; padding: 30px; border-radius: 20px; margin-bottom: 40px; }

@@ -169,6 +169,11 @@ const fetchFaqList = async () => {
   }
 }
 
+const selectTab = (val) => {
+  activeTab.value = val
+  currentPage.value = 1
+}
+
 onMounted(() => {
   fetchSummary()
   fetchFaqList()
@@ -194,9 +199,9 @@ const filteredFaqList = computed(() => {
 const toggleVisible = async (faq) => {
   try {
     await adminService.toggleFaqVisible(faq.faqId)
-    faq.visible = !faq.visible
+    faq.isActive = !faq.isActive
   } catch (e) {
-    faq.visible = !faq.visible
+    faq.isActive = !faq.isActive
   }
 }
 
@@ -337,7 +342,7 @@ const deleteFaq = async (faqId) => {
                   <td>{{ categoryLabel(item.type) }}</td>
                   <td class="col_wide content_td">{{ item.question }}</td>
                   <td>
-                    <div class="toggle_wrap" :class="{ on: item.visible }" @click="toggleVisible(item)">
+                    <div class="toggle_wrap" :class="{ on: item.isActive }" @click="toggleVisible(item)">
                       <div class="toggle_thumb"></div>
                     </div>
                   </td>

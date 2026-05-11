@@ -10,17 +10,17 @@ const deliveryStore = useDeliveryStore()
 // 진행 중 배달 1건 (라이더 1명이 동시 1건 — R3-b 정책)
 const current = computed(() => deliveryStore.currentDelivery())
 
-// 단계별 다음 액션 매핑 (ADR-004 화이트리스트 5 transition)
+// 단계별 다음 액션 매핑 — ASSIGNED는 accept(R6-FE-3)가 처리하므로 InProgressTab 진입 시점은 ARRIVED부터.
+// reviewer C-1 정정: ASSIGNED 항목 제거 (이전엔 fn:'arrive'로 잘못 매핑되어 BE 400 발생 위험).
+// ARRIVED_AT_STORE label '가게 도착 확인'으로 정정 (이전 '픽업 대기'는 라이더 관점 어색).
 const nextAction = computed(() => {
   if (!current.value) return null
   const map = {
-    ASSIGNED:         { label: '가게로 출발',  fn: 'arrive',  promptText: '가게로 출발하시겠습니까?'   },
-    ARRIVED_AT_STORE: { label: '픽업 대기',    fn: 'arrive',  promptText: '가게에 도착하셨습니까?'     },
-    AWAITING_PICKUP:  { label: '픽업 완료',    fn: 'pickup',  promptText: '음식을 픽업 완료하셨습니까?' },
-    PICKED_UP:        { label: '배달 시작',    fn: 'depart',  promptText: '배달지로 출발하시겠습니까?' },
-    DELIVERING:       { label: '전달 완료',    fn: 'complete', promptText: null },
+    ARRIVED_AT_STORE: { label: '가게 도착 확인', fn: 'arrive',  promptText: '가게에 도착하셨습니까?'     },
+    AWAITING_PICKUP:  { label: '픽업 완료',     fn: 'pickup',  promptText: '음식을 픽업 완료하셨습니까?' },
+    PICKED_UP:        { label: '배달 시작',     fn: 'depart',  promptText: '배달지로 출발하시겠습니까?' },
+    DELIVERING:       { label: '전달 완료',     fn: 'complete', promptText: null },
   }
-  // ASSIGNED → ARRIVED는 accept(R6-FE-3)가 처리, 여기는 ARRIVED부터 시작
   return map[current.value.status] ?? null
 })
 

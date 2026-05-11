@@ -1,0 +1,18 @@
+import axios from 'axios'
+
+/**
+ * 라이더 위치 송신 — R5 PUT /api/rider/location.
+ * ADR-005 D6-b 5s/10s 빈도, TTL 30s.
+ */
+class LocationService {
+  #url = '/rider/location'
+
+  /**
+   * @param {{ lat: number, lng: number }} payload
+   */
+  async update(payload) {
+    await axios.put(this.#url, payload)
+  }
+}
+
+export default new LocationService()

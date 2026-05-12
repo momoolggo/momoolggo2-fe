@@ -1,8 +1,8 @@
-import axios from 'axios'
+import axios from '@/services/httpRequester'
 
 /**
  * 라이더 배달 처리 — interfaces.md §6.2 9 endpoint.
- * R1-FE riderService 패턴 일관 (axios + res.data.resultData 추출).
+ * R1-FE riderService 패턴 일관 (httpRequester + res.data.resultData 추출).
  *
  * 9 endpoint:
  * - GET  /waiting              대기 배달 목록 (ACTIVE 라이더)
@@ -19,33 +19,33 @@ class DeliveryService {
   #url = '/rider/order'
 
   async getWaiting() {
-    const res = await axios.get(`${this.#url}/waiting`)
+    const res = await http.get(`${this.#url}/waiting`)
     return res.data.resultData
   }
 
   async getInProgress() {
-    const res = await axios.get(`${this.#url}/inprogress`)
+    const res = await http.get(`${this.#url}/inprogress`)
     return res.data.resultData
   }
 
   async accept(deliveryNo) {
-    await axios.put(`${this.#url}/${deliveryNo}/accept`)
+    await http.put(`${this.#url}/${deliveryNo}/accept`)
   }
 
   async reject(deliveryNo) {
-    await axios.put(`${this.#url}/${deliveryNo}/reject`)
+    await http.put(`${this.#url}/${deliveryNo}/reject`)
   }
 
   async arrive(deliveryNo) {
-    await axios.put(`${this.#url}/${deliveryNo}/arrive`)
+    await http.put(`${this.#url}/${deliveryNo}/arrive`)
   }
 
   async pickup(deliveryNo) {
-    await axios.put(`${this.#url}/${deliveryNo}/pickup`)
+    await http.put(`${this.#url}/${deliveryNo}/pickup`)
   }
 
   async depart(deliveryNo) {
-    await axios.put(`${this.#url}/${deliveryNo}/depart`)
+    await http.put(`${this.#url}/${deliveryNo}/depart`)
   }
 
   /**
@@ -54,7 +54,7 @@ class DeliveryService {
    * @param {{ deliveredMethod: 'DIRECT'|'CUSTOMER_REQUEST'|'CUSTOMER_ABSENT', deliveredPhotoUrl: string|null }} payload
    */
   async complete(deliveryNo, payload) {
-    await axios.put(`${this.#url}/${deliveryNo}/complete`, payload)
+    await http.put(`${this.#url}/${deliveryNo}/complete`, payload)
   }
 
   /**
@@ -63,7 +63,7 @@ class DeliveryService {
    * @param {{ reason: 'ACCIDENT'|'PERSONAL'|'OTHER' }} payload
    */
   async cancel(deliveryNo, payload) {
-    await axios.put(`${this.#url}/${deliveryNo}/cancel`, payload)
+    await http.put(`${this.#url}/${deliveryNo}/cancel`, payload)
   }
 }
 

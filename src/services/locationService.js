@@ -1,4 +1,4 @@
-import axios from 'axios'
+import axios from '@/services/httpRequester'
 
 /**
  * 라이더 위치 송신 — R5 PUT /api/rider/location.
@@ -11,7 +11,7 @@ class LocationService {
    * @param {{ lat: number, lng: number }} payload
    */
   async update(payload) {
-    await axios.put(this.#url, payload)
+    await http.put(this.#url, payload)
   }
 }
 

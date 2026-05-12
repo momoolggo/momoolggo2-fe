@@ -34,6 +34,7 @@ const handleAddCart = async () => {
       quantity: quantity.value,
     }
     await cartService.addToCart(cartData)
+    emit('add-to-cart')
     await showAlert('장바구니에 담겼습니다! 🛒', { title: '장바구니', type: 'success' })
     quantity.value = 1
     emit('close')
@@ -46,6 +47,7 @@ const handleAddCart = async () => {
           menuId: props.menu.menuId,
           quantity: quantity.value,
         })
+        emit('add-to-cart')
         await showAlert('장바구니에 담겼습니다! 🛒', { title: '장바구니', type: 'success' })
         quantity.value = 1
         emit('close')

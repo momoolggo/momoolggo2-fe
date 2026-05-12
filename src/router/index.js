@@ -33,6 +33,7 @@ import SearchStoreView    from '@/views/header/SearchStoreView.vue'
 import NearbyView from '@/views/servicee/NearbyView.vue'
 
 // ── 라이더
+import RiderLandingView from '@/views/rider/RiderLandingView.vue'
 import RiderSignupView from '@/views/rider/RiderSignupView.vue'
 import RiderSigninView from '@/views/rider/RiderSigninView.vue'
 import RiderHomeView   from '@/views/rider/RiderHomeView.vue'
@@ -108,7 +109,8 @@ const routes = [
   { path: '/ownerservice', name: 'OwnerService', component: OwnerOrderView, meta: { requiresAuth: true, role: 'OWNER' } },
   { path: '/ownerservice/addstore', name: 'AddStore', component: AddStoreView, meta: { requiresAuth: true, role: 'OWNER' } },
 
-  // ── 라이더 인증
+  // ── 라이더 랜딩 + 인증
+  { path: '/riderlanding', name: 'RiderLanding', component: RiderLandingView },
   { path: '/rider/signup', name: 'RiderSignup', component: RiderSignupView, meta: { guestOnly: true } },
   { path: '/rider/signin', name: 'RiderSignin', component: RiderSigninView, meta: { guestOnly: true } },
 

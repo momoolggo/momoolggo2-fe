@@ -10,7 +10,7 @@ const menuItems = [
   { name: '가게 관리', path: '/admin/store' },
   { name: '리뷰 관리', path: '/admin/blind' },
   { name: '정산 관리', path: '/admin/settlement' },
-  { name: '배달 관리', path: '/admin/rider' },
+  { name: '배달 관리', path: '/admin/delivery' },
   { name: '고객 지원', path: '/admin/cs' },
 ]
 

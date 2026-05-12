@@ -211,7 +211,7 @@ const barHeightPercent = (val) => {
   padding: 36px 60px;
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 20px;
 }
 
 /* ─── Today 섹션 ─── */
@@ -222,7 +222,7 @@ const barHeightPercent = (val) => {
 }
 
 .today_label {
-  font-size: 16px;
+  font-size: 20px;
   font-weight: 700;
   color: #222;
   margin-bottom: 16px;
@@ -241,7 +241,7 @@ const barHeightPercent = (val) => {
 }
 
 .stat_label {
-  font-size: 12px;
+  font-size: px;
   color: #777;
   margin-bottom: 8px;
   font-weight: 500;
@@ -282,7 +282,7 @@ const barHeightPercent = (val) => {
 }
 
 .chart_title {
-  font-size: 15px;
+  font-size: 20px;
   font-weight: 700;
   color: #222;
 }

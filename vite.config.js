@@ -1,33 +1,38 @@
 import { fileURLToPath, URL } from 'node:url'
 
-import { defineConfig } from 'vite'
+import { defineConfig, loadEnv } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import vueDevTools from 'vite-plugin-vue-devtools'
 
 // https://vite.dev/config/
-export default defineConfig({
-  build: {
-      outDir: 'C:/codding/project/momoolggo/src/main/resources/static'
-  },
-
-  plugins: [
-    vue(),
-    vueDevTools(),
-  ],
-  resolve: {
-    alias: {
-      '@': fileURLToPath(new URL('./src', import.meta.url))
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd())
+  return {
+    build: {
+        outDir: env.VITE_OUT_DIR,
+        emptyOutDir: true,
     },
-  },
-  server: {
-    proxy: {
-      '/api': {
-          target: 'http://localhost:8000',
-          changeOrigin: true,
-        },
-      '/pic': {
-      target: 'http://localhost:8080',
+
+    plugins: [
+      vue(),
+      vueDevTools(),
+    ],
+    resolve: {
+      alias: {
+        '@': fileURLToPath(new URL('./src', import.meta.url))
+      },
+    },
+    server: {
+      proxy: {
+        '/api': {
+            target: 'http://localhost:8000',
+            changeOrigin: true,
+          },
+        '/pic': {
+        target: 'http://localhost:8080',
+        }
       }
     }
-  }}
+  }
+}
 )

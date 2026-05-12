@@ -17,7 +17,7 @@ const globalAlert = ref(null)
 
 const noHeaderPages = ['/','/ownerlanding' ,'/owner/signin', '/owner/signup', '/customer/signin', '/customer/signup'
                           ,'/admin','/admin/notice','/admin/faq','/admin/settlement','/admin/blind','/admin/cs','/admin/delivery'
-                          ,'/riderlanding','/rider/signin','/rider/signup','/riderservice','/rider/work-session']
+                          ,'/riderlanding','/rider/signin','/rider/signup','/riderservice','/rider/work-session','/rider/notice','/rider/history']
 
 const showHeader = computed(() => !noHeaderPages.includes(route.path));
 

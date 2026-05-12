@@ -37,6 +37,7 @@ import RiderLandingView from '@/views/rider/RiderLandingView.vue'
 import RiderSignupView from '@/views/rider/RiderSignupView.vue'
 import RiderSigninView from '@/views/rider/RiderSigninView.vue'
 import RiderHomeView   from '@/views/rider/RiderHomeView.vue'
+import RiderWorkSessionView from '@/views/rider/RiderWorkSessionView.vue'
 
 // ── 관리자
 import AdminHomeView from '@/views/admin/AdminHomeView.vue'
@@ -116,6 +117,7 @@ const routes = [
 
   // ── 라이더 전용
   { path: '/riderservice', name: 'RiderService', component: RiderHomeView, meta: { requiresAuth: true, role: 'RIDER' } },
+  { path: '/rider/work-session', name: 'RiderWorkSession', component: RiderWorkSessionView, meta: { requiresAuth: true, role: 'RIDER' } },
 
   // ── 404 → 랜딩으로
   { path: '/:pathMatch(.*)*', redirect: '/' },

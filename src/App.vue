@@ -16,7 +16,8 @@ const globalAlert = ref(null)
 // 헤더를 숨길 페이지
 
 const noHeaderPages = ['/','/ownerlanding' ,'/owner/signin', '/owner/signup', '/customer/signin', '/customer/signup'
-                          ,'/admin','/admin/notice','/admin/faq','/admin/settlement','/admin/blind','/admin/cs','/admin/delivery']
+                          ,'/admin','/admin/notice','/admin/faq','/admin/settlement','/admin/blind','/admin/cs','/admin/delivery'
+                          ,'/riderlanding','/rider/signin','/rider/signup','/riderservice','/rider/work-session']
 
 const showHeader = computed(() => !noHeaderPages.includes(route.path));
 
@@ -44,7 +45,12 @@ const signout = async () => {
       <router-view />
       <TokenExpiryModal />
       <MobileNavi
-      v-if="userStore.state.isSignedIn&& route.path !== '/mypage/pet'&& !route.path.startsWith('/admin')"/>
+      v-if="userStore.state.isSignedIn
+            && route.path !== '/mypage/pet'
+            && !route.path.startsWith('/admin')
+            && !route.path.startsWith('/rider')
+            && route.path !== '/riderlanding'
+            && route.path !== '/riderservice'"/>
     </div>
   </div>
   <AlertModal ref="globalAlert" />

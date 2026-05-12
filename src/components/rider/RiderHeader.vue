@@ -72,6 +72,7 @@ const signout = async () => {
         <button class="menu-item" @click="goTo('/rider/notice')">공지사항</button>
         <button class="menu-item" @click="goTo('/rider/history')">배달내역</button>
         <button class="menu-item" @click="goTo('/rider/work-session')">근무관리</button>
+        <button class="menu-item" @click="goTo('/rider/settlement')">정산</button>
         <button class="menu-item danger" @click="openEndConfirm">업무 종료</button>
       </nav>
       <div class="drawer-foot">

@@ -19,33 +19,33 @@ class DeliveryService {
   #url = '/rider/order'
 
   async getWaiting() {
-    const res = await http.get(`${this.#url}/waiting`)
+    const res = await axios.get(`${this.#url}/waiting`)
     return res.data.resultData
   }
 
   async getInProgress() {
-    const res = await http.get(`${this.#url}/inprogress`)
+    const res = await axios.get(`${this.#url}/inprogress`)
     return res.data.resultData
   }
 
   async accept(deliveryNo) {
-    await http.put(`${this.#url}/${deliveryNo}/accept`)
+    await axios.put(`${this.#url}/${deliveryNo}/accept`)
   }
 
   async reject(deliveryNo) {
-    await http.put(`${this.#url}/${deliveryNo}/reject`)
+    await axios.put(`${this.#url}/${deliveryNo}/reject`)
   }
 
   async arrive(deliveryNo) {
-    await http.put(`${this.#url}/${deliveryNo}/arrive`)
+    await axios.put(`${this.#url}/${deliveryNo}/arrive`)
   }
 
   async pickup(deliveryNo) {
-    await http.put(`${this.#url}/${deliveryNo}/pickup`)
+    await axios.put(`${this.#url}/${deliveryNo}/pickup`)
   }
 
   async depart(deliveryNo) {
-    await http.put(`${this.#url}/${deliveryNo}/depart`)
+    await axios.put(`${this.#url}/${deliveryNo}/depart`)
   }
 
   /**
@@ -54,7 +54,7 @@ class DeliveryService {
    * @param {{ deliveredMethod: 'DIRECT'|'CUSTOMER_REQUEST'|'CUSTOMER_ABSENT', deliveredPhotoUrl: string|null }} payload
    */
   async complete(deliveryNo, payload) {
-    await http.put(`${this.#url}/${deliveryNo}/complete`, payload)
+    await axios.put(`${this.#url}/${deliveryNo}/complete`, payload)
   }
 
   /**
@@ -63,7 +63,7 @@ class DeliveryService {
    * @param {{ reason: 'ACCIDENT'|'PERSONAL'|'OTHER' }} payload
    */
   async cancel(deliveryNo, payload) {
-    await http.put(`${this.#url}/${deliveryNo}/cancel`, payload)
+    await axios.put(`${this.#url}/${deliveryNo}/cancel`, payload)
   }
 }
 

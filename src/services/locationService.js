@@ -11,7 +11,7 @@ class LocationService {
    * @param {{ lat: number, lng: number }} payload
    */
   async update(payload) {
-    await http.put(this.#url, payload)
+    await axios.put(this.#url, payload)
   }
 }
 

@@ -40,8 +40,6 @@ import RiderHomeView   from '@/views/rider/RiderHomeView.vue'
 
 // ── 관리자
 import AdminHomeView from '@/views/admin/AdminHomeView.vue'
-import AdminNoticeView from '@/views/admin/AdminNoticeView.vue'
-import AdminFaqView from '@/views/admin/AdminFaqView.vue'
 import AdminSettlementView from '@/views/admin/AdminSettlementView.vue'
 import AdminBlindView from '@/views/admin/AdminBlindView.vue'
 import AdminCsView from '@/views/admin/AdminCsView.vue'
@@ -66,8 +64,6 @@ const routes = [
 
   // ── 관리자 전용
   { path: '/admin', name: 'AdminHome', component: AdminHomeView /*,  meta: { requiresAuth: true, role: 'ADMIN' }*/ },
-  { path: '/admin/notice', name: 'AdminNotice', component: AdminNoticeView/*, meta: { requiresAuth: true, role: 'ADMIN' } */},
-  { path: '/admin/faq', name: 'AdminFaq', component: AdminFaqView/*, meta: { requiresAuth: true, role: 'ADMIN' } */},
   { path: '/admin/settlement', name: 'AdminSettlement', component: AdminSettlementView/*, meta: { requiresAuth: true, role: 'ADMIN' }*/ },
   { path: '/admin/blind', name: 'AdminBlind', component: AdminBlindView/*, meta: { requiresAuth: true, role: 'ADMIN' }*/ },
   { path: '/admin/cs', name: 'AdminCs', component: AdminCsView /*,  meta: { requiresAuth: true, role: 'ADMIN' }*/ },

@@ -9,27 +9,6 @@ class AdminService {
         return res.data;
     }
 
-    // 공지사항
-    async getNoticeList() {
-        const res = await axios.get(`${this.#url}/notice`);
-        return res.data;
-    }
-
-    async createNotice(data) {
-        const res = await axios.post(`${this.#url}/notice`, data);
-        return res.data;
-    }
-
-    async updateNotice(noticeId, data) {
-        const res = await axios.put(`${this.#url}/notice/${noticeId}`, data);
-        return res.data;
-    }
-
-    async deleteNotice(noticeId) {
-        const res = await axios.delete(`${this.#url}/notice/${noticeId}`);
-        return res.data;
-    }
-
     // FAQ
     async getFaqList(type = null) {
         const params = {};
@@ -108,7 +87,7 @@ class AdminService {
         return res.data;
     }
 
-    // 블라인드
+    // 리뷰,블라인드
     async getBlindList(status = null) {
         const params = {};
         if (status) params.status = status;
@@ -178,22 +157,30 @@ class AdminService {
         return res.data;
     }
 
-    async sendRiderNotice(message) {
-        const res = await axios.post(`${this.#url}/delivery/notice`, { message });
+    async getRiderCount() {
+        const res = await axios.get(`${this.#url}/delivery/rider-count`);
         return res.data;
     }
 
-
-    async getRiderCount() {
-        const res = await axios.get(`${this.#url}/delivery/rider-count`)
-        return res.data
-    }
-    
     async sendRiderNotice(payload) {
-        const res = await axios.post(`${this.#url}/delivery/notice`, payload)
-        return res.data
+        const res = await axios.post(`${this.#url}/delivery/notice`, payload);
+        return res.data;
     }
 
+    async getNoticeList() {
+        const res = await axios.get(`${this.#url}/delivery/notice`);
+        return res.data;
     }
+
+    async updateNotice(noticeId, payload) {
+        const res = await axios.put(`${this.#url}/delivery/notice/${noticeId}`, payload);
+        return res.data;
+    }
+
+    async deleteNotice(noticeId) {
+        const res = await axios.delete(`${this.#url}/delivery/notice/${noticeId}`);
+        return res.data;
+    }
+}
 
 export default new AdminService();

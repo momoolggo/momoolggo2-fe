@@ -57,13 +57,13 @@ const noticeForm = ref({
   reservedAt: '',
 })
 
-const daeguDistricts = ['동구', '서구', '남구', '북구', '중구', '수성구', '달서구', '달성군']
+//const daeguDistricts = ['동구', '서구', '남구', '북구', '중구', '수성구', '달서구', '달성군']
 
-const toggleDistrict = (d) => {
+/*const toggleDistrict = (d) => {
   const idx = noticeForm.value.selectedDistricts.indexOf(d)
   if (idx === -1) noticeForm.value.selectedDistricts.push(d)
   else noticeForm.value.selectedDistricts.splice(idx, 1)
-}
+}*/
 
 const openNoticeModal = async () => {
   noticeForm.value = { title: '', targetType: 'ALL', selectedDistricts: [], content: '', sendType: 'NOW', reservedAt: '' }
@@ -340,18 +340,13 @@ onMounted(fetchList)
           </div>
           <div class="form_group">
             <div class="form_label_row">
-              <label class="form_label">수신 / 대상 설정</label>
+            
               <span class="rider_count_badge">총 수신 라이더: {{ totalRiderCount }}명</span>
             </div>
-            <div class="target_row">
+            <!--<div class="target_row">
               <label class="radio_label"><input type="radio" v-model="noticeForm.targetType" value="ALL" /> 전체</label>
-              <label class="radio_label"><input type="radio" v-model="noticeForm.targetType" value="SPECIFIC" /> 특정 구역</label>
-            </div>
-            <div v-if="noticeForm.targetType === 'SPECIFIC'" class="district_grid">
-              <label v-for="d in daeguDistricts" :key="d" class="check_label">
-                <input type="checkbox" :checked="noticeForm.selectedDistricts.includes(d)" @change="toggleDistrict(d)" /> {{ d }}
-              </label>
-            </div>
+              
+            </div>-->
           </div>
           <div class="form_two_col">
             <div class="form_group">

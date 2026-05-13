@@ -16,9 +16,9 @@ class OrderService {
     }
     // 토스 결제 승인 요청
     async confirmPayment(paymentData) {
-      const res = await axios.post('/payment/confirm', paymentData);
-      return res.data;
-  }
+    const res = await axios.post('/payment/confirm', paymentData);
+        return res.data;
+}
 
     // 주문 내역 조회 (마이페이지)
     async getOrderHistory(params) {
@@ -32,11 +32,17 @@ class OrderService {
         return res.data;
     }
 
+    //주문 취소
+    async cancelOrder(orderId, cancelData) {
+        const res = await axios.put(`${this.#url}/${orderId}/cancel`, cancelData)
+        return res.data;
+    }
+
     //주문내역 맥스페이지
     async getMaxHistory(userId) {
-      const res = await axios.get(`${this.#url}/history/max/${userId}`);
-      return res.data;
-  }
+        const res = await axios.get(`${this.#url}/history/max/${userId}`);
+        return res.data;
+}
 
 }
 export default new OrderService();

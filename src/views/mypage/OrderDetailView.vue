@@ -2,6 +2,7 @@
 import router from '@/router'
 import { ref, computed, onMounted } from 'vue'
 import orderService from '@/services/orderService';
+import { showAlert, showConfirm } from '@/composables/useAlert';
 import { useRoute } from 'vue-router';
 
 const getImageUrl = (path) => {
@@ -26,9 +27,27 @@ const order = ref({
   orderState: 1     // 기본값: 주문수락전(1)
 })
 
-onMounted(async () => {
-  const result = await orderService.getOrderDetail(id);
-  order.value = result;
+const isCanceling = ref(false)
+const selectedCancelReason = ref('')
+const customCancelReason = ref('')
+const isCancelModalOpen = ref(false)
+
+const cancelReasons = [
+  '단순 변심',
+  '메뉴 또는 수량을 잘못 선택했어요',
+  '배달 주소를 잘못 입력했어요',
+  '결제 수단을 변경하고 싶어요',
+  '쿠폰 또는 할인을 적용하지 못했어요',
+  '기타',
+]
+
+const loadOrderDetail = async () => {
+  const result = await orderService.getOrderDetail(id)
+  order.value = result
+}
+
+onMounted( () => {
+  loadOrderDetail()
 })
 
 const totalPrice = computed(() => {
@@ -42,7 +61,61 @@ const totalPrice = computed(() => {
  * 5: 배달중 (라이더배차완료)
  * 6: 배달완료
  */
- const currentOrderState = computed(() => order.value.orderState)
+const currentOrderState = computed(() => order.value.orderState)
+
+const canCancelOrder = computed(() => !!order.value.orderId && currentOrderState.value === 1 )
+
+const openCancelModal = () => {
+  selectedCancelReason.value = ''
+  customCancelReason.value = ''
+  isCancelModalOpen.value = true
+}
+
+const closeCancelModal = () => {
+  if(isCanceling.value) return
+  isCancelModalOpen.value = false
+  selectedCancelReason.value = ''
+  customCancelReason.value = ''
+}
+
+const cancelOrder = async () => {
+  const reason = selectedCancelReason.value === '기타' 
+                      ? customCancelReason.value.trim()
+                      : selectedCancelReason.value
+
+  if(!reason) {
+    await showAlert('취소 사유를 입력해 주세요', { title: ' 주문 취소', type: 'warning'})
+    return
+  }
+
+const confirmed = await showConfirm( 
+  '주문을 취소하시겠습니까?', { title: '주문 취소', type: 'warning'}
+)
+
+if(!confirmed) return
+
+  try {
+    isCanceling.value = true
+    await orderService.cancelOrder(order.value.orderId, {
+      reason,
+    })
+    await showAlert('주문이 취소되었습니다', { title: ' 주문 취소', type: 'success'})
+    isCancelModalOpen.value = false
+    selectedCancelReason.value = ''
+    customCancelReason.value = ''
+    
+    await loadOrderDetail()
+  } catch (error) {
+    console.error('주문 취소 실패:', error.response?.status, error.response?.data)
+    
+    const message = 
+    error.response?.data?.resultMessage || error.response?.data?.message ||
+    '주문 취소 실패했습니다'
+    await showAlert(message, { title: '주문 취소 실패', type: 'error'})
+  } finally {
+    isCanceling.value = false
+  }
+}
 
 /* 상태 숫자(Key)에 따른 UI 매핑 - index를 steps 순서(0, 1, 2, 3)와 일치시킴 */
 const statusMap = {
@@ -182,6 +255,14 @@ const progressWidth = computed(() => (currentStepIndex.value / (steps.value.leng
         </div>
       </div>
 
+      <button
+        v-if="canCancelOrder"
+        class="btn-cancel-order"
+        :disabled="isCanceling"
+        @click="openCancelModal">
+      {{ isCanceling ? '주문 취소 처리 중' : '주문 취소' }}
+      </button>
+
       <button :class="currentOrderState === 2 ? 'btn-reorder' : 'btn-continue'"  @click="router.push('/storelist')">
         {{ currentOrderState === 2 ? '다시 주문하기' : '주문 계속하기' }}
       </button>
@@ -189,6 +270,67 @@ const progressWidth = computed(() => (currentStepIndex.value / (steps.value.leng
       <div class="nav-spacer"></div>
     </div>
   </div>
+
+  <!--주문 취소 사유 모달-->
+<div v-if="isCancelModalOpen" class="cancel-modal-overlay" @click.self="closeCancelModal">
+  <div class="cancel-modal">
+    <div class="cancel-modal-header">
+      <h3>주문 취소 사유</h3>
+      <button type="button" class="cancel-modal-close" @click="closeCancelModal">
+        <i class="bi bi-x"></i>
+      </button>
+    </div>
+
+    <p class="cancel-modal-desc">취소 사유를 선택해 주세요!</p>
+
+    <div class="cancel-reason-list">
+      <label
+        v-for="reason in cancelReasons"
+        :key="reason"
+        class="cancel-reason-item"
+        :class="{ selected: selectedCancelReason === reason }"
+      >
+        <input
+          v-model="selectedCancelReason"
+          type="radio"
+          name="cancelReason"
+          :value="reason"
+        />
+        <span>{{ reason }}</span>
+      </label>
+    </div>
+
+    <textarea
+      v-if="selectedCancelReason === '기타'"
+      v-model="customCancelReason"
+      class="cancel-reason-textarea"
+      placeholder="취소 사유를 입력해 주세요"
+      maxlength="100"
+    ></textarea>
+
+    <div class="cancel-modal-actions">
+      <button
+        type="button"
+        class="btn-cancel-modal-close"
+        :disabled="isCanceling"
+        @click="closeCancelModal"
+      >
+        닫기
+      </button>
+
+      <button
+        type="button"
+        class="btn-cancel-modal-submit"
+        :disabled="isCanceling"
+        @click="cancelOrder"
+      >
+        {{ isCanceling ? '처리 중...' : '주문 취소' }}
+      </button>
+    </div>
+  </div>
+</div>
+
+
 </template>
 
 <style scoped>
@@ -399,6 +541,25 @@ const progressWidth = computed(() => (currentStepIndex.value / (steps.value.leng
 }
 
 /* 버튼 스타일 */
+
+.btn-cancel-order {
+  width: 100%;
+  padding: 16px;
+  border-radius: 15px;
+  border: 1.5px solid #b21f1f;
+  background: #fff;
+  color: #b21f1f;
+  font-size: 16px;
+  font-weight: 800;
+  cursor: pointer;
+  margin-bottom: 12px;
+}
+
+.btn-cancel-order:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .btn-continue,
 .btn-reorder {
   width: 100%;
@@ -427,4 +588,160 @@ const progressWidth = computed(() => (currentStepIndex.value / (steps.value.leng
 .nav-spacer {
   height: 80px;
 }
+
+.cancel-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.cancel-modal {
+  width: 100%;
+  max-width: 360px;
+  max-height: 86vh;
+  overflow-y: auto;
+  background: #fff;
+  border-radius: 20px;
+  padding: 22px 20px 20px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.18);
+  box-sizing: border-box;
+}
+
+.cancel-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.cancel-modal-header h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 800;
+  color: #222;
+  white-space: nowrap;
+}
+
+.cancel-modal-close {
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: transparent;
+  color: #999;
+  font-size: 22px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.cancel-modal-desc {
+  margin: 0 0 16px;
+  font-size: 14px;
+  color: #777;
+}
+
+.cancel-reason-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.cancel-reason-item {
+  width: 100%;
+  min-height: 46px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1.5px solid #e5e3dc;
+  border-radius: 12px;
+  background: #fff;
+  color: #333;
+  font-size: 14px;
+  line-height: 1.4;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+.cancel-reason-item.selected {
+  border-color: #b21f1f;
+  background: #fff5f5;
+  color: #b21f1f;
+  font-weight: 700;
+}
+
+.cancel-reason-item input {
+  flex-shrink: 0;
+  accent-color: #b21f1f;
+}
+
+.cancel-reason-item span {
+  flex: 1;
+  min-width: 0;
+  white-space: normal;
+  word-break: keep-all;
+}
+
+.cancel-reason-textarea {
+  width: 100%;
+  min-height: 82px;
+  margin-top: 10px;
+  padding: 12px 14px;
+  border: 1.5px solid #e5e3dc;
+  border-radius: 12px;
+  resize: none;
+  outline: none;
+  font-size: 14px;
+  line-height: 1.5;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+.cancel-reason-textarea:focus {
+  border-color: #b21f1f;
+}
+
+.cancel-modal-actions {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+  margin-top: 18px;
+}
+
+.btn-cancel-modal-close,
+.btn-cancel-modal-submit {
+  flex: 1;
+  height: 46px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.btn-cancel-modal-close {
+  border: 1.5px solid #ddd;
+  background: #fff;
+  color: #666;
+}
+
+.btn-cancel-modal-submit {
+  border: none;
+  background: #b21f1f;
+  color: #fff;
+}
+
+.btn-cancel-modal-close:disabled,
+.btn-cancel-modal-submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 </style>

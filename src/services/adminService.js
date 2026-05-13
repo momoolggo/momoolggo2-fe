@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios from '@/services/httpRequester'
 
 class AdminService {
     #url = 'http://localhost:8083/api/admin';

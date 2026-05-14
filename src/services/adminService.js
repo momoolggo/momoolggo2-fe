@@ -210,6 +210,34 @@ class AdminService {
         const res = await axios.patch(`${this.#url}/user/${userNo}/suspension/release`)
         return res.data
     }
+
+    async getMemberAddress(userNo) {
+        const res = await axios.get(`${this.#url}/user/${userNo}/address`)
+        return res.data
     }
+
+    async getStoreList(page = 0) {
+        const res = await axios.get(`${this.#url}/store/list`, { params: { page } })
+        return res.data
+    }
+
+    async getStoreDetail(storeId) {
+        const res = await axios.get(`${this.#url}/store/${storeId}`)
+        return res.data
+    }
+
+    async getStoreLocation(userNo) {
+        const res = await axios.get(`${this.#url}/user/${userNo}/store-location`)
+        return res.data
+    }
+
+    async getAllReviews(page = 0, size = 15) {
+        const res = await axios.get(`${this.#url}/review`, { params: { page, size } })
+        return res.data
+    }
+
+
+
+ }
 
 export default new AdminService();

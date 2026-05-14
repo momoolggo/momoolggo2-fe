@@ -41,22 +41,16 @@ onMounted(async () => {
     const res = await adminService.getDashboard()
     if (res?.resultData) {
       dashboard.value = {
-        memberCount: res.resultData.memberCount ?? res.resultData.totalMembers ?? 143,
-        storeCount: res.resultData.storeCount ?? res.resultData.totalStores ?? 35,
-        reviewCount: res.resultData.reviewCount ?? res.resultData.totalReviews ?? 88,
-        reportCount: res.resultData.reportCount ?? res.resultData.totalReports ?? 7,
+        memberCount: res.resultData.memberCount ?? 0,
+        storeCount: res.resultData.storeCount ?? 0,
+        reviewCount: res.resultData.reviewCount ?? 0,
       }
     }
   } catch (e) {
     console.error('대시보드 조회 실패', e)
-    // 피그마 더미값 유지
-    dashboard.value = {
-      memberCount: 143,
-      storeCount: 35,
-      reviewCount: 88
-    }
   }
 })
+
 
 const selectedMetricLabel = () =>
   metricOptions.find((m) => m.key === chartMetric.value)?.label ?? '가입자 수'

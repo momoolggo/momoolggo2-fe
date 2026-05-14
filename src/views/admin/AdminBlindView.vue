@@ -81,16 +81,16 @@ const reasonLabel = (reason) => {
 const fetchList = async () => {
   loading.value = true
   try {
-    const status = activeTab.value === 'blind' ? 'BLINDED' : null
-    const res = await adminService.getBlindList(status)
-    blindList.value = res?.resultData ?? []
+    if (activeTab.value === 'all') {
+      const res = await adminService.getAllReviews(currentPage.value - 1)
+      blindList.value = res?.resultData ?? []
+    } else {
+      const res = await adminService.getBlindList('BLINDED')
+      blindList.value = res?.resultData ?? []
+    }
   } catch (e) {
-    console.error('블라인드 목록 조회 실패', e)
-    blindList.value = [
-      { blindId: 1, storeName: '숨은집', writer: '김블루', userName: '김블루', userTel: '010-1234-5678', content: '이번 주만 세번째 배달입니다~! 그만큼 너무 맛있어요!!', rating: 4.8, createdAt: '2026-05-02', reason: 'ABUSE', status: 'BLINDED' },
-      { blindId: 2, storeName: '동성로 꾸꾸미', writer: '김그린', userName: '김그린', userTel: '010-2345-6789', content: '맛있어요', rating: 3.3, createdAt: '2026-04-15', reason: 'FALSE_FACT', status: 'BLINDED' },
-      { blindId: 3, storeName: '피자헛', writer: '김레드', userName: '김레드', userTel: '010-3456-7890', content: '맵기도 딱 좋고 양도 넉넉해서 아주 만족스런 한 끼 였습니다😀', rating: 4.5, createdAt: '2026-01-08', reason: 'AD', status: 'BLINDED' },
-    ]
+    console.error('목록 조회 실패', e)
+    blindList.value = []
   } finally {
     loading.value = false
   }

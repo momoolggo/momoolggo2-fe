@@ -13,16 +13,17 @@ const today = new Date()
 const formatDate = (d) =>
   `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`
 
-const searchForm = ref({
+  const searchForm = ref({
   userId: '',
   name: '',
   startDate: formatDate(today),
   endDate: formatDate(today),
-  category: '고객',
+  category: '전체',  // 변경
 })
 
+const categoryOptions = ['전체', '고객', '사장', '라이더']  // '전체' 추가
+
 const categoryOpen = ref(false)
-const categoryOptions = ['고객', '사장', '라이더']
 const selectCategory = (val) => { searchForm.value.category = val; categoryOpen.value = false }
 
 const startDateRef = ref(null)
@@ -68,6 +69,12 @@ const roleBadgeClass = (role) => {
 }
 
 //여기
+
+const formatCreatedAt = (isoString) => {
+  if (!isoString) return '-'
+  const d = new Date(isoString)
+  return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`
+}
 
 const fetchUserList = async () => {
   loading.value = true
@@ -151,14 +158,34 @@ const suspendOpen = ref(false)
 const suspendOptions = ['정상', '계정 정지(30일)', '계정 영구 정지']
 const selectedSuspend = ref('정상')
 
-const openDetail = (user) => {
-  selectedUser.value = user
+// 주소 로딩 상태
+const addressLoading = ref(false)
+
+// openDetail 함수 교체
+const openDetail = async (user) => {
+  selectedUser.value = { ...user, address: null }
   suspendOpen.value = false
   selectedSuspend.value = user.status === 'SUSPENDED' ? '계정 정지(30일)'
                         : user.status === 'PERMANENT' ? '계정 영구 정지'
                         : '정상'
   showDetailModal.value = true
+
+  addressLoading.value = true
+  try {
+    if (user.role === 'CUSTOMER') {
+      const res = await adminService.getMemberAddress(user.userNo)
+      selectedUser.value = { ...selectedUser.value, address: res ?? '-' }
+    } else if (user.role === 'OWNER') {
+      const res = await adminService.getStoreLocation(user.userNo)
+      selectedUser.value = { ...selectedUser.value, address: res ?? '-' }
+    }
+  } catch {
+    selectedUser.value = { ...selectedUser.value, address: '-' }
+  } finally {
+    addressLoading.value = false
+  }
 }
+
 const closeDetail = () => { showDetailModal.value = false; selectedUser.value = null }
 
 // ── 상태변경 확인 모달
@@ -256,7 +283,7 @@ onMounted(fetchUserList)
           <table class="user_table">
             <thead>
               <tr>
-                <th>이름</th><th>아이디</th><th class="col_wide">주소</th>
+                <th>이름</th><th>아이디</th>
                 <th>전화번호</th><th>상태</th><th>분류</th><th>가입일</th><th>친환경 점수</th>
               </tr>
             </thead>
@@ -265,11 +292,10 @@ onMounted(fetchUserList)
                 <tr v-for="user in userList" :key="user.userNo" class="clickable_row" @click="openDetail(user)">
                   <td>{{ user.name }}</td>
                   <td>{{ user.userId }}</td>
-                  <td class="col_wide address_td">{{ user.address }}</td>
                   <td>{{ user.tel }}</td>
                   <td><span :class="['status_badge', statusBadgeClass(user.status)]">{{ statusLabel(user.status) }}</span></td>
                   <td><span :class="['role_badge', roleBadgeClass(user.role)]">{{ roleLabel(user.role) }}</span></td>
-                  <td>{{ user.createdAt }}</td>
+                  <td>{{ formatCreatedAt(user.createdAt) }}</td>
                   <td>
                     <span v-if="user.role === 'CUSTOMER' && greenLabel(user.green)" class="green_text">
                       {{ greenLabel(user.green).text }}
@@ -279,9 +305,9 @@ onMounted(fetchUserList)
                   </td>
                 </tr>
               </template>
-              <tr v-if="userList.length === 0"><td colspan="8" class="empty_td">조회된 회원이 없습니다.</td></tr>
+              <tr v-if="userList.length === 0"><td colspan="7" class="empty_td">조회된 회원이 없습니다.</td></tr>
               <tr v-for="i in Math.max(0, 15 - userList.length)" :key="'e'+i" class="empty_row">
-                <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
               </tr>
             </tbody>
           </table>
@@ -292,7 +318,7 @@ onMounted(fetchUserList)
           <table class="user_table">
             <thead>
               <tr>
-                <th>이름</th><th>아이디</th><th class="col_wide">주소</th>
+                <th>이름</th><th>아이디</th>
                 <th>전화번호</th><th>상태</th><th>분류</th><th>신청일</th><th>처리</th>
               </tr>
             </thead>
@@ -301,7 +327,6 @@ onMounted(fetchUserList)
                 <tr v-for="user in pendingList" :key="user.userNo">
                   <td>{{ user.name }}</td>
                   <td>{{ user.userId }}</td>
-                  <td class="col_wide address_td">{{ user.address }}</td>
                   <td>{{ user.tel }}</td>
                   <td><span :class="['status_badge', statusBadgeClass(user.status)]">{{ statusLabel(user.status) }}</span></td>
                   <td><span :class="['role_badge', roleBadgeClass(user.role)]">{{ roleLabel(user.role) }}</span></td>
@@ -311,9 +336,9 @@ onMounted(fetchUserList)
                   </td>
                 </tr>
               </template>
-              <tr v-if="pendingList.length === 0"><td colspan="8" class="empty_td">승인 대기 중인 회원이 없습니다.</td></tr>
+              <tr v-if="pendingList.length === 0"><td colspan="7" class="empty_td">승인 대기 중인 회원이 없습니다.</td></tr>
               <tr v-for="i in Math.max(0, 15 - pendingList.length)" :key="'e'+i" class="empty_row">
-                <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
               </tr>
             </tbody>
           </table>
@@ -342,9 +367,15 @@ onMounted(fetchUserList)
             <span class="info_label">분류</span>
             <span :class="['role_badge', roleBadgeClass(selectedUser.role)]">{{ roleLabel(selectedUser.role) }}</span>
           </div>
-          <div class="info_row"><span class="info_label">주소</span><span class="info_value">{{ selectedUser.address ?? '-' }}</span></div>
+          <div class="info_row">
+            <span class="info_label">주소</span>
+            <span class="info_value" v-if="!addressLoading">
+              {{ selectedUser.address ?? '-' }}
+            </span>
+            <span class="info_value" v-else style="color:#aaa;">불러오는 중...</span>
+          </div>
           <div class="info_row"><span class="info_label">전화 번호</span><span class="info_value">{{ selectedUser.tel }}</span></div>
-          <div class="info_row"><span class="info_label">가입일</span><span class="info_value">{{ selectedUser.createdAt }}</span></div>
+          <div class="info_row"><span class="info_label">가입일</span><span class="info_value">{{ formatCreatedAt(selectedUser.createdAt) }}</span></div>
           <div class="info_row" v-if="selectedUser.role === 'CUSTOMER'">
             <span class="info_label">친환경 점수</span>
             <span class="green_modal_text" v-if="greenLabel(selectedUser.green)">
@@ -371,7 +402,7 @@ onMounted(fetchUserList)
           </div>
         </div>
         <div class="modal_btns">
-          <button class="modal_cancel" @click="closeDetail">닫기</button>
+          
           <button v-if="selectedUser.role === 'CUSTOMER'" class="modal_confirm" @click="openConfirmModal">적용</button>
         </div>
       </div>

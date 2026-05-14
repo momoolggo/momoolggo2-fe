@@ -181,6 +181,35 @@ class AdminService {
         const res = await axios.delete(`${this.#url}/delivery/notice/${noticeId}`);
         return res.data;
     }
-}
+
+    // 회원 관리
+    async getUserList(role = null, page = 0) {
+        const params = {}
+        params['page'] = page
+        if (role) params['role'] = role
+        const res = await axios.get(`${this.#url}/user`, { params })
+        return res.data
+    }
+    
+    async getPendingUsers() {
+        const res = await axios.get(`${this.#url}/user/pending`)
+        return res.data
+    }
+
+    async updateApproval(userNo, status, reason = null) {
+        const res = await axios.patch(`${this.#url}/user/${userNo}/approval`, { status, reason })
+        return res.data
+    }
+
+    async suspendUserByAdmin(userNo, days, reason = null) {
+        const res = await axios.patch(`${this.#url}/user/${userNo}/suspension`, { days, reason })
+        return res.data
+    }
+
+    async releaseSuspension(userNo) {
+        const res = await axios.patch(`${this.#url}/user/${userNo}/suspension/release`)
+        return res.data
+    }
+    }
 
 export default new AdminService();

@@ -16,7 +16,8 @@ const globalAlert = ref(null)
 // 헤더를 숨길 페이지
 
 const noHeaderPages = ['/','/ownerlanding' ,'/owner/signin', '/owner/signup', '/customer/signin', '/customer/signup'
-                          ,'/admin','/admin/notice','/admin/faq','/admin/settlement','/admin/blind','/admin/cs','/admin/delivery']
+                          ,'/admin','/admin/notice','/admin/faq','/admin/settlement','/admin/blind','/admin/cs',
+                          '/admin/delivery','/admin/user','/admin/store']
 
 const showHeader = computed(() => !noHeaderPages.includes(route.path));
 

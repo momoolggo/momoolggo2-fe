@@ -8,8 +8,7 @@ import adminService from '@/services/adminService'
 const dashboard = ref({
   memberCount: 0,
   storeCount: 0,
-  reviewCount: 0,
-  reportCount: 0,
+  reviewCount: 0
 })
 
 // 차트 데이터 (주간 기본)
@@ -54,8 +53,7 @@ onMounted(async () => {
     dashboard.value = {
       memberCount: 143,
       storeCount: 35,
-      reviewCount: 88,
-      reportCount: 7,
+      reviewCount: 88
     }
   }
 })
@@ -104,12 +102,6 @@ const barHeightPercent = (val) => {
               <p class="stat_label">리뷰등록수</p>
               <p class="stat_value">
                 {{ dashboard.reviewCount }}<span class="stat_unit">개</span>
-              </p>
-            </div>
-            <div class="stat_card">
-              <p class="stat_label">신고수</p>
-              <p class="stat_value">
-                {{ dashboard.reportCount }}<span class="stat_unit">개</span>
               </p>
             </div>
           </div>
@@ -230,7 +222,7 @@ const barHeightPercent = (val) => {
 
 .stats_grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 16px;
 }
 

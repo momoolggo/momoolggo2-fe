@@ -103,15 +103,21 @@ const handleTabChange = (tab) => {
   fetchList()
 }
 
-// 작성자 클릭 → 고객 상세 모달
-const openUserModal = (item) => {
-  selectedUser.value = item
-  showUserModal.value = true
-}
-
 const closeUserModal = () => {
   showUserModal.value = false
   selectedUser.value = null
+}
+
+
+const openUserModal = async (item) => {
+  selectedUser.value = item
+  showUserModal.value = true
+  try {
+    const res = await adminService.getUserDetail(item.userNo)
+    selectedUser.value = { ...item, ...res?.resultData }
+  } catch (e) {
+    // 기존 데이터 유지
+  }
 }
 
 // 블라인드 해제 모달
@@ -330,17 +336,25 @@ const handleSearch = () => {
         <div class="user_modal_body">
           <div class="user_info_row">
             <span class="user_info_label">이름</span>
-            <span class="user_info_value">{{ selectedUser.userName ?? selectedUser.writer ?? '-' }}</span>
+            <span class="user_info_value">{{ selectedUser.name ?? selectedUser.writer ?? '-' }}</span>
+          </div>
+          <div class="user_info_row">
+            <span class="user_info_label">아이디</span>
+            <span class="user_info_value">{{ selectedUser.userId ?? '-' }}</span>
           </div>
           <div class="user_info_row">
             <span class="user_info_label">전화번호</span>
-            <span class="user_info_value">{{ selectedUser.userTel ?? '-' }}</span>
+            <span class="user_info_value">{{ selectedUser.tel ?? '-' }}</span>
           </div>
           <div class="user_info_row">
-            <span class="user_info_label">가게명</span>
-            <span class="user_info_value">{{ selectedUser.storeName ?? '-' }}</span>
+            <span class="user_info_label">가입일</span>
+            <span class="user_info_value">{{ selectedUser.createdAt ? String(selectedUser.createdAt).slice(0,10).replaceAll('-','.') : '-' }}</span>
           </div>
           <div class="user_info_row">
+            <span class="user_info_label">친환경점수</span>
+            <span class="user_info_value">{{ selectedUser.green ?? '-' }}</span>
+          </div>
+          <div class="user_info_row" v-if="activeTab === 'blind'">
             <span class="user_info_label">블라인드 사유</span>
             <span class="user_info_value">{{ reasonLabel(selectedUser.reason) }}</span>
           </div>
@@ -350,12 +364,6 @@ const handleSearch = () => {
               {{ statusLabel(selectedUser.status).text }}
             </span>
           </div>
-          <!-- MainFeignClient 연동 후 추가 예정 -->
-          <p class="user_modal_note">※ 아이디, 주소, 가입일, 친환경점수는 추후 연동 예정</p>
-        </div>
-
-        <div class="user_modal_btns">
-          <button class="modal_cancel" @click="closeUserModal">닫기</button>
         </div>
       </div>
     </div>

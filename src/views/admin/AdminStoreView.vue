@@ -8,36 +8,23 @@ const storeList = ref([])
 const loading = ref(false)
 const currentPage = ref(1)
 const totalPages = ref(1)
-
 const today = new Date()
 const formatDate = (d) =>
   `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`
 
-  const searchForm = ref({
+const searchForm = ref({
   storeName: '',
   businessNo: '',
   userId: '',
-  startDate: formatDate(today),
-  endDate: formatDate(today),
-  category: '고객',
+  date: '',         // 추가
+  storeCategory: '',
   name: '',
 })
 
-// 드롭다운
-const categoryOpen = ref(false)
-const categoryOptions = ['고객', '사장', '라이더']
-const selectCategory = (val) => { searchForm.value.category = val; categoryOpen.value = false }
-
-const startDateRef = ref(null)
-const endDateRef = ref(null)
-
-const onStartDateChange = (e) => {
+const dateRef = ref(null)
+const onDateChange = (e) => {
   const [y, m, d] = e.target.value.split('-')
-  searchForm.value.startDate = `${y}.${m}.${d}`
-}
-const onEndDateChange = (e) => {
-  const [y, m, d] = e.target.value.split('-')
-  searchForm.value.endDate = `${y}.${m}.${d}`
+  searchForm.value.date = `${y}.${m}.${d}`
 }
 
 // 영업 상태 (state: 0=준비중, 1=영업중)
@@ -55,21 +42,28 @@ const formatCreatedAt = (dateStr) => {
   return String(dateStr).slice(0, 10).replaceAll('-', '.')
 }
 
-// 가게 목록 조회 (팀원 API 연동 후 실제 호출로 교체)
 const fetchStoreList = async () => {
   loading.value = true
   try {
-    const res = await adminService.getStoreList(currentPage.value - 1)
-    storeList.value = res?.resultData?.content ?? []
-    totalPages.value = res?.resultData?.totalPages ?? 1
+    const params = { page: currentPage.value - 1 }
+    if (searchForm.value.storeName) params.storeName = searchForm.value.storeName
+    if (searchForm.value.businessNo) params.businessNo = searchForm.value.businessNo
+    if (searchForm.value.userId) params.userId = searchForm.value.userId
+    if (searchForm.value.date) params.date = searchForm.value.date
+    if (searchForm.value.storeCategory) params.category = searchForm.value.storeCategory
+    if (searchForm.value.name) params.name = searchForm.value.name
+
+    const res = await adminService.getStoreList(params)
+const data = res?.resultData?.content ?? []
+storeList.value = data
+totalPages.value = Math.ceil((res?.resultData?.totalCount ?? 0) / 15) || 1
+console.log('totalCount:', res?.resultData?.totalCount)
+console.log('totalPages:', totalPages.value)
+
+    totalPages.value = Math.ceil((res?.resultData?.totalCount ?? 0) / 15) || 1
   } catch {
-    // 더미 데이터 (API 연동 전)
-    storeList.value = [
-      { storeId: 1, storeName: '숨은집', ownerName: '김블루', location: '대구광역시 중구 동성로1길 46-23 1층', storeTel: '010-1111-1111', state: 0, createdAt: '2023-03-23' },
-      { storeId: 2, storeName: '오레가노 동성로본점', ownerName: '김블루', location: '대구광역시 중구 동성로2길 27-1 1층', storeTel: '010-1111-1111', state: 1, createdAt: '2023-03-23' },
-      { storeId: 3, storeName: '숨은집', ownerName: '김블루', location: '대구광역시 중구 동성로1길 46-23 1층', storeTel: '010-1111-1111', state: 0, createdAt: '2023-03-23' },
-    ]
-    totalPages.value = 3
+    storeList.value = []
+    totalPages.value = 1
   } finally {
     loading.value = false
   }
@@ -80,7 +74,7 @@ const handleSearch = () => {
   fetchStoreList()
 }
 
-// ── 가게 상세 모달
+// 가게 상세 모달
 const showDetailModal = ref(false)
 const selectedStore = ref(null)
 const detailLoading = ref(false)
@@ -117,52 +111,39 @@ onMounted(fetchStoreList)
 
         <!-- 검색 필터 -->
         <div class="search_box">
-            <div class="search_row">
-        <div class="search_field">
-            <label>가게명</label>
-            <input v-model="searchForm.storeName" type="text" class="form_input" />
-        </div>
-        <div class="search_field">
-            <label>사업자 번호</label>
-            <input v-model="searchForm.businessNo" type="text" class="form_input" />
-        </div>
-        <div class="search_field">
-            <label>아이디</label>
-            <input v-model="searchForm.userId" type="text" class="form_input" />
-        </div>
-        <div class="search_field">
-            <label>가입일</label>
-            <div class="date_range">
-            <div class="date_picker_wrap">
-                <img src="@/assets/calender.png" alt="calendar" class="blind_search_img" @click="startDateRef.showPicker()" />
-                <span class="date_text">{{ searchForm.startDate }}</span>
-                <input ref="startDateRef" type="date" class="hidden_date" @change="onStartDateChange" />
+          <div class="search_row">
+            <div class="search_field">
+              <label>가게명</label>
+              <input v-model="searchForm.storeName" type="text" class="form_input" />
             </div>
-            <span class="date_sep">-</span>
-            <div class="date_picker_wrap">
-                <img src="@/assets/calender.png" alt="calendar" class="blind_search_img" @click="endDateRef.showPicker()" />
-                <span class="date_text">{{ searchForm.endDate }}</span>
-                <input ref="endDateRef" type="date" class="hidden_date" @change="onEndDateChange" />
+            <div class="search_field">
+              <label>사업자 번호</label>
+              <input v-model="searchForm.businessNo" type="text" class="form_input" />
             </div>
+            <div class="search_field">
+              <label>아이디</label>
+              <input v-model="searchForm.userId" type="text" class="form_input" />
             </div>
-        </div>
-        <div class="search_field">
-            <label>분류</label>
-            <div class="dropdown_wrap">
-            <button class="dropdown_btn" @click="categoryOpen = !categoryOpen">
-                {{ searchForm.category }}<span class="dropdown_arrow">▼</span>
-            </button>
-            <div v-if="categoryOpen" class="dropdown_menu">
-                <button v-for="opt in categoryOptions" :key="opt" class="dropdown_item" @click="selectCategory(opt)">{{ opt }}</button>
+            <div class="search_field">
+  <label>가게등록일</label>
+  <div class="date_picker_wrap" @click="dateRef.showPicker()">
+    <img src="@/assets/calender.png" alt="calendar" class="blind_search_img" />
+    <span class="date_text" :class="{ placeholder: !searchForm.date }">
+      {{ searchForm.date || formatDate(today) }}
+    </span>
+    <input ref="dateRef" type="date" class="hidden_date" @change="onDateChange" />
+  </div>
+</div>
+            <div class="search_field">
+              <label>카테고리</label>
+              <input v-model="searchForm.storeCategory" type="text" class="form_input" placeholder="카테고리명" />
             </div>
+            <div class="search_field">
+              <label>이름</label>
+              <input v-model="searchForm.name" type="text" class="form_input" />
             </div>
-        </div>
-        <div class="search_field">
-            <label>이름</label>
-            <input v-model="searchForm.name" type="text" class="form_input" />
-        </div>
-        <button class="search_btn" @click="handleSearch">검색</button>
-    </div>
+            <button class="search_btn" @click="handleSearch">검색</button>
+          </div>
         </div>
 
         <!-- 테이블 -->
@@ -203,56 +184,61 @@ onMounted(fetchStoreList)
 
         <!-- 페이지네이션 -->
         <div class="pagination">
-          <button @click="currentPage > 1 && currentPage--">◀</button>
-          <button v-for="p in totalPages" :key="p" :class="{ active: currentPage === p }" @click="currentPage = p">{{ p }}</button>
-          <button @click="currentPage < totalPages && currentPage++">▶</button>
-        </div>
+        <button :disabled="currentPage === 1" @click="currentPage--; fetchStoreList()">◀</button>
+        <button
+          v-for="p in totalPages"
+          :key="p"
+          :class="{ active: currentPage === p }"
+          @click="currentPage = p; fetchStoreList()"
+        >{{ p }}</button>
+        <button :disabled="currentPage >= totalPages" @click="currentPage++; fetchStoreList()">▶</button>
+      </div>
       </div>
     </div>
 
-        <!-- 가게 상세 모달 -->
+    <!-- 가게 상세 모달 -->
     <div v-if="showDetailModal && selectedStore" class="modal_overlay" @click.self="closeDetail">
-    <div class="modal">
+      <div class="modal">
         <div class="modal_header">
-        <span class="modal_header_title">가게 상세 정보 모달</span>
-        <button class="modal_close" @click="closeDetail">✕</button>
+          <span class="modal_header_title">가게 상세 정보 모달</span>
+          <button class="modal_close" @click="closeDetail">✕</button>
         </div>
         <div class="modal_body" v-if="!detailLoading">
-        <div class="info_row"><span class="info_label">가게명</span><span class="info_value">{{ selectedStore.storeName }}</span></div>
-        <div class="info_row"><span class="info_label">대표자명</span><span class="info_value">{{ selectedStore.ownerName }}</span></div>
-        <div class="info_row"><span class="info_label">카테고리</span><span class="info_value">{{ selectedStore.category ?? '-' }}</span></div>
-        <div class="info_row"><span class="info_label">주소</span><span class="info_value">{{ selectedStore.location }} {{ selectedStore.detailLocation }}</span></div>
-        <div class="info_row"><span class="info_label">전화번호</span><span class="info_value">{{ selectedStore.storeTel }}</span></div>
-        <div class="info_row"><span class="info_label">가게 등록일</span><span class="info_value">{{ formatCreatedAt(selectedStore.createdAt) }}</span></div>
-        <div class="info_row">
+          <div class="info_row"><span class="info_label">가게명</span><span class="info_value">{{ selectedStore.storeName }}</span></div>
+          <div class="info_row"><span class="info_label">대표자명</span><span class="info_value">{{ selectedStore.ownerName }}</span></div>
+          <div class="info_row"><span class="info_label">카테고리</span><span class="info_value">{{ selectedStore.category ?? '-' }}</span></div>
+          <div class="info_row"><span class="info_label">주소</span><span class="info_value">{{ selectedStore.location }} {{ selectedStore.detailLocation }}</span></div>
+          <div class="info_row"><span class="info_label">전화번호</span><span class="info_value">{{ selectedStore.storeTel }}</span></div>
+          <div class="info_row"><span class="info_label">가게 등록일</span><span class="info_value">{{ formatCreatedAt(selectedStore.createdAt) }}</span></div>
+          <div class="info_row">
             <span class="info_label">영업 상태</span>
             <span :class="['state_badge_pill', stateBadgeClass(selectedStore.state)]">{{ stateLabel(selectedStore.state) }}</span>
-        </div>
+          </div>
         </div>
 
-        <!-- 통계 (항상 표시, 영업중 아닐 때는 0) -->
+        <!-- 통계 -->
         <div class="stats_bottom" v-if="!detailLoading">
-        <div class="stat_card_item">
+          <div class="stat_card_item">
             <span class="stat_card_label">주문 수</span>
             <span class="stat_card_value">{{ (selectedStore.orderCount ?? 0).toLocaleString() }}</span>
-        </div>
-        <div class="stat_card_item">
+          </div>
+          <div class="stat_card_item">
             <span class="stat_card_label">리뷰 수</span>
             <span class="stat_card_value">{{ selectedStore.ratingCount ?? 0 }}</span>
-        </div>
-        <div class="stat_card_item">
+          </div>
+          <div class="stat_card_item">
             <span class="stat_card_label">평균 평점</span>
-            
             <span class="stat_card_value">
-                <img src="@/assets/star.png" alt="star" class="star_img" />
-                 {{ selectedStore.ratingAvg ?? 0 }}</span>
-        </div>
+              <img src="@/assets/star.png" alt="star" class="star_img" />
+              {{ selectedStore.ratingAvg ?? 0 }}
+            </span>
+          </div>
         </div>
 
         <div class="modal_body" v-if="detailLoading">
-        <p style="text-align:center; color:#aaa; padding: 20px 0;">불러오는 중...</p>
+          <p style="text-align:center; color:#aaa; padding: 20px 0;">불러오는 중...</p>
         </div>
-    </div>
+      </div>
     </div>
   </div>
 </template>
@@ -290,12 +276,14 @@ onMounted(fetchStoreList)
 .clickable_row { cursor: pointer; }
 .clickable_row:hover { background: #fafafa; }
 .state_badge_pill { border-radius: 150px; padding: 3px 12px; font-size: 12px; font-weight: 700; white-space: nowrap; }
-.badge_ready { background: #fff3d6; color: #b07800; border-radius: 15px; padding: 3px 12px; font-size: 12px; font-weight: 700; white-space: nowrap;}
+.badge_ready { background: #fff3d6; color: #b07800; border-radius: 15px; padding: 3px 12px; font-size: 12px; font-weight: 700; white-space: nowrap; }
 .badge_open { background: #e8f5e9; color: #2e7d32; border-radius: 15px; padding: 3px 12px; font-size: 12px; font-weight: 700; white-space: nowrap; }
 .pagination { display: flex; justify-content: center; align-items: center; gap: 6px; padding: 8px 0; }
 .pagination button { background: none; border: none; font-size: 13px; color: #666; cursor: pointer; padding: 4px 8px; border-radius: 4px; }
 .pagination button.active { font-weight: 700; color: #cc1f1f; }
 .pagination button:hover { background: #f0f0f0; }
+.pagination button:disabled { color: #ccc; cursor: default; }
+.pagination button:disabled:hover { background: none; }
 .modal_overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); display: flex; align-items: center; justify-content: center; z-index: 100; }
 .modal { background: #fff; border-radius: 14px; width: 490px; box-shadow: 0 8px 32px rgba(0,0,0,0.18); overflow: visible; }
 .modal_header { display: flex; align-items: center; justify-content: space-between; padding: 20px 24px 16px; border-bottom: 1px solid #eee; }
@@ -306,22 +294,9 @@ onMounted(fetchStoreList)
 .info_row { display: flex; align-items: center; gap: 16px; }
 .info_label { width: 100px; font-size: 13px; font-weight: 600; color: #555; flex-shrink: 0; }
 .info_value { font-size: 13px; color: #222; }
-.divider { height: 1px; background: #eee; margin: 4px 0; }
-.stats_row { display: flex; gap: 12px; }
-.stat_item { flex: 1; background: #f5f5f5; border-radius: 8px; padding: 12px; text-align: center; }
-.stat_label { display: block; font-size: 11px; color: #888; margin-bottom: 6px; font-weight: 500; }
-.stat_value { font-size: 16px; font-weight: 700; color: #222; }
-.modal_btns { display: flex; gap: 10px; justify-content: flex-end; padding: 0 24px 20px; }
-.dropdown_wrap { position: relative; }
-.dropdown_btn { background: #fff; border: 1px solid #ddd; border-radius: 6px; padding: 7px 12px; font-size: 13px; color: #333; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 8px; min-width: 80px; }
-.dropdown_btn:hover { border-color: #aaa; }
-.dropdown_arrow { font-size: 10px; color: #999; }
-.dropdown_menu { position: absolute; top: calc(100% + 4px); left: 0; background: #fff; border: 1px solid #ddd; border-radius: 6px; min-width: 80px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); z-index: 20; overflow: hidden; }
-.dropdown_item { display: block; width: 100%; padding: 9px 14px; font-size: 13px; color: #333; background: none; border: none; text-align: left; cursor: pointer; }
-.dropdown_item:hover { background: #f5f5f5; }
 .stats_bottom { display: flex; gap: 12px; padding: 0 24px 16px; }
 .stat_card_item { flex: 1; border: 1px solid #e0e0e0; border-radius: 30px; padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; }
 .stat_card_label { font-size: 12px; color: #888; font-weight: 500; }
 .stat_card_value { font-size: 15px; font-weight: 700; color: #222; display: flex; align-items: center; gap: 4px; }
-.star_img {width: 16px; height: 16px; }
+.star_img { width: 16px; height: 16px; }
 </style>

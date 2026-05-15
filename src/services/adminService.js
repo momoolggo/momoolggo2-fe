@@ -216,8 +216,8 @@ class AdminService {
         return res.data
     }
 
-    async getStoreList(page = 0) {
-        const res = await axios.get(`${this.#url}/store/list`, { params: { page } })
+    async getStoreList(params = {}) {
+        const res = await axios.get(`${this.#url}/store`, { params })
         return res.data
     }
 
@@ -235,6 +235,11 @@ class AdminService {
         const res = await axios.get(`${this.#url}/review`, { params: { page, size } })
         return res.data
     }
+
+    async getChartStats(period = 'weekly', metric = 'memberCount') {
+        const res = await axios.get(`${this.#url}/dashboard/chart`, { params: { period, metric } })
+        return res.data
+      }
 
 
 

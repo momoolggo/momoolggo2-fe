@@ -146,12 +146,11 @@ const openDetail = async (item) => {
       ...item,
       periodStart: '2026-04-06',
       periodEnd: '2026-04-12',
-      netAmount: item.netAmount ?? 1300000,
       orders: [
-        { orderNo: '000001A', datetime: '2026-04-10 15:26PM', menu: '파스타 외 2', total: 36000, fee: 1500 },
-        { orderNo: '000001A', datetime: '2026-04-08 15:26PM', menu: '피자 외 3', total: 36000, fee: 1500 },
-        { orderNo: '000001A', datetime: '2026-04-07 15:26PM', menu: '파스타 외 2', total: 36000, fee: 1500 },
-        { orderNo: '000001A', datetime: '2026-04-06 12:35PM', menu: '피자 외 1', total: 36000, fee: 1500 },
+        { orderNo: '000001A', datetime: '2026-04-10 15:26PM', menu: '파스타 외 2', total: 36000 },
+        { orderNo: '000002A', datetime: '2026-04-08 15:26PM', menu: '피자 외 3', total: 36000 },
+        { orderNo: '000003A', datetime: '2026-04-07 15:26PM', menu: '파스타 외 2', total: 36000 },
+        { orderNo: '000004A', datetime: '2026-04-06 12:35PM', menu: '피자 외 1', total: 36000 },
       ]
     }
   }
@@ -369,7 +368,7 @@ const handleSearch = () => {
           <button class="modal_close" @click="closeDetail">✕</button>
         </div>
 
-        <!-- 피그마 스타일 모달 카드 -->
+        <!-- 모달 요약 카드 -->
         <div class="modal_summary">
           <div class="modal_info_card">
             <div class="modal_icon_area blue_icon_area">
@@ -394,8 +393,7 @@ const handleSearch = () => {
                 <th>주문 번호</th>
                 <th>일시</th>
                 <th>메뉴</th>
-                <th>총 결제액</th>
-                <th>수수료</th>
+                <th>결제금액</th>
               </tr>
             </thead>
             <tbody>
@@ -405,14 +403,29 @@ const handleSearch = () => {
                   <td>{{ order.datetime }}</td>
                   <td>{{ order.menu }}</td>
                   <td>₩{{ order.total?.toLocaleString() }}</td>
-                  <td><span class="fee_text">수수료(5%)<br />{{ order.fee?.toLocaleString() }}₩</span></td>
                 </tr>
               </template>
               <tr v-else>
-                <td colspan="5" class="empty_td">주문 내역이 없습니다.</td>
+                <td colspan="4" class="empty_td">주문 내역이 없습니다.</td>
               </tr>
             </tbody>
           </table>
+        </div>
+
+        <!-- 합계 정보 -->
+        <div class="modal_total_wrap">
+          <div class="modal_total_row">
+            <span class="total_label">총 매출</span>
+            <span class="total_value">{{ formatMoney(selectedSettlement.grossAmount) }}</span>
+          </div>
+          <div class="modal_total_row">
+            <span class="total_label">수수료 (5%)</span>
+            <span class="total_value fee_color">- {{ formatMoney(selectedSettlement.feeAmount) }}</span>
+          </div>
+          <div class="modal_total_row total_final">
+            <span class="total_label">실 지급액</span>
+            <span class="total_value final_color">{{ formatMoney(selectedSettlement.netAmount) }}</span>
+          </div>
         </div>
 
         <div v-if="selectedSettlement.status === 'PENDING'" class="modal_actions">
@@ -430,8 +443,6 @@ const handleSearch = () => {
 .content { padding: 36px 60px; display: flex; flex-direction: column; gap: 20px; }
 .page_title { font-size: 20px; font-weight: 700; color: #222; margin: 0; }
 .section_title { font-size: 20px; font-weight: 700; color: #222; margin-bottom: -8px; margin-top: 10px; }
-
-/* 요약 카드 */
 .summary_grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
 .summary_card { border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 2px 10px rgba(0,0,0,0.08); background: #fff; margin-bottom: 20px; }
 .card_main { display: flex; align-items: stretch; flex: 1; }
@@ -450,8 +461,6 @@ const handleSearch = () => {
 .blue_sub { background: #ddeeff; color: #2c6fbb; }
 .green_sub { background: #ddf5dd; color: #2e7d32; }
 .yellow_sub { background: #fff3d6; color: #b07800; }
-
-/* 검색 */
 .search_box { background: #fff; border-radius: 10px; padding: 20px 24px; }
 .search_row { display: flex; align-items: flex-end; gap: 16px; flex-wrap: wrap; }
 .search_field { display: flex; flex-direction: column; gap: 6px; }
@@ -469,8 +478,6 @@ const handleSearch = () => {
 .keyword_input { border: 1px solid #ddd; border-radius: 6px; padding: 7px 10px; font-size: 13px; color: #333; outline: none; min-width: 160px; }
 .search_btn { background: #9b1b1b; color: #fff; border: none; border-radius: 6px; padding: 8px 20px; font-size: 13px; font-weight: 600; cursor: pointer; height: 34px; align-self: flex-end; }
 .search_btn:hover { background: #7f1515; }
-
-/* 테이블 */
 .table_wrap { background: #fff; border-radius: 10px; overflow: hidden; }
 .settlement_table { width: 100%; border-collapse: collapse; font-size: 13px; }
 .settlement_table thead tr { background: #e8e8e8; }
@@ -493,14 +500,10 @@ const handleSearch = () => {
 .badge_complete { background: #e0e0e0; color: #555; }
 .badge_pending { background: #f5a623; color: #fff; }
 .badge_hold { background: #cc1f1f; color: #fff; }
-
-/* 페이지네이션 */
 .pagination { display: flex; justify-content: center; align-items: center; gap: 6px; padding: 8px 0; }
 .pagination button { background: none; border: none; font-size: 13px; color: #666; cursor: pointer; padding: 4px 8px; border-radius: 4px; }
 .pagination button.active { font-weight: 700; color: #cc1f1f; }
 .pagination button:hover { background: #f0f0f0; }
-
-/* 모달 */
 .modal_overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); display: flex; align-items: center; justify-content: center; z-index: 100; }
 .modal { background: #fff; border-radius: 14px; width: 700px; max-height: 85vh; overflow-y: auto; box-shadow: 0 8px 32px rgba(0,0,0,0.18); display: flex; flex-direction: column; }
 .modal_header { display: flex; align-items: center; justify-content: space-between; padding: 24px 28px 16px; border-bottom: 1px solid #eee; }
@@ -508,49 +511,26 @@ const handleSearch = () => {
 .modal_title { font-size: 18px; font-weight: 700; color: #222; }
 .modal_close { background: none; border: none; font-size: 18px; color: #999; cursor: pointer; padding: 4px 8px; }
 .modal_close:hover { color: #333; }
-
-/* 모달 요약 카드 - 피그마 스타일 */
 .modal_summary { display: flex; gap: 12px; padding: 20px 28px; }
-
-.modal_info_card {
-  display: flex;
-  align-items: stretch;
-  border-radius: 10px;
-  overflow: hidden;
-  border: 1px solid #eee;
-  flex: 1;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
-}
-
-.modal_icon_area {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 10px 16px;
-  flex-shrink: 0;
-}
-
+.modal_info_card { display: flex; align-items: stretch; border-radius: 10px; overflow: hidden; border: 1px solid #eee; flex: 1; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+.modal_icon_area { display: flex; align-items: center; justify-content: center; padding: 10px 16px; flex-shrink: 0; }
 .blue_icon_area { background: #4a90d9; }
 .green_icon_area { background: #4caf50; }
-
 .modal_icon_img { width: 28px; height: auto; }
-
-.modal_card_text {
-  display: flex;
-  align-items: center;
-  padding: 0 18px;
-  font-size: 13px;
-  font-weight: 600;
-  color: #333;
-}
-
+.modal_card_text { display: flex; align-items: center; padding: 0 18px; font-size: 13px; font-weight: 600; color: #333; }
 .modal_sub_title { font-size: 14px; font-weight: 700; color: #222; padding: 4px 28px 10px; }
-.modal_table_wrap { padding: 0 28px 30px; overflow-x: auto; }
+.modal_table_wrap { padding: 0 28px; overflow-x: auto; }
 .modal_table { width: 100%; border-collapse: collapse; font-size: 13px; }
 .modal_table thead tr { background: #f0f0f0; }
 .modal_table th { padding: 10px 8px; text-align: center; font-weight: 600; color: #444; border-bottom: 1px solid #ddd; }
 .modal_table td { padding: 10px 8px; text-align: center; color: #333; border-bottom: 1px solid #f5f5f5; }
-.fee_text { font-size: 11px; color: #888; line-height: 1.5; }
+.modal_total_wrap { margin: 16px 28px 0; padding: 16px 0 20px; border-top: 1px solid #eee; display: flex; flex-direction: column; gap: 10px; }
+.modal_total_row { display: flex; justify-content: space-between; align-items: center; }
+.total_label { font-size: 13px; color: #666; font-weight: 500; }
+.total_value { font-size: 13px; font-weight: 600; color: #333; }
+.fee_color { color: #cc1f1f; }
+.total_final { border-top: 1px solid #eee; padding-top: 10px; margin-top: 4px; }
+.final_color { font-size: 15px; font-weight: 800; color: #222; }
 .modal_actions { display: flex; gap: 10px; padding: 20px 28px; justify-content: flex-end; }
 .action_hold { padding: 9px 24px; border: 1px solid #ddd; background: #fff; border-radius: 8px; font-size: 13px; color: #666; cursor: pointer; font-weight: 500; }
 .action_hold:hover { background: #f5f5f5; }

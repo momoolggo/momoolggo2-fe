@@ -71,12 +71,14 @@ const openCancelModal = () => {
   isCancelModalOpen.value = true
 }
 
-const closeCancelModal = () => {
-  if(isCanceling.value) return
-  isCancelModalOpen.value = false
-  selectedCancelReason.value = ''
-  customCancelReason.value = ''
+const closeOptionModal = () => {
+  showOptionModal.value = false
+  showOptionForm.value = false
+  selectedMenu.value = null
+  optionCategories.value = []
+  resetOptionForm()
 }
+
 
 const cancelOrder = async () => {
   const reason = selectedCancelReason.value === '기타' 

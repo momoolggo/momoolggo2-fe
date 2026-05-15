@@ -1,5 +1,5 @@
 <script setup>
-import { ref, reactive, computed, onMounted, watch} from 'vue'
+import { ref, reactive, computed, onMounted, watch } from 'vue'
 import ownerService from '@/services/ownerService'
 import { useStore } from '@/stores/useStore'
 import { showAlert, showConfirm } from '@/composables/useAlert'
@@ -12,15 +12,20 @@ const getImageUrl = (path) => {
   return `${path}`
 }
 
-// ── 상태
 const menuList = ref([])
 const categories = ref([])
 const loading = ref(false)
 
-// 모달 상태
 const showMenuModal = ref(false)
 const showCategoryModal = ref(false)
+const showOptionModal = ref(false)
+const showOptionForm = ref(false)
+
+
 const editMode = ref(false)
+const selectedMenu = ref(null)
+const optionCategories = ref([])
+const editingOptionCategory = ref(null)
 
 const menuForm = reactive({
   menuId: null,
@@ -28,8 +33,8 @@ const menuForm = reactive({
   name: '',
   menuInfo: '',
   price: '',
-  menuPic: '',      // 서버 경로만 저장
-  previewUrl: '',   // 화면 미리보기용 (blob URL)
+  menuPic: '',
+  previewUrl: '',
 })
 
 const categoryForm = reactive({
@@ -38,30 +43,44 @@ const categoryForm = reactive({
   editMode: false,
 })
 
-// ── 카테고리별 메뉴 그룹
+const optionCategoryForm = reactive({
+  optionCategoryNo: null,
+  optionCategoryName: '',
+  isRequired: true,
+  maxSelect: 1,
+})
+
+const optionForms = ref([{ name: '', price: 0, soldOut: 'N' }])
+
 const groupedMenus = computed(() => {
   const groups = []
+
   for (const cat of categories.value) {
-    const catId = cat.categoryId
-    const menus = menuList.value.filter(m => Number(m.categoryId) === Number(catId))
+    const menus = menuList.value.filter(
+      (menu) => Number(menu.categoryId) === Number(cat.categoryId),
+    )
+
     groups.push({ ...cat, menus })
   }
+
   return groups
 })
 
-// ── 데이터 로드
 const loadAll = async () => {
   if (!storeInfo.myStoreId) return
+
   loading.value = true
+
   try {
     const [menuRes, catRes] = await Promise.all([
       ownerService.getMenus(storeInfo.myStoreId),
       ownerService.getCategories(storeInfo.myStoreId),
     ])
+
     menuList.value = menuRes.resultData || []
     categories.value = catRes.resultData || []
-  } catch (e) {
-    console.error('로드 실패:', e)
+  } catch (error) {
+    console.error('로드 실패:', error)
     menuList.value = []
     categories.value = []
   } finally {
@@ -70,12 +89,9 @@ const loadAll = async () => {
 }
 
 onMounted(loadAll)
-
 watch(() => storeInfo.myStoreId, loadAll)
 
-// ══════════════════════════════════════
-//  메뉴 추가/수정 모달
-// ══════════════════════════════════════
+// 메뉴 추가 / 수정
 const openAddMenu = () => {
   menuForm.menuId = null
   menuForm.categoryId = categories.value.length ? categories.value[0].categoryId : null
@@ -100,30 +116,42 @@ const openEditMenu = (item) => {
   showMenuModal.value = true
 }
 
-// 파일 업로드 핸들러
-const handleImageUpload = async (e) => {
-  const file = e.target.files[0]
+const handleImageUpload = async (event) => {
+  const file = event.target.files[0]
   if (!file) return
 
-  // 미리보기용 blob URL (화면에만 사용)
   menuForm.previewUrl = URL.createObjectURL(file)
 
-  // 서버에 업로드 → 실제 경로 받아서 저장
   try {
     const formData = new FormData()
     formData.append('file', file)
+
     const res = await ownerService.uploadMenuImage(formData)
-    menuForm.menuPic = res.resultData  // /uploads/menu/파일명.jpg
+    menuForm.menuPic = res.resultData
   } catch {
-    await showAlert('이미지 업로드에 실패했습니다.', { title: '업로드 오류', type: 'error' })
+    await showAlert('이미지 업로드에 실패했습니다.', {
+      title: '업로드 오류',
+      type: 'error',
+    })
     menuForm.previewUrl = ''
   }
 }
 
 const saveMenu = async () => {
-  if (!menuForm.name) { await showAlert('메뉴명을 입력해 주세요.', { title: '입력 필요', type: 'warning' }); return }
-  if (!menuForm.price) { await showAlert('가격을 입력해 주세요.', { title: '입력 필요', type: 'warning' }); return }
-  if (!menuForm.categoryId) { await showAlert('카테고리를 선택해 주세요.', { title: '입력 필요', type: 'warning' }); return }
+  if (!menuForm.name) {
+    await showAlert('메뉴명을 입력해 주세요.', { title: '입력 필요', type: 'warning' })
+    return
+  }
+
+  if (!menuForm.price) {
+    await showAlert('가격을 입력해 주세요.', { title: '입력 필요', type: 'warning' })
+    return
+  }
+
+  if (!menuForm.categoryId) {
+    await showAlert('카테고리를 선택해 주세요.', { title: '입력 필요', type: 'warning' })
+    return
+  }
 
   try {
     if (editMode.value) {
@@ -145,6 +173,7 @@ const saveMenu = async () => {
         menuPic: menuForm.menuPic,
       })
     }
+
     showMenuModal.value = false
     await loadAll()
   } catch {
@@ -153,8 +182,13 @@ const saveMenu = async () => {
 }
 
 const deleteMenu = async (menuId) => {
-  const ok = await showConfirm('이 메뉴를 삭제하시겠습니까?', { title: '메뉴 삭제', type: 'warning' })
+  const ok = await showConfirm('이 메뉴를 삭제하시겠습니까?', {
+    title: '메뉴 삭제',
+    type: 'warning',
+  })
+
   if (!ok) return
+
   try {
     await ownerService.deleteMenu(menuId)
     await loadAll()
@@ -163,9 +197,190 @@ const deleteMenu = async (menuId) => {
   }
 }
 
-// ══════════════════════════════════════
-//  카테고리 관리 모달
-// ══════════════════════════════════════
+// 옵션 관리
+const resetOptionForm = () => {
+  editingOptionCategory.value = null
+  optionCategoryForm.optionCategoryNo = null
+  optionCategoryForm.optionCategoryName = ''
+  optionCategoryForm.isRequired = true
+  optionCategoryForm.maxSelect = 1
+  optionForms.value = [{ name: '', price: 0, soldOut: 'N' }]
+}
+
+
+const openOptionModal = (menu) => {
+  selectedMenu.value = menu
+  optionCategories.value = menu.optionCategories || []
+  resetOptionForm()
+  showOptionForm.value = false
+  showOptionModal.value = true
+}
+
+const closeOptionModal = () => {
+  showOptionModal.value = false
+  selectedMenu.value = null
+  optionCategories.value = []
+  resetOptionForm()
+}
+
+const startAddOptionCategory = () => {
+  resetOptionForm()
+  showOptionForm.value = true
+}
+
+
+const startEditOptionCategory = (category) => {
+  editingOptionCategory.value = category
+  optionCategoryForm.optionCategoryNo = category.optionCategoryNo
+  optionCategoryForm.optionCategoryName = category.optionCategoryName
+  optionCategoryForm.isRequired = category.isRequired
+  optionCategoryForm.maxSelect = category.maxSelect
+
+  optionForms.value = category.options?.length
+    ? category.options.map((option) => ({
+        optionId: option.optionId,
+        name: option.name,
+        price: option.price || 0,
+        soldOut: option.soldOut || 'N',
+      }))
+    : [{ name: '', price: 0, soldOut: 'N' }]
+
+  showOptionForm.value = true
+}
+
+
+const addOptionRow = () => {
+  optionForms.value.push({ name: '', price: 0, soldOut: 'N' })
+}
+
+const removeOptionRow = async (index) => {
+  if (optionForms.value.length === 1) return
+
+  const option = optionForms.value[index]
+
+  if (option.optionId) {
+    const ok = await showConfirm('이 옵션을 삭제하시겠습니까?', {
+      title: '옵션 삭제',
+      type: 'warning',
+    })
+
+    if (!ok) return
+
+    try {
+      await ownerService.deleteOption(option.optionId)
+    } catch (error) {
+      console.error('옵션 삭제 실패:', error.response?.status, error.response?.data || error)
+      await showAlert('옵션 삭제에 실패했습니다.', { title: '오류', type: 'error' })
+      return
+    }
+  }
+
+  optionForms.value.splice(index, 1)
+}
+
+const saveOptions = async () => {
+  if (!selectedMenu.value) return
+
+  if (!optionCategoryForm.optionCategoryName.trim()) {
+    await showAlert('옵션 그룹명을 입력해 주세요.', {
+      title: '입력 필요',
+      type: 'warning',
+    })
+    return
+  }
+
+  const validOptions = optionForms.value.filter((option) => option.name.trim())
+
+  if (!validOptions.length) {
+    await showAlert('옵션을 1개 이상 입력해 주세요.', {
+      title: '입력 필요',
+      type: 'warning',
+    })
+    return
+  }
+
+  try {
+    if (optionCategoryForm.optionCategoryNo) {
+      await ownerService.updateOptionCategory(optionCategoryForm.optionCategoryNo, {
+        optionCategoryName: optionCategoryForm.optionCategoryName.trim(),
+        isRequired: optionCategoryForm.isRequired,
+        maxSelect: Number(optionCategoryForm.maxSelect),
+      })
+
+      await Promise.all(
+        validOptions.map((option) => {
+          const optionData = {
+            name: option.name.trim(),
+            price: Number(option.price) || 0,
+            soldOut: option.soldOut || 'N',
+          }
+
+          if (option.optionId) {
+            return ownerService.updateOption(option.optionId, optionData)
+          }
+
+          return ownerService.registerOption({
+            optionCategoryNo: optionCategoryForm.optionCategoryNo,
+            ...optionData,
+          })
+        }),
+      )
+    } else {
+      await ownerService.registerOptionCategory(selectedMenu.value.menuId, {
+        optionCategoryName: optionCategoryForm.optionCategoryName.trim(),
+        isRequired: optionCategoryForm.isRequired,
+        maxSelect: Number(optionCategoryForm.maxSelect),
+        options: validOptions.map((option) => ({
+          name: option.name.trim(),
+          price: Number(option.price) || 0,
+          soldOut: 'N',
+        })),
+      })
+    }
+
+    showOptionModal.value = false
+    await loadAll()
+  } catch (error) {
+    console.error('옵션 저장 실패:', error.response?.status, error.response?.data || error)
+
+    const message =
+      error.response?.data?.resultMessage ||
+      error.response?.data?.message ||
+      '옵션 저장에 실패했습니다.'
+
+    await showAlert(message, { title: '오류', type: 'error' })
+  }
+}
+
+const deleteOptionCategory = async (category) => {
+  const ok = await showConfirm('이 옵션 카테고리를 삭제하시겠습니까?', {
+    title: '옵션 카테고리 삭제',
+    type: 'warning',
+  })
+
+  if (!ok) return
+
+  try {
+    await ownerService.deleteOptionCategory(category.optionCategoryNo)
+    optionCategories.value = optionCategories.value.filter(
+      (item) => item.optionCategoryNo !== category.optionCategoryNo,
+    )
+
+    if (optionCategoryForm.optionCategoryNo === category.optionCategoryNo) {
+      resetOptionForm()
+    }
+
+    await loadAll()
+  } catch (error) {
+    console.error('옵션 카테고리 삭제 실패:', error.response?.status, error.response?.data || error)
+    await showAlert('옵션 카테고리 삭제에 실패했습니다.', {
+      title: '오류',
+      type: 'error',
+    })
+  }
+}
+
+// 카테고리 관리
 const openCategoryModal = () => {
   categoryForm.categoryId = null
   categoryForm.category = ''
@@ -186,13 +401,21 @@ const cancelEditCategory = () => {
 }
 
 const saveCategory = async () => {
-  if (!categoryForm.category.trim()) { await showAlert('카테고리명을 입력해 주세요.', { title: '입력 필요', type: 'warning' }); return }
+  if (!categoryForm.category.trim()) {
+    await showAlert('카테고리명을 입력해 주세요.', {
+      title: '입력 필요',
+      type: 'warning',
+    })
+    return
+  }
+
   try {
     if (categoryForm.editMode) {
       await ownerService.updateCategory(categoryForm.categoryId, categoryForm.category.trim())
     } else {
       await ownerService.addCategory(storeInfo.myStoreId, categoryForm.category.trim())
     }
+
     categoryForm.categoryId = null
     categoryForm.category = ''
     categoryForm.editMode = false
@@ -203,8 +426,13 @@ const saveCategory = async () => {
 }
 
 const deleteCategory = async (categoryId) => {
-  const ok = await showConfirm('이 카테고리와 포함된 메뉴가 모두 삭제됩니다. 계속하시겠습니까?', { title: '카테고리 삭제', type: 'warning' })
+  const ok = await showConfirm('이 카테고리와 포함된 메뉴가 모두 삭제됩니다. 계속하시겠습니까?', {
+    title: '카테고리 삭제',
+    type: 'warning',
+  })
+
   if (!ok) return
+
   try {
     await ownerService.deleteCategory(categoryId)
     await loadAll()
@@ -218,8 +446,6 @@ const formatPrice = (price) => Number(price).toLocaleString() + '원'
 
 <template>
   <div class="menu-manage">
-
-    <!-- 상단 탭 / 버튼 -->
     <div class="menu-topbar">
       <div class="tab-group">
         <span class="tab active">메뉴 관리</span>
@@ -228,10 +454,8 @@ const formatPrice = (price) => Number(price).toLocaleString() + '원'
       <button class="btn-add-menu" @click="openAddMenu">+ 메뉴 추가하기</button>
     </div>
 
-    <!-- 로딩 -->
     <div v-if="loading" class="state-msg">불러오는 중...</div>
 
-    <!-- 메뉴 목록 (카테고리별) -->
     <template v-else-if="groupedMenus.length">
       <div v-for="group in groupedMenus" :key="group.categoryId" class="category-group">
         <h3 class="category-title">{{ group.categoryName }}</h3>
@@ -243,12 +467,43 @@ const formatPrice = (price) => Number(price).toLocaleString() + '원'
             <div class="menu-name">{{ item.name }}</div>
             <div v-if="item.menuInfo" class="menu-desc">{{ item.menuInfo }}</div>
             <div class="menu-price">{{ formatPrice(item.price) }}</div>
+
+            <div v-if="item.optionCategories?.length" class="menu-options">
+              <div
+                v-for="category in item.optionCategories"
+                :key="category.optionCategoryNo"
+                class="option-category"
+              >
+                <div class="option-category-title">
+                  {{ category.optionCategoryName }}
+                  <span v-if="category.isRequired" class="required-badge">필수</span>
+                  <span v-else class="optional-badge">선택</span>
+                </div>
+
+                <div class="option-chip-list">
+                  <span
+                    v-for="option in category.options || []"
+                    :key="option.optionId"
+                    class="menu-option-chip"
+                    :class="{ soldout: option.soldOut === 'Y' }"
+                  >
+                    {{ option.name }}
+                    <template v-if="option.price">
+                      +{{ Number(option.price).toLocaleString() }}원
+                    </template>
+                    <template v-if="option.soldOut === 'Y'">품절</template>
+                  </span>
+                </div>
+              </div>
+            </div>
           </div>
+
           <div class="menu-right">
-            <!-- 수정된 부분: getImageUrl 적용 -->
             <img v-if="item.menuPic" :src="getImageUrl(item.menuPic)" class="menu-thumb" />
             <div v-else class="menu-thumb-empty">🍽️</div>
+
             <div class="menu-btns">
+              <button class="btn-sm btn-option" @click="openOptionModal(item)">옵션 관리</button>
               <button class="btn-sm btn-edit" @click="openEditMenu(item)">수정</button>
               <button class="btn-sm btn-del" @click="deleteMenu(item.menuId)">삭제</button>
             </div>
@@ -257,7 +512,6 @@ const formatPrice = (price) => Number(price).toLocaleString() + '원'
       </div>
     </template>
 
-    <!-- 완전 빈 상태 -->
     <div v-else class="state-msg">
       <p>등록된 메뉴가 없습니다.</p>
       <p class="sub">메뉴를 추가해 보세요!</p>
@@ -279,7 +533,11 @@ const formatPrice = (price) => Number(price).toLocaleString() + '원'
 
         <div class="field">
           <label>메뉴 설명</label>
-          <textarea v-model="menuForm.menuInfo" placeholder="메뉴에 대한 설명을 입력하세요" maxlength="100"></textarea>
+          <textarea
+            v-model="menuForm.menuInfo"
+            placeholder="메뉴에 대한 설명을 입력하세요"
+            maxlength="100"
+          ></textarea>
           <span class="cnt">{{ menuForm.menuInfo.length }}/100</span>
         </div>
 
@@ -304,8 +562,7 @@ const formatPrice = (price) => Number(price).toLocaleString() + '원'
         <div class="field">
           <label>메뉴 사진</label>
           <input type="file" accept="image/*" @change="handleImageUpload" />
-          <img v-if="menuForm.previewUrl" :src="menuForm.previewUrl"
-               style="width:100px; height:100px; object-fit:cover; margin-top:8px; border-radius:8px;" />
+          <img v-if="menuForm.previewUrl" :src="menuForm.previewUrl" class="menu-preview" />
         </div>
 
         <div class="modal-foot">
@@ -345,12 +602,122 @@ const formatPrice = (price) => Number(price).toLocaleString() + '원'
           <button class="btn-cat-save" @click="saveCategory">
             {{ categoryForm.editMode ? '수정' : '추가' }}
           </button>
-          <button v-if="categoryForm.editMode" class="btn-cat-cancel" @click="cancelEditCategory">취소</button>
+          <button v-if="categoryForm.editMode" class="btn-cat-cancel" @click="cancelEditCategory">
+            취소
+          </button>
         </div>
       </div>
     </div>
 
+    <!-- 옵션 관리 모달 -->
+  <!-- 옵션 관리 모달 -->
+<div v-if="showOptionModal" class="overlay" @click.self="closeOptionModal">
+  <div class="modal option-modal" @keydown.stop>
+    <div class="modal-head">
+      <h3>옵션 관리</h3>
+      <button class="modal-x" @click="closeOptionModal">✕</button>
+    </div>
+
+    <!-- 등록된 옵션 카테고리 목록 -->
+    <div class="option-category-manage-list">
+      <div v-if="!optionCategories.length" class="option-empty">
+        등록된 옵션 카테고리가 없습니다.
+      </div>
+
+      <div
+        v-for="category in optionCategories"
+        :key="category.optionCategoryNo"
+        class="option-manage-card"
+        :class="{ active: optionCategoryForm.optionCategoryNo === category.optionCategoryNo }"
+      >
+        <div class="option-manage-main">
+          <div class="option-manage-title">
+            {{ category.optionCategoryName }}
+            <span v-if="category.isRequired" class="required-badge">필수</span>
+            <span v-else class="optional-badge">선택</span>
+          </div>
+
+          <div class="option-chip-list">
+            <span
+              v-for="option in category.options || []"
+              :key="option.optionId"
+              class="menu-option-chip"
+            >
+              {{ option.name }}
+              <template v-if="option.price">
+                +{{ Number(option.price).toLocaleString() }}원
+              </template>
+            </span>
+          </div>
+        </div>
+
+        <div class="option-manage-actions">
+          <button class="btn-xs" @click="startEditOptionCategory(category)">수정</button>
+          <button class="btn-xs btn-xs-del" @click="deleteOptionCategory(category)">삭제</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 새 옵션 카테고리 추가 버튼 -->
+    <button class="btn-add-option-category" @click="startAddOptionCategory">
+      + 새 옵션 카테고리 추가
+    </button>
+
+    <!-- 추가/수정 폼: 버튼을 눌렀을 때만 보임 -->
+    <template v-if="showOptionForm">
+      <div class="option-form-divider"></div>
+
+      <div class="field">
+        <label>옵션 그룹명</label>
+        <input
+          v-model="optionCategoryForm.optionCategoryName"
+          type="text"
+          placeholder="예: 사이즈, 맵기, 토핑"
+          maxlength="30"
+        />
+      </div>
+
+      <div class="field">
+        <label>필수 선택 여부</label>
+        <select v-model="optionCategoryForm.isRequired">
+          <option :value="true">필수</option>
+          <option :value="false">선택</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>최대 선택 개수</label>
+        <input v-model="optionCategoryForm.maxSelect" type="number" min="1" />
+      </div>
+
+      <div class="option-form-list">
+        <div
+          v-for="(option, index) in optionForms"
+          :key="option.optionId || index"
+          class="option-form-row"
+        >
+          <input v-model="option.name" type="text" placeholder="옵션명" maxlength="30" />
+          <input v-model="option.price" type="number" placeholder="추가 금액" />
+          <button type="button" class="btn-remove-option" @click="removeOptionRow(index)">
+            ✕
+          </button>
+        </div>
+      </div>
+
+      <button type="button" class="btn-add-option-row" @click="addOptionRow">
+        + 옵션 항목 추가
+      </button>
+
+      <div class="modal-foot">
+        <button class="btn-cancel" @click="showOptionForm = false">닫기</button>
+        <button class="btn-save" @click="saveOptions">
+          {{ optionCategoryForm.optionCategoryNo ? '수정 저장' : '추가 저장' }}
+        </button>
+      </div>
+    </template>
   </div>
+</div>
+</div>
 </template>
 
 <style scoped>
@@ -358,6 +725,7 @@ const formatPrice = (price) => Number(price).toLocaleString() + '원'
   max-width: 900px;
   margin: 0 auto;
 }
+
 .menu-topbar {
   display: flex;
   align-items: center;
@@ -366,10 +734,12 @@ const formatPrice = (price) => Number(price).toLocaleString() + '원'
   border-bottom: 2px solid #eee;
   padding-bottom: 14px;
 }
+
 .tab-group {
   display: flex;
   gap: 8px;
 }
+
 .tab {
   padding: 8px 18px;
   font-size: 14px;
@@ -380,33 +750,39 @@ const formatPrice = (price) => Number(price).toLocaleString() + '원'
   color: #888;
   cursor: default;
 }
+
 .tab.active {
-  color: #A40C0B;
-  border-color: #A40C0B;
+  color: #a40c0b;
+  border-color: #a40c0b;
   background: #fff4f4;
 }
+
 .tab-btn {
   cursor: pointer;
   border: 1.5px solid #e5e3dc;
   transition: all 0.15s;
 }
+
 .tab-btn:hover {
-  border-color: #A40C0B;
-  color: #A40C0B;
+  border-color: #a40c0b;
+  color: #a40c0b;
 }
+
 .btn-add-menu {
   padding: 10px 22px;
-  background: #A40C0B;
+  background: #a40c0b;
   color: #fff;
   border: none;
   border-radius: 10px;
   font-size: 14px;
   font-weight: 700;
   cursor: pointer;
-  transition: background 0.15s;
 }
-.btn-add-menu:hover { background: #8a0a09; }
-.category-group { margin-bottom: 32px; }
+
+.category-group {
+  margin-bottom: 32px;
+}
+
 .category-title {
   font-size: 16px;
   font-weight: 700;
@@ -415,6 +791,7 @@ const formatPrice = (price) => Number(price).toLocaleString() + '원'
   border-bottom: 1.5px solid #eee;
   margin-bottom: 12px;
 }
+
 .menu-row {
   display: flex;
   align-items: center;
@@ -424,21 +801,85 @@ const formatPrice = (price) => Number(price).toLocaleString() + '원'
   border: 1.5px solid #eee;
   border-radius: 12px;
   margin-bottom: 10px;
-  transition: box-shadow 0.15s;
 }
-.menu-row:hover { box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
-.menu-text { flex: 1; min-width: 0; }
-.menu-name { font-size: 16px; font-weight: 700; color: #1a1a1a; margin-bottom: 4px; }
+
+.menu-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.menu-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin-bottom: 4px;
+}
+
 .menu-desc {
   font-size: 13px;
   color: #888;
   margin-bottom: 6px;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
 }
-.menu-price { font-size: 15px; font-weight: 700; color: #A40C0B; }
+
+.menu-price {
+  font-size: 15px;
+  font-weight: 700;
+  color: #a40c0b;
+}
+
+.menu-options {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.option-category {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.option-category-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: #555;
+}
+
+.required-badge,
+.optional-badge {
+  margin-left: 4px;
+  padding: 2px 6px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.required-badge {
+  background: #fff4f4;
+  color: #a40c0b;
+}
+
+.optional-badge {
+  background: #f2f2f2;
+  color: #777;
+}
+
+.option-chip-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.menu-option-chip {
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: #f7f7f7;
+  border: 1px solid #e5e3dc;
+  color: #666;
+  font-size: 12px;
+}
+
 .menu-right {
   display: flex;
   align-items: center;
@@ -446,43 +887,89 @@ const formatPrice = (price) => Number(price).toLocaleString() + '원'
   margin-left: 20px;
   flex-shrink: 0;
 }
-.menu-thumb { width: 72px; height: 72px; border-radius: 10px; object-fit: cover; }
+
+.menu-thumb,
 .menu-thumb-empty {
   width: 72px;
   height: 72px;
   border-radius: 10px;
+}
+
+.menu-thumb {
+  object-fit: cover;
+}
+
+.menu-thumb-empty {
   background: #f5f5f5;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 28px;
 }
-.menu-btns { display: flex; flex-direction: column; gap: 6px; }
+
+.menu-btns {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
 .btn-sm {
   padding: 6px 14px;
   border-radius: 6px;
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.15s;
   white-space: nowrap;
 }
-.btn-edit { background: #fff; border: 1.5px solid #ddd; color: #555; }
-.btn-edit:hover { border-color: #A40C0B; color: #A40C0B; }
-.btn-del { background: #fff; border: 1.5px solid #A40C0B; color: #A40C0B; }
-.btn-del:hover { background: #A40C0B; color: #fff; }
-.state-msg { text-align: center; padding: 60px 0; color: #888; font-size: 15px; }
-.state-msg .sub { font-size: 13px; color: #bbb; margin-top: 8px; }
-.empty-cat { text-align: center; color: #bbb; padding: 20px 0; font-size: 13px; }
+
+.btn-option {
+  background: #fff;
+  border: 1.5px solid #4a80da;
+  color: #4a80da;
+}
+
+.btn-edit {
+  background: #fff;
+  border: 1.5px solid #ddd;
+  color: #555;
+}
+
+.btn-del {
+  background: #fff;
+  border: 1.5px solid #a40c0b;
+  color: #a40c0b;
+}
+
+.state-msg {
+  text-align: center;
+  padding: 60px 0;
+  color: #888;
+  font-size: 15px;
+}
+
+.state-msg .sub {
+  font-size: 13px;
+  color: #bbb;
+  margin-top: 8px;
+}
+
+.empty-cat {
+  text-align: center;
+  color: #bbb;
+  padding: 20px 0;
+  font-size: 13px;
+}
+
 .overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.4);
+  background: rgba(0, 0, 0, 0.4);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 9999;
 }
+
 .modal {
   background: #fff;
   border-radius: 18px;
@@ -494,11 +981,38 @@ const formatPrice = (price) => Number(price).toLocaleString() + '원'
   flex-direction: column;
   gap: 16px;
 }
-.modal-head { display: flex; align-items: center; justify-content: space-between; }
-.modal-head h3 { font-size: 18px; font-weight: 700; }
-.modal-x { background: none; border: none; font-size: 20px; cursor: pointer; color: #888; }
-.field { display: flex; flex-direction: column; gap: 6px; }
-.field label { font-size: 13px; font-weight: 600; color: #444; }
+
+.modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.modal-head h3 {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.modal-x {
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  color: #888;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.field label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #444;
+}
+
 .field input,
 .field textarea,
 .field select {
@@ -510,42 +1024,75 @@ const formatPrice = (price) => Number(price).toLocaleString() + '원'
   outline: none;
   background: #fafafa;
   box-sizing: border-box;
-  transition: border-color 0.15s;
   font-family: inherit;
 }
-.field input:focus,
-.field textarea:focus,
-.field select:focus { border-color: #A40C0B; background: #fff; }
-.field textarea { height: 90px; resize: none; }
-.cnt { align-self: flex-end; font-size: 11px; color: #bbb; }
-.price-row { display: flex; align-items: center; gap: 8px; }
-.price-row input { flex: 1; }
-.unit { font-size: 14px; font-weight: 600; color: #444; }
-.modal-foot { display: flex; gap: 10px; margin-top: 6px; }
-.btn-cancel {
+
+.field textarea {
+  height: 90px;
+  resize: none;
+}
+
+.cnt {
+  align-self: flex-end;
+  font-size: 11px;
+  color: #bbb;
+}
+
+.price-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.price-row input {
   flex: 1;
-  padding: 13px;
-  background: #f4f4f4;
-  border: none;
-  border-radius: 10px;
+}
+
+.unit {
   font-size: 14px;
   font-weight: 600;
-  cursor: pointer;
+  color: #444;
 }
-.btn-cancel:hover { background: #e8e8e8; }
+
+.modal-foot {
+  display: flex;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.btn-cancel,
 .btn-save {
   flex: 1;
   padding: 13px;
-  background: #A40C0B;
-  color: #fff;
   border: none;
   border-radius: 10px;
   font-size: 14px;
   font-weight: 700;
   cursor: pointer;
 }
-.btn-save:hover { background: #8a0a09; }
-.modal-cat { width: 420px; }
+
+.btn-cancel {
+  background: #f4f4f4;
+  color: #333;
+}
+
+.btn-save {
+  background: #a40c0b;
+  color: #fff;
+}
+
+.menu-preview {
+  width: 100px;
+  height: 100px;
+  object-fit: cover;
+  margin-top: 8px;
+  border-radius: 8px;
+}
+
+.modal-cat {
+  width: 420px;
+}
+
 .cat-list {
   display: flex;
   flex-direction: column;
@@ -556,6 +1103,7 @@ const formatPrice = (price) => Number(price).toLocaleString() + '원'
   border-radius: 10px;
   padding: 12px;
 }
+
 .cat-item {
   display: flex;
   align-items: center;
@@ -564,8 +1112,17 @@ const formatPrice = (price) => Number(price).toLocaleString() + '원'
   background: #fafafa;
   border-radius: 8px;
 }
-.cat-name { font-size: 14px; font-weight: 600; color: #333; }
-.cat-actions { display: flex; gap: 6px; }
+
+.cat-name {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.cat-actions {
+  display: flex;
+  gap: 6px;
+}
+
 .btn-xs {
   padding: 5px 10px;
   font-size: 11px;
@@ -575,44 +1132,166 @@ const formatPrice = (price) => Number(price).toLocaleString() + '원'
   background: #fff;
   color: #555;
   cursor: pointer;
-  transition: all 0.15s;
 }
-.btn-xs:hover { border-color: #A40C0B; color: #A40C0B; }
-.btn-xs-del { border-color: #A40C0B; color: #A40C0B; }
-.btn-xs-del:hover { background: #A40C0B; color: #fff; }
-.cat-form { display: flex; gap: 8px; align-items: center; }
+
+.btn-xs-del {
+  border-color: #a40c0b;
+  color: #a40c0b;
+}
+
+.cat-form {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
 .cat-form input {
   flex: 1;
   padding: 10px 14px;
   border: 1.5px solid #e5e3dc;
   border-radius: 10px;
   font-size: 14px;
-  outline: none;
-  background: #fafafa;
-  transition: border-color 0.15s;
 }
-.cat-form input:focus { border-color: #A40C0B; background: #fff; }
-.btn-cat-save {
-  padding: 10px 18px;
-  background: #A40C0B;
-  color: #fff;
+
+.btn-cat-save,
+.btn-cat-cancel {
+  padding: 10px 14px;
   border: none;
   border-radius: 10px;
   font-size: 13px;
   font-weight: 700;
   cursor: pointer;
-  white-space: nowrap;
 }
-.btn-cat-save:hover { background: #8a0a09; }
+
+.btn-cat-save {
+  background: #a40c0b;
+  color: #fff;
+}
+
 .btn-cat-cancel {
-  padding: 10px 14px;
   background: #f4f4f4;
-  border: none;
-  border-radius: 10px;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  white-space: nowrap;
 }
-.btn-cat-cancel:hover { background: #e8e8e8; }
+
+.option-modal {
+  width: 560px;
+}
+
+.option-category-manage-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.option-empty {
+  padding: 14px;
+  border: 1px dashed #ddd;
+  border-radius: 10px;
+  color: #999;
+  text-align: center;
+  font-size: 13px;
+}
+
+.option-manage-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 92px;
+  gap: 12px;
+  align-items: start;
+  padding: 14px;
+  border: 1.5px solid #eee;
+  border-radius: 12px;
+  box-sizing: border-box;
+}
+
+.option-manage-card.active {
+  border-color: #a40c0b;
+  background: #fff8f8;
+}
+
+.option-manage-main {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.option-manage-title {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.option-manage-actions {
+  width: 92px;
+  display: grid;
+  grid-template-columns: 43px 43px;
+  gap: 6px;
+  align-items: start;
+  justify-content: end;
+}
+
+.option-manage-actions .btn-xs {
+  width: 43px;
+  min-width: 43px;
+  padding: 5px 0;
+  box-sizing: border-box;
+  text-align: center;
+}
+
+.btn-add-option-category {
+  width: 100%;
+  padding: 11px 14px;
+  border: 1.5px dashed #4a80da;
+  border-radius: 10px;
+  background: #f7faff;
+  color: #4a80da;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.option-form-divider {
+  height: 1px;
+  background: #eee;
+}
+
+.option-form-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.option-form-row {
+  display: grid;
+  grid-template-columns: 1fr 120px 36px;
+  gap: 8px;
+  align-items: center;
+}
+
+.option-form-row input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1.5px solid #e5e3dc;
+  border-radius: 10px;
+  font-size: 14px;
+  box-sizing: border-box;
+}
+
+.btn-remove-option {
+  height: 38px;
+  border: none;
+  border-radius: 8px;
+  background: #f4f4f4;
+  color: #777;
+  cursor: pointer;
+}
+
+.btn-add-option-row {
+  width: 100%;
+  padding: 11px 14px;
+  border: 1.5px dashed #a40c0b;
+  border-radius: 10px;
+  background: #fff8f8;
+  color: #a40c0b;
+  font-weight: 700;
+  cursor: pointer;
+}
+
 </style>

@@ -89,6 +89,44 @@ class OwnerService {
         return res.data;
     }
 
+    // 메뉴 옵션 카테고리 등록
+    async registerOptionCategory(menuId, optionCategoryData) {
+        const res = await axios.post(`${this.#url}/menu/${menuId}/option_category`, optionCategoryData);
+        return res.data;
+    }
+
+    // 메뉴 옵션 카테고리 수정
+    async updateOptionCategory(optionCategoryNo, optionCategoryData) {
+        const res = await axios.put(`${this.#url}/menu/option_category/${optionCategoryNo}`, optionCategoryData);
+        return res.data;
+    }
+
+    // 메뉴 옵션 카테고리 삭제
+    async deleteOptionCategory(optionCategoryNo) {
+        const res = await axios.delete(`${this.#url}/menu/option_category/${optionCategoryNo}`);
+        return res.data;
+    }
+    
+
+    //메뉴 옵션 등록
+    async registerOption(optionData) {
+        const res = await axios.post(`${this.#url}/menu/option`, optionData);
+        return res.data;
+    }
+
+    // 메뉴 옵션 수정
+    async updateOption(optionId, optionData) {
+        const res = await axios.put(`${this.#url}/menu/option/${optionId}`, optionData);
+        return res.data;
+    }
+
+    // 메뉴 옵션 삭제
+    async deleteOption(optionId) {
+        const res = await axios.delete(`${this.#url}/menu/option/${optionId}`);
+        return res.data;
+    }
+
+
     // 카테고리 목록 조회
     async getCategories(storeId) {
         const res = await axios.get(`${this.#url}/category`, { params: { storeId } });

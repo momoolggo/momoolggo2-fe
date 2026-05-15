@@ -166,6 +166,13 @@ class OwnerService {
         });
         return res.data;
     }
+
+    // 사장 리뷰 답글 등록
+    async saveReviewReply(reviewId, replyData) {
+        const res = await axios.post(`${this.#url}/review/${reviewId}/reply`, replyData);
+    return res.data;
+}
+
 }
 
 export default new OwnerService();

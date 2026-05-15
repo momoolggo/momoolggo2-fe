@@ -17,6 +17,15 @@ const selectedStoreName = ref('')
 const showUserModal = ref(false)
 const selectedUser = ref(null)
 
+const userStatusLabel = (status) => {
+  const map = {
+    ACTIVE: { text: '정상', class: 'badge_active' },
+    SUSPENDED: { text: '계정정지', class: 'badge_suspended' },
+    PERMANENT: { text: '영구정지', class: 'badge_permanent' },
+  }
+  return map[status] ?? { text: '-', class: '' }
+}
+
 // 오늘 날짜 초기화
 const today = new Date()
 const formatDate = (d) =>
@@ -360,9 +369,9 @@ const handleSearch = () => {
           </div>
           <div class="user_info_row">
             <span class="user_info_label">회원 상태</span>
-            <span :class="['status_badge', statusLabel(selectedUser.status).class]">
-              {{ statusLabel(selectedUser.status).text }}
-            </span>
+            <span :class="['status_badge', userStatusLabel(selectedUser.status).class]">
+            {{ userStatusLabel(selectedUser.status).text }}
+          </span>
           </div>
         </div>
       </div>
@@ -534,4 +543,7 @@ const handleSearch = () => {
 .modal_cancel:hover { background: #f5f5f5; }
 .modal_confirm { flex: 1; padding: 10px 0; border: none; background: #9b1b1b; border-radius: 8px; font-size: 14px; color: #fff; cursor: pointer; font-weight: 700; }
 .modal_confirm:hover { background: #7f1515; }
+.badge_active { background: #e8f5e9; color: #2e7d32; }      /* 정상 */
+.badge_suspended { background: #ffdddd; color: #ff0606; }    /* 계정정지 */
+.badge_permanent { background: #222; color: #fff; }
 </style>

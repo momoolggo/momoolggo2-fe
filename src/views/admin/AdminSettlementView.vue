@@ -248,12 +248,7 @@ const handleSearch = () => {
         <div class="search_box">
           <div class="search_row">
             <div class="search_field">
-              <label>기간 선택</label>
-              <div class="date_range">
-                <input type="date" class="visible_date" v-model="searchForm.startDate" @change="onStartDateChange" />
-                <span class="date_sep">~</span>
-                <input type="date" class="visible_date" v-model="searchForm.endDate" @change="onEndDateChange" />
-              </div>
+             
             </div>
 
             <div class="search_field">

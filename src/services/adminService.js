@@ -237,6 +237,15 @@ class AdminService {
         return res.data;
     }
 
+    /**
+     * 라이더 위치 다건 조회 — GET /api/admin/delivery/rider-locations (Group 10, 2026-05-17).
+     * 결정 (가) Redis TTL 기준 — 위치 송신 fresh 라이더만 반환. 5초 폴링.
+     */
+    async getRiderLocations() {
+        const res = await axios.get(`${this.#url}/delivery/rider-locations`);
+        return res.data;
+    }
+
     // 회원 관리
     async getUserList(role = null, page = 0) {
         const params = {}

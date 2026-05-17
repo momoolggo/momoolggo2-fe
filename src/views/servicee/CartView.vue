@@ -2,10 +2,12 @@
 import { reactive, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import cartService from '@/services/cartService';
+import { useCartStore } from '@/stores/cartStore';
 import { useUserStore } from '@/stores/userStore';
 import { showAlert, showConfirm } from '@/composables/useAlert'
 
 const router = useRouter();
+const cartStore = useCartStore();
 const userStore = useUserStore();
 const userNo = computed(() => userStore.state.userNo);
 
@@ -24,6 +26,10 @@ const getImageUrl = (path) => {
   if (path.startsWith('data:')) return path      // ← Base64 data URI 지원 추가
   if (path.startsWith('http') || path.startsWith('blob')) return path
   return `${path}`
+}
+
+const refreshCartBadge = async () => {
+  await cartStore.refreshCartCount(userNo.value);
 }
 
 const loadCart = async () => {
@@ -70,8 +76,9 @@ const changeQuantity = (item, delta) => {
     debounceTimers[item.id] = setTimeout(async () => {
         try {
             await cartService.updateCartItem(item.id, { quantity: item.quantity });
+            await refreshCartBadge();
         } catch (e) {
-            loadCart();
+            await loadCart();
         }
     }, 500);
 };
@@ -81,7 +88,8 @@ const removeItem = async (item) => {
     if (!ok) return
     try {
         await cartService.deleteCartItem(item.id);
-        loadCart();
+        await loadCart();
+        await refreshCartBadge();
     } catch (e) {
         await showAlert('삭제에 실패했습니다.', { title: '오류', type: 'error' })
     }
@@ -95,6 +103,8 @@ const clearCart = async () => {
         await cartService.clearCart(userNo.value);
         state.cartItems = [];
         state.storeName = '';
+        state.storeId = null;
+        cartStore.resetCount();
     } catch (e) {
         await showAlert('초기화에 실패했습니다.', { title: '오류', type: 'error' })
     }

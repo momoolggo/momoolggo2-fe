@@ -1,0 +1,140 @@
+[33m9ba5ead[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mCHO[m[33m)[m fix: 사장 메뉴 옵션 수정
+[33mf825ac1[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m Merge pull request #15 from momoolggo/KYL
+[33mef682ad[m[33m ([m[1;31morigin/KYL[m[33m)[m feat:(admin) 회원관리 주소 조회 및 가입일 포맷, 리뷰 목록 연동
+[33m4e15dd5[m Merge pull request #14 from momoolggo/KYL
+[33m494f934[m Merge pull request #13 from momoolggo/CHO
+[33m9b6a983[m[33m ([m[1;31morigin/CHO[m[33m)[m feat: 고객 주문 취소 사유 선택 기능
+[33m31b29d3[m Merge branch 'main' of https://github.com/momoolggo/momoolggo2-fe into KYL
+[33mb830720[m feat: admin-service, adminhomeview 수정, adminuserview생성
+[33mdc7e44b[m Merge pull request #12 from momoolggo/KYL
+[33m9409b93[m feat: AdminDelivery수정, router수정
+[33m54a969d[m Merge pull request #11 from momoolggo/CHO
+[33m16f6f63[m fix: 가게 내 메뉴 검색 동작 및 UI
+[33mbb36b08[m Merge pull request #10 from momoolggo/kjh
+[33m1207c1f[m 수정에 수정을 더해서
+[33m80bf7b3[m Merge pull request #9 from momoolggo/kjh
+[33m4ebe62b[m main 소문자로 수정
+[33m8c814fb[m Merge pull request #8 from momoolggo/kjh
+[33m74eea73[m 수정
+[33me1eabde[m Merge pull request #7 from momoolggo/kjh
+[33m7ea81a7[m service
+[33m71e91ca[m Merge remote-tracking branch 'origin/main' into kjh
+[33m39b8892[m Merge pull request #6 from momoolggo/KYL
+[33mb035456[m feat: AdminDelivery 생성
+[33m61451bc[m fix(rider-fe): NaverMap reviewer Warning 1 + Cosmetic 4 처리
+[33m17b3225[m feat(rider-fe): RiderDeliveryMap 신설 + 3곳 통합 (NaverMap 표시 전용 다중 마커)
+[33m9fcbd7d[m fix(rider-fe): R6 FE reviewer C-1 + W-1 처리
+[33m5febadd[m feat(rider-fe): R6-FE-7 useLocationTracker composable (5s tick 위치 송신)
+[33m3ebfbbe[m feat(rider-fe): R6-FE-4 + FE-5 + FE-6 진행 카드 + 단계별 액션 + 완료/반려 모달
+[33m1ad326c[m feat(rider-fe): R6-FE-2 + FE-3 RiderHomeView 탭 컨테이너 + WaitingTab 본격
+[33meeedfc1[m feat(rider-fe): R6-FE-1 deliveryService + locationService + deliveryStore
+[33mc1583e2[m feat(rider-fe): R6-FE-0 라이더 랜딩 화면 (Image 170116 추종)
+[33mcc968b6[m Merge pull request #5 from momoolggo/CHO
+[33mca64555[m feat: 장바구니 수량 뱃지 표시
+[33m849ea7d[m Merge pull request #4 from momoolggo/KYL
+[33m8e04787[m feat: 색상변경
+[33m3b65fe0[m feat:- 관리자 고객지원탭 생성,사장님 서비스 리뷰 신고 내용 수정,사장님 서비스 영업상태 토글 내비게이션 이동
+[33ma2ad522[m Merge branch 'main' of https://github.com/momoolggo/momoolggo2-fe into KYL
+[33ma777fb9[m feat: 리뷰관리 정산관리 탭
+[33m8f53747[m Merge pull request #3 from momoolggo/kjh
+[33m26f0fa8[m Merge branch 'main' of https://github.com/momoolggo/momoolggo2-fe into kjh
+[33m2322907[m Merge pull request #2 from momoolggo/CHO
+[33mab2846f[m 커밋
+[33m5d63741[m[33m ([m[1;32mmain[m[33m)[m Revert "feat: 가게 내 메뉴 검색"
+[33mb22ddd2[m feat: 가게 내 메뉴 검색
+[33m3eb3dd5[m feat: 가게 내 메뉴 검색
+[33m5447204[m docs: PROGRESS.md 신규 (Phase 5-R1-FE 박제)
+[33m937c7bf[m feat(rider): 라우터 라이더 라우트 3건 추가
+[33mb1ffcbe[m feat(rider): RiderSignupView + RiderSigninView 신규 (Figma 추종, 1차 customer 패턴 일관)
+[33m97209d0[m feat(rider): riderService + riderStore 신규 (스켈레톤)
+[33m9617829[m Merge pull request #1 from momoolggo/KYL
+[33mcfb6a65[m merge: 새 레포 연결
+[33m6e002a5[m[33m ([m[1;31morigin/KJH[m[33m)[m chore: momoolggo-fe 스냅샷 import (라이더 화면 작업 base)
+[33m6a3ee75[m 0506 admin추가, 라우터 admin추가
+[33m5e14624[m Merge pull request #104 from momoolggo/KSB
+[33m2253729[m 이모지수정
+[33m9b81553[m Merge pull request #103 from momoolggo/KYL
+[33m0e3954e[m 0325 css 수정했습니다
+[33m684564c[m Merge pull request #102 from momoolggo/KYL
+[33m7c079ad[m 0324 css 수정
+[33me9d2809[m Merge pull request #101 from momoolggo/KJH
+[33m2af2ad2[m 이게 맞아!
+[33m3a0756e[m Merge pull request #100 from momoolggo/CHO
+[33ma7b08e0[m 주소 관리로 네이밍 변경
+[33mb48a8b2[m Merge pull request #99 from momoolggo/KYL
+[33m5543ab6[m 0324 사장서비스 css수정
+[33m37d54d4[m Merge pull request #98 from momoolggo/KJH
+[33m307b098[m 수정수정
+[33mea7ba73[m Merge pull request #97 from momoolggo/KJH
+[33m3238353[m Merge pull request #96 from momoolggo/KYL
+[33m6829d8e[m 사진 url 수정
+[33m1f06b7d[m 0324 사장서비스-리뷰 css수정
+[33m0806d8e[m Merge branch 'master' of https://github.com/momoolggo/momoolggo-fe into KYL
+[33m81b1226[m Merge pull request #95 from momoolggo/KJH
+[33m6518339[m 리뷰관리
+[33mb8d6a38[m Merge branch 'master' of https://github.com/momoolggo/momoolggo-fe into KYL
+[33m042e459[m Merge pull request #94 from momoolggo/KJH
+[33m457c6cd[m 수정수정
+[33mdb755ab[m Merge pull request #93 from momoolggo/KSB
+[33m59c5558[m 0323
+[33m0677ff4[m Merge branch 'master' of https://github.com/momoolggo/momoolggo-fe into KSB
+[33m778a3ba[m 가게정렬추가
+[33m6327167[m Merge branch 'master' of https://github.com/momoolggo/momoolggo-fe into KYL
+[33m7ff9b42[m Merge pull request #92 from momoolggo/KJH
+[33m2001dd3[m 0323 배송지 -> 주소관리로 수정
+[33m8d11862[m 주문상세 페이지
+[33me72f7bc[m Merge pull request #91 from momoolggo/KJH
+[33me637d5f[m 변경할 것들 변경
+[33mf346da7[m Merge pull request #90 from momoolggo/CHO
+[33m8c08824[m 랜딩뷰 색상 수정
+[33m1a71eba[m Merge pull request #89 from momoolggo/KJH
+[33m8f14e22[m 변경사항
+[33m2ac7037[m Merge pull request #88 from momoolggo/KYL
+[33m6549158[m 0323 수정
+[33m2185423[m css수정
+[33mac1e3ee[m Merge pull request #87 from momoolggo/KJH
+[33mcbc9a61[m 필요없는 파일 삭제
+[33m2399caf[m Merge pull request #86 from momoolggo/KSB
+[33m19da15d[m Merge pull request #85 from momoolggo/CHO
+[33m52bceb0[m 가게페이징
+[33m96ad9c5[m 입점 홍보 수정
+[33mf41f04a[m Merge pull request #84 from momoolggo/KJH
+[33m946f099[m build 후 정리
+[33m57023b0[m Merge pull request #83 from momoolggo/KJH
+[33ma76e931[m 마지막 pr
+[33m73e3f4c[m Merge pull request #82 from momoolggo/KYL
+[33mae83a44[m 0320 수정
+[33mdd98a1e[m Merge pull request #81 from momoolggo/CHO
+[33m3035ccc[m Merge pull request #80 from momoolggo/KSB
+[33mf284c62[m 입점 홍보
+[33mab382bc[m 고객페이지 전면보완
+[33m7f31ad3[m Merge pull request #79 from momoolggo/KJH
+[33mad61445[m 사장님 가게 사진 넣기
+[33m7208f1e[m Merge pull request #78 from momoolggo/KJH
+[33mafb8187[m 예림이가 말한거 다 수정
+[33m1231874[m Merge pull request #77 from momoolggo/KYL
+[33m75bc3a7[m 0320 타입 오류 고침
+[33mdee3d84[m Merge pull request #76 from momoolggo/KJH
+[33m5b8d853[m 진짜 정신 나갈거같음
+[33ma97790d[m Merge pull request #75 from momoolggo/KJH
+[33m5421127[m alert 수정하느라 뒤질뻔
+[33m3897bdc[m Merge pull request #74 from momoolggo/KSB
+[33m14436d9[m .
+[33m7be59e4[m Merge branch 'master' of https://github.com/momoolggo/momoolggo-fe into KSB
+[33m58a6572[m 주문내역 리뷰 끝
+[33med5eb8f[m Merge pull request #73 from momoolggo/CHO
+[33m0fa8248[m Merge pull request #72 from momoolggo/KYL
+[33m255d9f7[m 입점 홍보
+[33mdb40125[m 다시 이것저것 수정 로그인 오류 잡음
+[33mdee4b37[m Merge pull request #71 from momoolggo/KYL
+[33mb514f54[m 배달현황임티에셋추가
+[33md230ac5[m css 수정 ( 페이지 탭 색, 포인트 색 통일)
+[33m8655055[m Merge pull request #70 from momoolggo/KYL
+[33m3dc523a[m 가게 준비중 반영, 이벤트 사이즈 수정, 사장서비스 달력 뜨기, 나머지 이것저것 css수정
+[33m2298b30[m Merge pull request #69 from momoolggo/KJH
+[33ma244b85[m 수정
+[33m22055ed[m 뭐든 일단 수정중
+[33maf6d672[m Merge pull request #68 from momoolggo/KSB
+[33mdc95d83[m Merge branch 'master' into KSB
+[33ma532eeb[m rufwp
+[33m4137604[m Merge pu

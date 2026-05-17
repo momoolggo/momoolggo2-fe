@@ -5,13 +5,15 @@ import MenuCategory from '@/components/store/MenuCategory.vue'
 import StoreInfo from '@/components/store/StoreInfo.vue'
 import MenuDetailModal from '@/components/store/MenuModal.vue'
 import storeService from '@/services/storeService'
+import { useCartStore } from '@/stores/cartStore'
 import { useUserStore } from '@/stores/userStore'
 import { showAlert } from '@/composables/useAlert'
 import StoreReview from '@/components/store/ReviewInfo.vue'
 
 const route = useRoute()
+const cartStore = useCartStore()
 const userStore = useUserStore()
-const userNo = userStore.state.userNo
+const userNo = computed(() => userStore.state.userNo )
 
 const getImageUrl = (path) => {
   if (!path) return null
@@ -29,12 +31,11 @@ const state = reactive({
   isModalOpen: false,
   isWished: false,
   menuSearchText: '',
-  searchResults: [],
 })
 
 const getStoreDetail = async () => {
   const storeId = Number(route.params.id)
-  const params = { userNo: userNo, storeId: storeId }
+  const params = { userNo: userNo.value, storeId: Number(route.params.id) }
   try {
     const res = await storeService.getStore(storeId)
     state.storeInfo = res.resultData
@@ -56,15 +57,33 @@ const getMenuList = async () => {
 }
 
 //가게 내 메뉴 검색 추가
-const searchMenu = async () => {
-  if (!state.menuSearchText.trim()) {
-    state.searchResults = []
-    return
+
+const searchMenu = () => {
+    state.menuSearchText = state.menuSearchText.trim()
   }
-  const storeId = route.params.id
-  const res = await storeService.menuSearchInStore(storeId, state.menuSearchText)
-  state.searchResults = res.resultData || []
-}
+
+  const updateMenuSearchText = (event) => {
+    state.menuSearchText = event.target.value
+  }
+
+  const searchableMenus = computed(() => {
+  return state.menuList.map((menu) => ({
+    ...menu,
+    searchName: (menu.menuName || '').toLowerCase(),
+  }))
+})
+
+  const searchResultMenus = computed(() => {
+    const keyword = state.menuSearchText.trim().toLowerCase()
+
+    if(!keyword) {
+      return []
+    }
+
+    return searchableMenus.value.filter((menu) => 
+    menu.searchName.includes(keyword))
+  })
+
 
 // 가게 리뷰 조회 추가
 const getReviewList = async () => {
@@ -78,7 +97,7 @@ const getReviewList = async () => {
 }
 
 const toggleWish = async () => {
-  const params = { userNo: userNo, storeId: Number(route.params.id) }
+  const params = { userNo: userNo.value, storeId: Number(route.params.id) }
   try {
     const result = await storeService.toggleFavorite(params)
     state.isWished = result.resultData
@@ -113,7 +132,8 @@ const openMenuModal = (menu) => {
   state.isModalOpen = true
 }
 
-const handleAddToCart = (item) => {
+const handleAddToCart = async () => {
+  await cartStore.refreshCartCount(userNo.value)
   state.isModalOpen = false
 }
 </script>
@@ -169,25 +189,47 @@ const handleAddToCart = (item) => {
       </button>
     </nav>
 
-    <div class="tab-content-area">
-      <div v-if="state.activeTab === 'menu'" class="menu-list-wrapper">
-  <div class="menu-search-bar">
-    <input
-      v-model="state.menuSearchText"
-      type="text"
-      placeholder="메뉴를 검색하세요"
-      @keyup.enter="searchMenu"
+  <div class="tab-content-area">
+    <div v-if="state.activeTab === 'menu'" class="menu-list-wrapper">
+      <form class="menu-search-form" @submit.prevent="searchMenu">
+    <label class="menu-search-bar">
+      <input
+      :value="state.menuSearchText"
+      type="search"
+      placeholder="메뉴 검색"
+      @input="updateMenuSearchText"
+      @compositionend="updateMenuSearchText"
     />
-    <button @click="searchMenu">검색</button>
-  </div>
+    <button
+      v-if="state.menuSearchText"
+      type= "button" class="menu-search-clear"
+      @click="state.menuSearchText = ''">
+      <i class="bi bi-x"></i>
+    </button>
 
-  <template v-if="state.searchResults.length > 0">
+    <button
+      v-else
+      type="submit"
+      class="menu-search-icon">
+      <i class="bi bi-search"></i>
+    </button>
+    </label>
+  </form>
+
+  <template v-if="state.menuSearchText.trim()">
     <MenuCategory
+      v-if="searchResultMenus.length > 0"
       category-name="검색 결과"
-      :items="state.searchResults"
+      :items="searchResultMenus"
       @click-menu="openMenuModal"
     />
+
+    <div v-else class="menu-search-empty">
+  <span class="menu-search-empty-icon">⚠️</span>
+  <p>검색 결과가 없습니다</p>
+</div>
   </template>
+
   <template v-else>
     <MenuCategory
       v-for="group in groupedMenu"
@@ -210,7 +252,9 @@ const handleAddToCart = (item) => {
           <StoreReview :reviews="state.reviews" />
         </div>
       </div>
-    </div>
+      </div>
+  </div>
+    
 
     <MenuDetailModal
       :menu="state.selectedMenu"
@@ -219,7 +263,7 @@ const handleAddToCart = (item) => {
       @close="state.isModalOpen = false"
       @add-to-cart="handleAddToCart"
     />
-  </div>
+  
 </template>
 
 <style scoped>
@@ -342,8 +386,101 @@ const handleAddToCart = (item) => {
   border-bottom: 3px solid #111;
 }
 .tab-content-area {
-  background: #f8f9fa;
+  background: #fff;
 }
+
+.menu-search-form {
+  padding: 12px 16px 14px;
+  background: #fff;
+}
+
+.menu-search-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #fff;
+  border: 1.5px solid #e0dcd0;
+  border-radius: 22px;
+  padding: 9px 14px;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+
+.menu-search-bar:focus-within {
+  border-color: #d63031;
+}
+
+.menu-search-bar input {
+  flex: 1;
+  background: transparent;
+  outline: none;
+  border: none;
+  width: 100%;
+  font-size: 14px;
+  color: #222;
+}
+
+.menu-search-bar input::placeholder {
+  color: #999;
+}
+
+.menu-search-bar input::-webkit-search-decoration,
+.menu-search-bar input::-webkit-search-cancel-button,
+.menu-search-bar input::-webkit-search-results-button,
+.menu-search-bar input::-webkit-search-results-decoration {
+  display: none;
+}
+
+.menu-search-icon {
+  font-size: 15px;
+  color: #888;
+  border: none;
+  background: transparent;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.menu-search-clear {
+  font-size: 20px;
+  color: #888;
+  border: none;
+  background: transparent;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.menu-search-empty {
+  height: 260px;
+  margin: 0;
+  background: #fafafa;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+}
+
+.menu-search-empty-icon {
+  font-size: 40px;
+  line-height: 1;
+}
+
+.menu-search-empty p {
+  margin: 0;
+  font-size: 18px;
+  color: #999;
+  font-weight: 500;
+}
+
 
 /* 리뷰 스타일 */
 .review-container {

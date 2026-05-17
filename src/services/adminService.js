@@ -9,27 +9,6 @@ class AdminService {
         return res.data;
     }
 
-    // 공지사항
-    async getNoticeList() {
-        const res = await axios.get(`${this.#url}/notice`);
-        return res.data;
-    }
-
-    async createNotice(data) {
-        const res = await axios.post(`${this.#url}/notice`, data);
-        return res.data;
-    }
-
-    async updateNotice(noticeId, data) {
-        const res = await axios.put(`${this.#url}/notice/${noticeId}`, data);
-        return res.data;
-    }
-
-    async deleteNotice(noticeId) {
-        const res = await axios.delete(`${this.#url}/notice/${noticeId}`);
-        return res.data;
-    }
-
     // FAQ
     async getFaqList(type = null) {
         const params = {};
@@ -108,7 +87,7 @@ class AdminService {
         return res.data;
     }
 
-    // 블라인드
+    // 리뷰,블라인드
     async getBlindList(status = null) {
         const params = {};
         if (status) params.status = status;
@@ -179,13 +158,28 @@ class AdminService {
     }
 
     async getRiderCount() {
-        const res = await axios.get(`${this.#url}/delivery/rider-count`)
-        return res.data
+        const res = await axios.get(`${this.#url}/delivery/rider-count`);
+        return res.data;
     }
 
     async sendRiderNotice(payload) {
-        const res = await axios.post(`${this.#url}/delivery/notice`, payload)
-        return res.data
+        const res = await axios.post(`${this.#url}/delivery/notice`, payload);
+        return res.data;
+    }
+
+    async getNoticeList() {
+        const res = await axios.get(`${this.#url}/delivery/notice`);
+        return res.data;
+    }
+
+    async updateNotice(noticeId, payload) {
+        const res = await axios.put(`${this.#url}/delivery/notice/${noticeId}`, payload);
+        return res.data;
+    }
+
+    async deleteNotice(noticeId) {
+        const res = await axios.delete(`${this.#url}/delivery/notice/${noticeId}`);
+        return res.data;
     }
 
     // ─── 라이더 관리 (Group 8 신설, Q-A1 (라++)) ──────
@@ -243,6 +237,72 @@ class AdminService {
         return res.data;
     }
 
+    // 회원 관리
+    async getUserList(role = null, page = 0) {
+        const params = {}
+        params['page'] = page
+        if (role) params['role'] = role
+        const res = await axios.get(`${this.#url}/user`, { params })
+        return res.data
     }
+
+    async getPendingUsers() {
+        const res = await axios.get(`${this.#url}/user/pending`)
+        return res.data
+    }
+
+    async updateApproval(userNo, status, reason = null) {
+        const res = await axios.patch(`${this.#url}/user/${userNo}/approval`, { status, reason })
+        return res.data
+    }
+
+    async suspendUserByAdmin(userNo, days, reason = null) {
+        const res = await axios.patch(`${this.#url}/user/${userNo}/suspension`, { days, reason })
+        return res.data
+    }
+
+    async releaseSuspension(userNo) {
+        const res = await axios.patch(`${this.#url}/user/${userNo}/suspension/release`)
+        return res.data
+    }
+
+    async getMemberAddress(userNo) {
+        const res = await axios.get(`${this.#url}/user/${userNo}/address`)
+        return res.data
+    }
+
+    async getStoreList(params = {}) {
+        const res = await axios.get(`${this.#url}/store`, { params })
+        return res.data
+    }
+
+    async getStoreDetail(storeId) {
+        const res = await axios.get(`${this.#url}/store/${storeId}`)
+        return res.data
+    }
+
+    async getStoreLocation(userNo) {
+        const res = await axios.get(`${this.#url}/user/${userNo}/store-location`)
+        return res.data
+    }
+
+    async getAllReviews(page = 0, size = 15) {
+        const res = await axios.get(`${this.#url}/review`, { params: { page, size } })
+        return res.data
+    }
+
+    async getChartStats(period = 'weekly', metric = 'memberCount') {
+        const res = await axios.get(`${this.#url}/dashboard/chart`, { params: { period, metric } })
+        return res.data
+      }
+
+      async getUserDetail(userNo) {
+        const res = await axios.get(`${this.#url}/user/${userNo}/detail`)
+        return res.data
+    }
+
+
+
+ }
 
 export default new AdminService();

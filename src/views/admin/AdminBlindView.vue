@@ -17,6 +17,15 @@ const selectedStoreName = ref('')
 const showUserModal = ref(false)
 const selectedUser = ref(null)
 
+const userStatusLabel = (status) => {
+  const map = {
+    ACTIVE: { text: '정상', class: 'badge_active' },
+    SUSPENDED: { text: '계정정지', class: 'badge_suspended' },
+    PERMANENT: { text: '영구정지', class: 'badge_permanent' },
+  }
+  return map[status] ?? { text: '-', class: '' }
+}
+
 // 오늘 날짜 초기화
 const today = new Date()
 const formatDate = (d) =>
@@ -81,16 +90,16 @@ const reasonLabel = (reason) => {
 const fetchList = async () => {
   loading.value = true
   try {
-    const status = activeTab.value === 'blind' ? 'BLINDED' : null
-    const res = await adminService.getBlindList(status)
-    blindList.value = res?.resultData ?? []
+    if (activeTab.value === 'all') {
+      const res = await adminService.getAllReviews(currentPage.value - 1)
+      blindList.value = res?.resultData ?? []
+    } else {
+      const res = await adminService.getBlindList('BLINDED')
+      blindList.value = res?.resultData ?? []
+    }
   } catch (e) {
-    console.error('블라인드 목록 조회 실패', e)
-    blindList.value = [
-      { blindId: 1, storeName: '숨은집', writer: '김블루', userName: '김블루', userTel: '010-1234-5678', content: '이번 주만 세번째 배달입니다~! 그만큼 너무 맛있어요!!', rating: 4.8, createdAt: '2026-05-02', reason: 'ABUSE', status: 'BLINDED' },
-      { blindId: 2, storeName: '동성로 꾸꾸미', writer: '김그린', userName: '김그린', userTel: '010-2345-6789', content: '맛있어요', rating: 3.3, createdAt: '2026-04-15', reason: 'FALSE_FACT', status: 'BLINDED' },
-      { blindId: 3, storeName: '피자헛', writer: '김레드', userName: '김레드', userTel: '010-3456-7890', content: '맵기도 딱 좋고 양도 넉넉해서 아주 만족스런 한 끼 였습니다😀', rating: 4.5, createdAt: '2026-01-08', reason: 'AD', status: 'BLINDED' },
-    ]
+    console.error('목록 조회 실패', e)
+    blindList.value = []
   } finally {
     loading.value = false
   }
@@ -103,15 +112,21 @@ const handleTabChange = (tab) => {
   fetchList()
 }
 
-// 작성자 클릭 → 고객 상세 모달
-const openUserModal = (item) => {
-  selectedUser.value = item
-  showUserModal.value = true
-}
-
 const closeUserModal = () => {
   showUserModal.value = false
   selectedUser.value = null
+}
+
+
+const openUserModal = async (item) => {
+  selectedUser.value = item
+  showUserModal.value = true
+  try {
+    const res = await adminService.getUserDetail(item.userNo)
+    selectedUser.value = { ...item, ...res?.resultData }
+  } catch (e) {
+    // 기존 데이터 유지
+  }
 }
 
 // 블라인드 해제 모달
@@ -330,32 +345,34 @@ const handleSearch = () => {
         <div class="user_modal_body">
           <div class="user_info_row">
             <span class="user_info_label">이름</span>
-            <span class="user_info_value">{{ selectedUser.userName ?? selectedUser.writer ?? '-' }}</span>
+            <span class="user_info_value">{{ selectedUser.name ?? selectedUser.writer ?? '-' }}</span>
+          </div>
+          <div class="user_info_row">
+            <span class="user_info_label">아이디</span>
+            <span class="user_info_value">{{ selectedUser.userId ?? '-' }}</span>
           </div>
           <div class="user_info_row">
             <span class="user_info_label">전화번호</span>
-            <span class="user_info_value">{{ selectedUser.userTel ?? '-' }}</span>
+            <span class="user_info_value">{{ selectedUser.tel ?? '-' }}</span>
           </div>
           <div class="user_info_row">
-            <span class="user_info_label">가게명</span>
-            <span class="user_info_value">{{ selectedUser.storeName ?? '-' }}</span>
+            <span class="user_info_label">가입일</span>
+            <span class="user_info_value">{{ selectedUser.createdAt ? String(selectedUser.createdAt).slice(0,10).replaceAll('-','.') : '-' }}</span>
           </div>
           <div class="user_info_row">
+            <span class="user_info_label">친환경점수</span>
+            <span class="user_info_value">{{ selectedUser.green ?? '-' }}</span>
+          </div>
+          <div class="user_info_row" v-if="activeTab === 'blind'">
             <span class="user_info_label">블라인드 사유</span>
             <span class="user_info_value">{{ reasonLabel(selectedUser.reason) }}</span>
           </div>
           <div class="user_info_row">
             <span class="user_info_label">회원 상태</span>
-            <span :class="['status_badge', statusLabel(selectedUser.status).class]">
-              {{ statusLabel(selectedUser.status).text }}
-            </span>
+            <span :class="['status_badge', userStatusLabel(selectedUser.status).class]">
+            {{ userStatusLabel(selectedUser.status).text }}
+          </span>
           </div>
-          <!-- MainFeignClient 연동 후 추가 예정 -->
-          <p class="user_modal_note">※ 아이디, 주소, 가입일, 친환경점수는 추후 연동 예정</p>
-        </div>
-
-        <div class="user_modal_btns">
-          <button class="modal_cancel" @click="closeUserModal">닫기</button>
         </div>
       </div>
     </div>
@@ -526,4 +543,7 @@ const handleSearch = () => {
 .modal_cancel:hover { background: #f5f5f5; }
 .modal_confirm { flex: 1; padding: 10px 0; border: none; background: #9b1b1b; border-radius: 8px; font-size: 14px; color: #fff; cursor: pointer; font-weight: 700; }
 .modal_confirm:hover { background: #7f1515; }
+.badge_active { background: #e8f5e9; color: #2e7d32; }      /* 정상 */
+.badge_suspended { background: #ffdddd; color: #ff0606; }    /* 계정정지 */
+.badge_permanent { background: #222; color: #fff; }
 </style>

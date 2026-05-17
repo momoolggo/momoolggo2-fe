@@ -79,7 +79,7 @@ const signup = async () => {
 
   try {
     state.errorMsg = ''
-    await userService.signup({ ...state.form })
+    await userService.signup({ ...state.form, agreedToTerms: requiredAgreed.value })
     await showAlert('회원가입이 완료되었습니다!', { title: '회원가입', type: 'success' })
     router.push('/rider/signin')
   } catch (err) {

@@ -89,10 +89,11 @@ const signup = async () => {
   }
   if (!state.form.address)     { state.errorMsg = '주소를 입력해 주세요.';         return }
   if (!state.form.tel)         { state.errorMsg = '연락처를 입력해 주세요.';       return }
+  if (!requiredAgreed.value)   { state.errorMsg = '필수 약관에 동의해 주세요.';    return }
 
   try {
     state.errorMsg = ''
-    await userService.signup({ ...state.form })
+    await userService.signup({ ...state.form, agreedToTerms: requiredAgreed.value })
     await showAlert('회원가입이 완료되었습니다!', { title: '회원가입', type: 'success' })
     router.push('/customer/signin')
   } catch (err) {

@@ -1,8 +1,9 @@
 <script setup>
-import { computed, reactive } from 'vue'
+import { computed, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import userService from '@/services/userService'
 import NaverMap from '@/components/common/NaverMap.vue'
+import TermsModal from '@/components/common/TermsModal.vue'
 import { showAlert } from '@/composables/useAlert'
 
 const router = useRouter()
@@ -53,6 +54,17 @@ const syncAll = () => {
 
 // 필수약관동의했는지
 const requiredAgreed = computed(() => state.terms.service && state.terms.privacy)
+
+// 작업 C (2026-05-18) — 약관 본문 모달
+const termsModalType = ref(null)
+const showTermsModal = ref(false)
+const openTerms = (type) => {
+  termsModalType.value = type
+  showTermsModal.value = true
+}
+const closeTerms = () => {
+  showTermsModal.value = false
+}
 
 
 
@@ -191,8 +203,9 @@ const signup = async () => {
             서비스 이용약관 동의
             <span class="badge required_badge">필수</span>
           </span>
+          <button type="button" class="view_btn" @click.prevent="openTerms('이용약관')">보기</button>
         </label>
- 
+
         <!-- 개인정보 수집·이용 (필수) -->
         <label class="terms_item">
           <input
@@ -208,8 +221,9 @@ const signup = async () => {
             개인정보 수집·이용 동의
             <span class="badge required_badge">필수</span>
           </span>
+          <button type="button" class="view_btn" @click.prevent="openTerms('개인정보')">보기</button>
         </label>
- 
+
         <!-- 마케팅 수신 (선택) -->
         <label class="terms_item">
           <input
@@ -225,8 +239,11 @@ const signup = async () => {
             마케팅 정보 수신 동의
             <span class="badge optional_badge">선택</span>
           </span>
+          <button type="button" class="view_btn" @click.prevent="openTerms('마케팅')">보기</button>
         </label>
       </div>
+
+      <TermsModal :type="termsModalType" :show="showTermsModal" @close="closeTerms" />
 
       <p v-if="state.errorMsg" class="error_msg">{{ state.errorMsg }}</p>
 
@@ -262,6 +279,12 @@ const signup = async () => {
 .terms_all_text { font-size: 15px; font-weight: 700; color: #566572; }
 .terms_divider { height: 1px; background: #e8e8e8; margin: 0 -4px; }
 .terms_item { display: flex; align-items: center; gap: 10px; cursor: pointer; user-select: none; }
+.terms_label { flex: 1; }
+.view_btn {
+  background: none; border: none; color: #888; font-size: 12px;
+  text-decoration: underline; cursor: pointer; padding: 2px 6px;
+}
+.view_btn:hover { color: #9b1b1b; }
 .hidden_check { display: none; }
 .custom_check { width: 20px; height: 20px; border-radius: 50%; border: 2px solid #ddd; display: flex; align-items: center; justify-content: center;
   flex-shrink: 0; transition: all 0.15s; color: transparent; font-size: 13px }

@@ -49,7 +49,7 @@ const cancelReview = () => {
 }
 
 const submitReview = async() => {
-  if (rating.value === 0 || textCount.value === 0) {
+  if (rating.value === 0 || !reviewText.value.trim()) {
     await showAlert('별점과 리뷰 내용을 입력해주세요!', { title: '입력 필요', type: 'warning' })
     return
   }
@@ -63,8 +63,13 @@ const submitReview = async() => {
     await userService.postReview(params);
     await showAlert('리뷰가 등록되었습니다!', { title: '등록 완료', type: 'success' })
     router.push('/mypage/review')
-  } catch(error) {
-    await showAlert('리뷰 등록에 실패했습니다.', { title: '오류', type: 'error' })
+  } catch (error) {
+    const message =
+      error.response?.data?.resultMessage ||
+      error.response?.data?.message ||
+      '리뷰 등록에 실패했습니다.'
+
+    await showAlert(message, { title: '오류', type: 'error' })
   }
 }
 </script>

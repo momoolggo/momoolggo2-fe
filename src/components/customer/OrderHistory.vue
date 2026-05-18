@@ -1,6 +1,8 @@
 <script setup>
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
+import orderService from '@/services/orderService'
+import { showAlert } from '@/composables/useAlert'
 
 const getImageUrl = (path) => {
   if (!path) return '/images/default-store.png'
@@ -32,6 +34,23 @@ const goToHistory = () => {
 const goToPost = () => {
   router.push(`/mypage/review/${props.orderId}`)
 }
+
+const reorder = async () => {
+  try {
+    await orderService.reorder(props.orderId)
+    await showAlert('메뉴를 장바구니에 다시 담았습니다', { title: '재주문 완료', type: 'success',})
+  router.push('/cart')
+}  catch(error)  {
+  const message =
+  error.response?.data?.resultMessage ||
+  error.response?.data?.message ||
+  '재주문에 실패했습니다.'
+
+  await showAlert(message, { title: '오류', type: 'error'})
+
+}}
+
+
 </script>
 
 
@@ -58,7 +77,7 @@ const goToPost = () => {
           <!-- 배달완료 + 리뷰 이미 있으면 -->
           <button v-else-if="orderState === 6 && hasReview" class="btn-outline btn-done" disabled>리뷰 작성완료</button>
           <!-- 주문 취소면 재주문 -->
-          <button v-else-if="isCancelled" class="btn-outline">재주문</button>
+          <button v-else-if="isCancelled" class="btn-outline" @click="reorder">재주문</button>
         <button class="btn-primary" @click="goToHistory">상세정보</button>
       </div>
     </div>

@@ -167,11 +167,37 @@ class OwnerService {
         return res.data;
     }
 
+    // 사장 리뷰 목록
+    async getOwnerReviews(storeId) {
+        const res = await axios.get(`${this.#url}/review`, {
+            params: { storeId }
+        });
+        return res.data;
+    }
+    
     // 사장 리뷰 답글 등록
     async saveReviewReply(reviewId, replyData) {
         const res = await axios.post(`${this.#url}/review/${reviewId}/reply`, replyData);
     return res.data;
     }
+    // 사장 리뷰 답글 수정
+    async updateReviewReply(replyId, replyData) {
+        const res = await axios.put(`${this.#url}/review/reply/${replyId}`, replyData);
+    return res.data;
+    }
+
+    // 사장 리뷰 답글 삭제
+    async deleteReviewReply(replyId) {
+        const res = await axios.delete(`${this.#url}/review/reply/${replyId}`);
+    return res.data;
+    }
+
+    // 사장 리뷰 신고
+    async reportReview(reviewId, reportData) {
+        const res = await axios.post(`${this.#url}/review/${reviewId}/report`, reportData);
+    return res.data;
+    }
+
 
     async getMySettlements(storeId) {
         const res = await axios.get(`${this.#url}/settlement`, { params: { storeId } })

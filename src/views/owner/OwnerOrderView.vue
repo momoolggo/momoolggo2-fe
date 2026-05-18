@@ -10,6 +10,7 @@ import AddStoreView from '@/views/owner/AddStoreView.vue';
 import ownerService from '@/services/ownerService';
 import { useStore } from '@/stores/useStore';
 import OwnerReviewView from './OwnerReviewView.vue'
+import OwnerSettlementView from '@/components/owner/OwnerSettlementView.vue'
 
 const storeInfo = useStore();
 
@@ -120,6 +121,11 @@ const formattedDate = computed(() => {
       <!-- 리뷰관리 화면 -->
       <template v-if="currentMenu === 'review'">
         <OwnerReviewView />
+      </template>
+
+      <!-- 정산관리 화면 -->
+      <template v-if="currentMenu === 'settlement'">
+        <OwnerSettlementView />
       </template>
 
     </main>

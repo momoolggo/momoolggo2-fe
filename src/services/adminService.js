@@ -310,6 +310,16 @@ class AdminService {
         return res.data
     }
 
+    async getRiderSettlements() {
+        const res = await axios.get(`${this.#url}/settlement/rider`)
+        return res.data
+      }
+      
+      async confirmRiderSettlement(settlementNo) {
+        const res = await axios.post(`${this.#url}/settlement/rider/${settlementNo}/confirm`)
+        return res.data
+      }
+
 
 
  }

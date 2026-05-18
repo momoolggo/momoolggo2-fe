@@ -48,7 +48,6 @@ import AdminSettlementView from '@/views/admin/AdminSettlementView.vue'
 import AdminBlindView from '@/views/admin/AdminBlindView.vue'
 import AdminCsView from '@/views/admin/AdminCsView.vue'
 import AdminDeliveryView from '@/views/admin/AdminDeliveryView.vue'
-import AdminRiderView from '@/views/admin/AdminRiderView.vue'
 import AdminUserView from '@/views/admin/AdminUserView.vue'
 import AdminStoreView from '@/views/admin/AdminStoreView.vue'
 
@@ -75,7 +74,6 @@ const routes = [
   { path: '/admin/blind', name: 'AdminBlind', component: AdminBlindView/*, meta: { requiresAuth: true, role: 'ADMIN' }*/ },
   { path: '/admin/cs', name: 'AdminCs', component: AdminCsView /*,  meta: { requiresAuth: true, role: 'ADMIN' }*/ },
   { path: '/admin/delivery', name: 'AdminDelivery', component: AdminDeliveryView/*,  meta: { requiresAuth: true, role: 'ADMIN' }*/ },
-  { path: '/admin/rider', name: 'AdminRider', component: AdminRiderView/*,  meta: { requiresAuth: true, role: 'ADMIN' }*/ },
   { path: '/admin/user', name: 'AdminUser', component: AdminUserView/*,  meta: { requiresAuth: true, role: 'ADMIN' }*/ },
   { path: '/admin/store', name: 'AdminStore', component: AdminStoreView/*,  meta: { requiresAuth: true, role: 'ADMIN' }*/ },
 

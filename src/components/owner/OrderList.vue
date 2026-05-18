@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, inject, watch } from 'vue';
+import { ref, onMounted, onBeforeUnmount, inject, watch } from 'vue';
 import { useStore } from '@/stores/useStore';
 import ownerService from '@/services/ownerService';
 import OrderDetailModal from '@/components/owner/OrderDetailModal.vue';
@@ -8,6 +8,13 @@ const storeInfo = useStore();
 const orders = ref([]);
 const modalOpen = ref(false);
 const selectedOrder = ref(null);
+const eventSource = ref(null);
+const newOrderId = ref(null)
+const toastVisible = ref(false)
+const toastMessage = ref('')
+let toastTimer = null
+let highlightTimer = null
+
 
 // 부모에서 provide한 날짜와 갱신 함수
 const selectedDate = inject('selectedDate', ref(null));
@@ -26,6 +33,16 @@ const fetchOrders = async () => {
     console.error("주문 조회 실패:", error);
   }
 };
+
+const showToast = (message) => {
+  toastMessage.value = message
+  toastVisible.value = true
+
+  clearTimeout(toastTimer)
+  toastTimer = setTimeout(() => {
+    toastVisible.value = false
+  }, 3000)
+}
 
 // 날짜가 변경되면 주문 목록도 갱신
 watch(selectedDate, () => {
@@ -56,9 +73,60 @@ const getStatusInfo = (status) => {
   return statusInfo[String(status)] || { text: '알 수 없음', class: 'waiting' };
 };
 
-watch(() => storeInfo.myStoreId, fetchOrders);
+watch(
+  () => storeInfo.myStoreId,
+  () => {
+    fetchOrders()
+    connectOrderSse()
+  }
+)
 
-onMounted(fetchOrders);
+onMounted(() => {
+  fetchOrders()
+  connectOrderSse()
+})
+
+onBeforeUnmount(() => {
+  eventSource.value?.close()
+  clearTimeout(toastTimer)
+  clearTimeout(highlightTimer)
+})
+const connectOrderSse = () => {
+  if (!storeInfo.myStoreId) return
+
+  if (eventSource.value) {
+    eventSource.value.close()
+  }
+
+  eventSource.value = new EventSource(
+    `http://localhost:8080/api/owner/order/subscribe?storeId=${storeInfo.myStoreId}`,
+    { withCredentials: true }
+  )
+
+  eventSource.value.addEventListener('connect', (event) => {
+    console.log('SSE connected', event.data)
+  })
+
+  eventSource.value.addEventListener('new-order', async (event) => {
+  const data = JSON.parse(event.data)
+  console.log('new order', data)
+
+  newOrderId.value = data.orderId
+  showToast('새 주문이 들어왔습니다.')
+
+  await fetchOrders()
+  await refreshStats()
+
+  clearTimeout(highlightTimer)
+  highlightTimer = setTimeout(() => {
+    newOrderId.value = null
+  }, 3000)
+})
+
+  eventSource.value.onerror = (error) => {
+    console.error('SSE error:', error)
+  }
+}
 
 </script>
 
@@ -67,6 +135,12 @@ onMounted(fetchOrders);
     <div class="title-area">
       <h2 class="main-title">신규 주문</h2>
     </div>
+
+    <Transition name="toast">
+      <div v-if="toastVisible" class="order-toast">
+        {{ toastMessage }}
+      </div>
+    </Transition>
 
     <div class="table-header">
       <span class="col-no">NO.</span>
@@ -78,7 +152,11 @@ onMounted(fetchOrders);
       <span class="col-status">상태</span>
     </div>
 
-    <div v-for="(order, index) in orders" :key="order.orderId" class="order-item" @click="openModal(order)">
+    <div v-for="(order, index) in orders" 
+    :key="order.orderId" 
+    class="order-item"
+    :class="{ 'new-order-highlight': order.orderId === newOrderId }" 
+    @click="openModal(order)">
       <span class="col-no">{{ index + 1 }}</span>
       <span class="col-time">{{ order.orderDate }}</span>
       <span class="col-duration">-</span>
@@ -164,4 +242,48 @@ onMounted(fetchOrders);
 .cancel    { background-color: #c42427; }
 
 .no-data { text-align: center; padding: 50px; color: #aaa; }
+
+.new-order-highlight {
+  border-color: #a40c0b;
+  background: #fff4f4;
+  box-shadow: 0 0 0 2px rgba(164, 12, 11, 0.14);
+  animation: highlightPulse 0.8s ease-in-out 2;
+}
+
+@keyframes highlightPulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.01);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.order-toast {
+  position: fixed;
+  top: 28px;
+  right: 28px;
+  z-index: 300;
+  padding: 14px 18px;
+  border-radius: 10px;
+  background: #a40c0b;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  box-shadow: 0 8px 24px rgba(164, 12, 11, 0.24);
+}
+
+.toast-enter-active,
+.toast-leave-active {
+  transition: all 0.2s ease;
+}
+
+.toast-enter-from,
+.toast-leave-to {
+  opacity: 0;
+  transform: translateY(-8px);
+}
 </style>

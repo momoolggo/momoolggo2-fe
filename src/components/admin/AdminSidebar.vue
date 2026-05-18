@@ -9,7 +9,6 @@ const menuItems = [
   { name: '회원 관리', path: '/admin/user' },
   { name: '가게 관리', path: '/admin/store' },
   { name: '리뷰 관리', path: '/admin/blind' },
-  { name: '라이더 관리', path: '/admin/rider' },  // Group 8 신설 2026-05-17 (Q-A14.b (3))
   { name: '정산 관리', path: '/admin/settlement' },
   { name: '배달 관리', path: '/admin/delivery' },
   { name: '고객 지원', path: '/admin/cs' },

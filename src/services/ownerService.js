@@ -171,8 +171,21 @@ class OwnerService {
     async saveReviewReply(reviewId, replyData) {
         const res = await axios.post(`${this.#url}/review/${reviewId}/reply`, replyData);
     return res.data;
+    }
+
+    async getMySettlements(storeId) {
+        const res = await axios.get(`${this.#url}/settlement`, { params: { storeId } })
+        return res.data
+    }
+
+    async submitSettlementInquiry(content) {
+        const res = await axios.post(`${this.#url}/settlement/inquiry`, { content })
+        return res.data
+    }
+
+    
 }
 
-}
+
 
 export default new OwnerService();

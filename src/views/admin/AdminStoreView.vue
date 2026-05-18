@@ -16,7 +16,7 @@ const searchForm = ref({
   storeName: '',
   businessNo: '',
   userId: '',
-  date: '',         // 추가
+  date: '',
   storeCategory: '',
   name: '',
 })
@@ -27,7 +27,6 @@ const onDateChange = (e) => {
   searchForm.value.date = `${y}.${m}.${d}`
 }
 
-// 영업 상태 (state: 0=준비중, 1=영업중)
 const stateLabel = (state) => {
   const map = { 0: '준비중', 1: '영업중' }
   return map[state] ?? '-'
@@ -54,12 +53,8 @@ const fetchStoreList = async () => {
     if (searchForm.value.name) params.name = searchForm.value.name
 
     const res = await adminService.getStoreList(params)
-const data = res?.resultData?.content ?? []
-storeList.value = data
-totalPages.value = Math.ceil((res?.resultData?.totalCount ?? 0) / 15) || 1
-console.log('totalCount:', res?.resultData?.totalCount)
-console.log('totalPages:', totalPages.value)
-
+    const data = res?.resultData?.content ?? []
+    storeList.value = data
     totalPages.value = Math.ceil((res?.resultData?.totalCount ?? 0) / 15) || 1
   } catch {
     storeList.value = []
@@ -74,7 +69,6 @@ const handleSearch = () => {
   fetchStoreList()
 }
 
-// 가게 상세 모달
 const showDetailModal = ref(false)
 const selectedStore = ref(null)
 const detailLoading = ref(false)
@@ -125,15 +119,15 @@ onMounted(fetchStoreList)
               <input v-model="searchForm.userId" type="text" class="form_input" />
             </div>
             <div class="search_field">
-  <label>가게등록일</label>
-  <div class="date_picker_wrap" @click="dateRef.showPicker()">
-    <img src="@/assets/calender.png" alt="calendar" class="blind_search_img" />
-    <span class="date_text" :class="{ placeholder: !searchForm.date }">
-      {{ searchForm.date || formatDate(today) }}
-    </span>
-    <input ref="dateRef" type="date" class="hidden_date" @change="onDateChange" />
-  </div>
-</div>
+              <label>가게등록일</label>
+              <div class="date_picker_wrap" @click="dateRef.showPicker()">
+                <img src="@/assets/calender.png" alt="calendar" class="blind_search_img" />
+                <span class="date_text" :class="{ placeholder: !searchForm.date }">
+                  {{ searchForm.date || formatDate(today) }}
+                </span>
+                <input ref="dateRef" type="date" class="hidden_date" @change="onDateChange" />
+              </div>
+            </div>
             <div class="search_field">
               <label>카테고리</label>
               <input v-model="searchForm.storeCategory" type="text" class="form_input" placeholder="카테고리명" />
@@ -184,15 +178,15 @@ onMounted(fetchStoreList)
 
         <!-- 페이지네이션 -->
         <div class="pagination">
-        <button :disabled="currentPage === 1" @click="currentPage--; fetchStoreList()">◀</button>
-        <button
-          v-for="p in totalPages"
-          :key="p"
-          :class="{ active: currentPage === p }"
-          @click="currentPage = p; fetchStoreList()"
-        >{{ p }}</button>
-        <button :disabled="currentPage >= totalPages" @click="currentPage++; fetchStoreList()">▶</button>
-      </div>
+          <button :disabled="currentPage === 1" @click="currentPage--; fetchStoreList()">◀</button>
+          <button
+            v-for="p in totalPages"
+            :key="p"
+            :class="{ active: currentPage === p }"
+            @click="currentPage = p; fetchStoreList()"
+          >{{ p }}</button>
+          <button :disabled="currentPage >= totalPages" @click="currentPage++; fetchStoreList()">▶</button>
+        </div>
       </div>
     </div>
 
@@ -253,12 +247,11 @@ onMounted(fetchStoreList)
 .search_field { display: flex; flex-direction: column; gap: 6px; }
 .search_field label { font-size: 12px; color: #666; font-weight: 500; }
 .form_input { border: 1px solid #ddd; border-radius: 6px; padding: 7px 10px; font-size: 13px; color: #333; outline: none; min-width: 110px; }
-.date_range { display: flex; align-items: center; gap: 6px; }
-.date_sep { color: #999; font-size: 13px; }
 .date_picker_wrap { position: relative; display: flex; align-items: center; gap: 6px; border: 1px solid #ddd; border-radius: 6px; padding: 6px 10px; cursor: pointer; background: #fff; }
 .date_picker_wrap:hover { border-color: #aaa; }
 .blind_search_img { width: 16px; height: auto; cursor: pointer; flex-shrink: 0; }
 .date_text { font-size: 13px; color: #333; min-width: 80px; user-select: none; }
+.date_text.placeholder { color: #aaa; }
 .hidden_date { position: absolute; opacity: 0; width: 0; height: 0; pointer-events: none; }
 .search_btn { background: #9b1b1b; color: #fff; border: none; border-radius: 6px; padding: 8px 20px; font-size: 13px; font-weight: 600; cursor: pointer; height: 34px; align-self: flex-end; }
 .search_btn:hover { background: #7f1515; }

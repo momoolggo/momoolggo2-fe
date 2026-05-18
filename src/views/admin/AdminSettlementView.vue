@@ -18,15 +18,32 @@ const showDetailModal = ref(false)
 const selectedSettlement = ref(null)
 
 const searchForm = ref({
-  startDate: '2026-04-06',
-  endDate: '2026-04-12',
   targetType: null,
   status: null,
   keyword: '',
 })
 
-const onStartDateChange = (e) => { searchForm.value.startDate = e.target.value }
-const onEndDateChange = (e) => { searchForm.value.endDate = e.target.value }
+const settlementTab = ref('store')
+const riderSettlementList = ref([])
+
+const fetchRiderSettlements = async () => {
+  try {
+    const res = await adminService.getRiderSettlements()
+    riderSettlementList.value = res?.resultData ?? []
+  } catch (e) {
+    console.error('라이더 정산 조회 실패', e)
+    riderSettlementList.value = []
+  }
+}
+
+const confirmRiderSettlement = async (settlementNo) => {
+  try {
+    await adminService.confirmRiderSettlement(settlementNo)
+    await fetchRiderSettlements()
+  } catch (e) {
+    alert('정산 확정 실패')
+  }
+}
 
 const targetTypeOpen = ref(false)
 const targetTypeOptions = [
@@ -34,7 +51,7 @@ const targetTypeOptions = [
   { label: '사장님(가게)', value: 'STORE' },
   { label: '라이더', value: 'RIDER' },
 ]
-const selectedTargetLabel = ref('사장님(가게)')
+const selectedTargetLabel = ref('전체')
 const selectTargetType = (opt) => {
   searchForm.value.targetType = opt.value
   selectedTargetLabel.value = opt.label
@@ -87,11 +104,12 @@ const statusBadge = (status) => {
     COMPLETED: { text: '완료', class: 'badge_complete' },
     PENDING: { text: '대기', class: 'badge_pending' },
     HOLD: { text: '보류', class: 'badge_hold' },
+    CONFIRMED: { text: '확정', class: 'badge_complete' },
   }
   return map[status] ?? { text: status, class: '' }
 }
 
-const formatMoney = (v) => v != null ? `₩${v.toLocaleString()}` : '-'
+const formatMoney = (v) => v != null ? `${v.toLocaleString()} ₩` : '-'
 const targetTypeLabel = (type) => type === 'STORE' ? '사장' : type === 'RIDER' ? '라이더' : type
 const targetName = (item) => {
   if (item.targetName) return item.targetName
@@ -120,17 +138,12 @@ const fetchSummary = async () => {
 const fetchList = async () => {
   loading.value = true
   try {
-    const params = {}
-    if (searchForm.value.startDate) params.startDate = searchForm.value.startDate
-    if (searchForm.value.endDate) params.endDate = searchForm.value.endDate
-    const res = await adminService.getSettlementList(params)
+    const res = await adminService.getSettlementList({})
     settlementList.value = res?.resultData ?? []
   } catch (e) {
     settlementList.value = [
-      { settlementId: 1, targetType: 'STORE', targetNo: 1, targetName: '숨은집(대구 중구)', grossAmount: 1520000, feeAmount: 152000, netAmount: 1368000, periodEnd: '2026-04-13', status: 'COMPLETED' },
-      { settlementId: 2, targetType: 'RIDER', targetNo: 1, targetName: '김그린(라이더)', grossAmount: 880000, feeAmount: 88000, netAmount: 792000, periodEnd: '2026-04-13', status: 'COMPLETED' },
-      { settlementId: 3, targetType: 'STORE', targetNo: 2, targetName: '마왕 족발(대구 북구)', grossAmount: 2220000, feeAmount: 220000, netAmount: 1980000, periodEnd: '2026-04-13', status: 'PENDING' },
-      { settlementId: 4, targetType: 'RIDER', targetNo: 2, targetName: '김블루(라이더)', grossAmount: 1200000, feeAmount: 120000, netAmount: 1080000, periodEnd: '2026-04-13', status: 'PENDING' },
+      { settlementId: 1, targetType: 'STORE', targetNo: 1, targetName: '숨은집(대구 중구)', grossAmount: 1520000, feeAmount: 76000, netAmount: 1444000, periodStart: '2026-04-06', periodEnd: '2026-04-12', status: 'COMPLETED' },
+      { settlementId: 2, targetType: 'STORE', targetNo: 2, targetName: '마왕 족발(대구 북구)', grossAmount: 2220000, feeAmount: 111000, netAmount: 2109000, periodStart: '2026-04-06', periodEnd: '2026-04-12', status: 'PENDING' },
     ]
   } finally {
     loading.value = false
@@ -144,13 +157,13 @@ const openDetail = async (item) => {
   } catch (e) {
     selectedSettlement.value = {
       ...item,
-      periodStart: '2026-04-06',
-      periodEnd: '2026-04-12',
+      periodStart: item.periodStart ?? '2026-04-06',
+      periodEnd: item.periodEnd ?? '2026-04-12',
       orders: [
-        { orderNo: '000001A', datetime: '2026-04-10 15:26PM', menu: '파스타 외 2', total: 36000 },
-        { orderNo: '000002A', datetime: '2026-04-08 15:26PM', menu: '피자 외 3', total: 36000 },
-        { orderNo: '000003A', datetime: '2026-04-07 15:26PM', menu: '파스타 외 2', total: 36000 },
-        { orderNo: '000004A', datetime: '2026-04-06 12:35PM', menu: '피자 외 1', total: 36000 },
+        { orderNo: '000001A', datetime: '2026-04-10 15:26', menu: '파스타 외 2', total: 380000 },
+        { orderNo: '000002A', datetime: '2026-04-08 15:26', menu: '피자 외 3', total: 360000 },
+        { orderNo: '000003A', datetime: '2026-04-07 15:26', menu: '파스타 외 2', total: 420000 },
+        { orderNo: '000004A', datetime: '2026-04-06 12:35', menu: '피자 외 1', total: 360000 },
       ]
     }
   }
@@ -181,6 +194,7 @@ const holdSettlement = async (settlementId) => {
 onMounted(() => {
   fetchSummary()
   fetchList()
+  fetchRiderSettlements()
 })
 
 const handleSearch = () => {
@@ -212,7 +226,6 @@ const handleSearch = () => {
             </div>
             <div class="card_sub_bar blue_sub">이번 주 총 예정액</div>
           </div>
-
           <div class="summary_card">
             <div class="card_main">
               <div class="icon_area green_area">
@@ -225,7 +238,6 @@ const handleSearch = () => {
             </div>
             <div class="card_sub_bar green_sub">지급 완료</div>
           </div>
-
           <div class="summary_card">
             <div class="card_main">
               <div class="icon_area yellow_area">
@@ -241,119 +253,197 @@ const handleSearch = () => {
             </div>
           </div>
         </div>
+        
 
-        <div class="section_title">정산 상세 내역</div>
+<div class="top_control_row">
 
-        <!-- 검색 필터 -->
-        <div class="search_box">
-          <div class="search_row">
-            <div class="search_field">
-             
-            </div>
+  <!-- 검색 -->
+  <div class="search_box">
+    <div class="search_row">
 
-            <div class="search_field">
-              <label>대상 구분</label>
-              <div class="dropdown_wrap">
-                <button class="dropdown_btn" @click="targetTypeOpen = !targetTypeOpen">
-                  {{ selectedTargetLabel }}<span class="dropdown_arrow">▼</span>
-                </button>
-                <div v-if="targetTypeOpen" class="dropdown_menu">
-                  <button v-for="opt in targetTypeOptions" :key="opt.label" class="dropdown_item" @click="selectTargetType(opt)">{{ opt.label }}</button>
-                </div>
-              </div>
-            </div>
+      <div class="search_field">
+        <div class="dropdown_wrap">
+          <button
+            class="dropdown_btn"
+            @click="statusOpen = !statusOpen"
+          >
+            {{ selectedStatusLabel }}
+            <span class="dropdown_arrow">▼</span>
+          </button>
 
-            <div class="search_field">
-              <label>정산 상태</label>
-              <div class="dropdown_wrap">
-                <button class="dropdown_btn" @click="statusOpen = !statusOpen">
-                  {{ selectedStatusLabel }}<span class="dropdown_arrow">▼</span>
-                </button>
-                <div v-if="statusOpen" class="dropdown_menu">
-                  <button v-for="opt in statusOptions" :key="opt.label" class="dropdown_item" @click="selectStatus(opt)">{{ opt.label }}</button>
-                </div>
-              </div>
-            </div>
-
-            <div class="search_field">
-              <label>&nbsp;</label>
-              <input v-model="searchForm.keyword" type="text" placeholder="가게명 / 라이더 검색" class="keyword_input" />
-            </div>
-
-            <button class="search_btn" @click="handleSearch">검색</button>
+          <div
+            v-if="statusOpen"
+            class="dropdown_menu"
+          >
+            <button
+              v-for="opt in statusOptions"
+              :key="opt.label"
+              class="dropdown_item"
+              @click="selectStatus(opt)"
+            >
+              {{ opt.label }}
+            </button>
           </div>
         </div>
+      </div>
 
-        <!-- 테이블 -->
-        <div class="table_wrap">
-          <table class="settlement_table">
-            <thead>
-              <tr>
-                <th>대상자(가게/라이더)</th>
-                <th>
-                  <div class="th_dropdown_wrap">
-                    정산 유형
-                    <span class="sort_arrow" @click.stop="tableTypeOpen = !tableTypeOpen">▼</span>
-                    <div v-if="tableTypeOpen" class="th_dropdown_menu">
-                      <button v-for="opt in targetTypeOptions" :key="opt.label" class="dropdown_item" @click="filterByType(opt)">{{ opt.label }}</button>
+      <div class="search_field">
+        
+
+        <input
+          v-model="searchForm.keyword"
+          type="text"
+          placeholder="가게명 검색"
+          class="keyword_input"
+        />
+      </div>
+
+      <button
+        class="search_btn"
+        @click="handleSearch"
+      >
+        검색
+      </button>
+
+    </div>
+  </div>
+
+  <!-- 탭 -->
+  <div class="tab_row">
+
+    <button
+      class="tab_btn"
+      :class="{ active: settlementTab === 'store' }"
+      @click="settlementTab = 'store'"
+    >
+      가게 정산
+    </button>
+
+    <button
+      class="tab_btn"
+      :class="{ active: settlementTab === 'rider' }"
+      @click="settlementTab = 'rider'"
+    >
+      라이더 정산
+    </button>
+
+  </div>
+
+</div>
+
+<!-- 가게 정산 -->
+<template v-if="settlementTab === 'store'">
+       
+          <!-- 가게 정산 테이블 -->
+          <div class="table_wrap">
+            <table class="settlement_table">
+              <thead>
+                <tr>
+                  <th>가게명</th>
+                  <th>정산 기간</th>
+                  <th>총 주문금액</th>
+                  <th>수수료 (5%)</th>
+                  <th>실지급액</th>
+                  <th>정산일</th>
+                  <th>
+                    <div class="th_dropdown_wrap">
+                      상태
+                      <span class="sort_arrow" @click.stop="tableStatusOpen = !tableStatusOpen">▼</span>
+                      <div v-if="tableStatusOpen" class="th_dropdown_menu">
+                        <button v-for="opt in statusOptions" :key="opt.label" class="dropdown_item" @click="filterByStatus(opt)">{{ opt.label }}</button>
+                      </div>
                     </div>
-                  </div>
-                </th>
-                <th>총 금액</th>
-                <th>수수료</th>
-                <th>실지급액</th>
-                <th>정산일</th>
-                <th>
-                  <div class="th_dropdown_wrap">
-                    상태
-                    <span class="sort_arrow" @click.stop="tableStatusOpen = !tableStatusOpen">▼</span>
-                    <div v-if="tableStatusOpen" class="th_dropdown_menu">
-                      <button v-for="opt in statusOptions" :key="opt.label" class="dropdown_item" @click="filterByStatus(opt)">{{ opt.label }}</button>
-                    </div>
-                  </div>
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              <template v-if="filteredList.length > 0">
-                <tr v-for="item in filteredList" :key="item.settlementId" class="clickable_row" @click="openDetail(item)">
-                  <td>{{ targetName(item) }}</td>
-                  <td>
-                    <span :class="['type_badge', item.targetType === 'STORE' ? 'badge_store' : 'badge_rider']">
-                      {{ targetTypeLabel(item.targetType) }}
-                    </span>
-                  </td>
-                  <td>{{ formatMoney(item.grossAmount) }}</td>
-                  <td>{{ formatMoney(item.feeAmount) }}</td>
-                  <td>{{ formatMoney(item.netAmount) }}</td>
-                  <td>{{ item.periodEnd }}</td>
-                  <td>
-                    <span :class="['status_badge', statusBadge(item.status).class]">
-                      {{ statusBadge(item.status).text }}
-                    </span>
-                  </td>
+                  </th>
                 </tr>
-              </template>
-              <tr v-if="filteredList.length === 0">
-                <td colspan="7" class="empty_td">조회된 정산 내역이 없습니다.</td>
-              </tr>
-              <tr v-for="i in Math.max(0, 10 - filteredList.length)" :key="'e'+i" class="empty_row">
-                <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                <template v-if="filteredList.length > 0">
+                  <tr v-for="item in filteredList" :key="item.settlementId" class="clickable_row" @click="openDetail(item)">
+                    <td>{{ targetName(item) }}</td>
+                    <td>{{ item.periodStart }} ~ {{ item.periodEnd }}</td>
+                    <td>{{ formatMoney(item.grossAmount) }}</td>
+                    <td>{{ formatMoney(item.feeAmount) }}</td>
+                    <td>{{ formatMoney(item.netAmount) }}</td>
+                    <td>{{ item.periodEnd }}</td>
+                    <td>
+                      <span :class="['status_badge', statusBadge(item.status).class]">
+                        {{ statusBadge(item.status).text }}
+                      </span>
+                    </td>
+                  </tr>
+                </template>
+                <tr v-if="filteredList.length === 0">
+                  <td colspan="7" class="empty_td">조회된 정산 내역이 없습니다.</td>
+                </tr>
+                <tr v-for="i in Math.max(0, 10 - filteredList.length)" :key="'e'+i" class="empty_row">
+                  <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
 
-        <!-- 페이지네이션 -->
-        <div class="pagination">
-          <button @click="currentPage > 1 && currentPage--">◀</button>
-          <button v-for="p in totalPages" :key="p" :class="{ active: currentPage === p }" @click="currentPage = p">{{ p }}</button>
-          <button @click="currentPage < totalPages && currentPage++">▶</button>
-        </div>
+          <!-- 페이지네이션 -->
+          <div class="pagination">
+            <button @click="currentPage > 1 && currentPage--">◀</button>
+            <button v-for="p in totalPages" :key="p" :class="{ active: currentPage === p }" @click="currentPage = p">{{ p }}</button>
+            <button @click="currentPage < totalPages && currentPage++">▶</button>
+          </div>
+        </template>
+
+        <!-- 라이더 정산 -->
+        <template v-if="settlementTab === 'rider'">
+          <div class="table_wrap">
+            <table class="settlement_table">
+              <thead>
+                <tr>
+                  <th>라이더 번호</th>
+                  <th>정산 기간</th>
+                  <th>배달 건수</th>
+                  <th>총 배달료</th>
+                  <th>수수료 (10%)</th>
+                  <th>세금 (3.3%)</th>
+                  <th>보험료</th>
+                  <th>실수령액</th>
+                  <th>상태</th>
+                  <th>처리</th>
+                </tr>
+              </thead>
+              <tbody>
+                <template v-if="riderSettlementList.length > 0">
+                  <tr v-for="item in riderSettlementList" :key="item.settlementNo">
+                    <td>{{ item.riderNo }}</td>
+                    <td>{{ item.periodStart }} ~ {{ item.periodEnd }}</td>
+                    <td>{{ item.deliveryCount }}건</td>
+                    <td>{{ formatMoney((item.totalBaseFee ?? 0) + (item.totalExtraFee ?? 0)) }}</td>
+                    <td>{{ formatMoney(item.commission) }}</td>
+                    <td>{{ formatMoney(item.tax) }}</td>
+                    <td>{{ formatMoney(item.insurance) }}</td>
+                    <td>{{ formatMoney(item.payout) }}</td>
+                    <td>
+                      <span :class="['status_badge', statusBadge(item.status).class]">
+                        {{ statusBadge(item.status).text }}
+                      </span>
+                    </td>
+                    <td>
+                      <button v-if="item.status === 'PENDING'" class="confirm_btn" @click="confirmRiderSettlement(item.settlementNo)">확정</button>
+                      <span v-else style="color:#aaa; font-size:12px;">완료</span>
+                    </td>
+                  </tr>
+                </template>
+                <tr v-if="riderSettlementList.length === 0">
+                  <td colspan="10" class="empty_td">라이더 정산 내역이 없습니다.</td>
+                </tr>
+                <tr v-for="i in Math.max(0, 10 - riderSettlementList.length)" :key="'r'+i" class="empty_row">
+                  <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </template>
       </div>
     </div>
 
-    <!-- 정산 상세 모달 -->
+    <!-- 가게 정산 상세 모달 -->
     <div v-if="showDetailModal && selectedSettlement" class="modal_overlay" @click.self="closeDetail">
       <div class="modal">
         <div class="modal_header">
@@ -363,7 +453,6 @@ const handleSearch = () => {
           <button class="modal_close" @click="closeDetail">✕</button>
         </div>
 
-        <!-- 모달 요약 카드 -->
         <div class="modal_summary">
           <div class="modal_info_card">
             <div class="modal_icon_area blue_icon_area">
@@ -407,7 +496,6 @@ const handleSearch = () => {
           </table>
         </div>
 
-        <!-- 합계 정보 -->
         <div class="modal_total_wrap">
           <div class="modal_total_row">
             <span class="total_label">총 매출</span>
@@ -435,7 +523,13 @@ const handleSearch = () => {
 <style scoped>
 .admin_layout { display: flex; min-height: 100vh; background: #ffffff; font-family: 'Noto Sans KR', sans-serif; }
 .main_content { margin-left: 190px; flex: 1; display: flex; flex-direction: column; }
-.content { padding: 36px 60px; display: flex; flex-direction: column; gap: 20px; }
+.content {
+  padding: 36px 60px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  
+}
 .page_title { font-size: 20px; font-weight: 700; color: #222; margin: 0; }
 .section_title { font-size: 20px; font-weight: 700; color: #222; margin-bottom: -8px; margin-top: 10px; }
 .summary_grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
@@ -456,13 +550,38 @@ const handleSearch = () => {
 .blue_sub { background: #ddeeff; color: #2c6fbb; }
 .green_sub { background: #ddf5dd; color: #2e7d32; }
 .yellow_sub { background: #fff3d6; color: #b07800; }
-.search_box { background: #fff; border-radius: 10px; padding: 20px 24px; }
-.search_row { display: flex; align-items: flex-end; gap: 16px; flex-wrap: wrap; }
-.search_field { display: flex; flex-direction: column; gap: 6px; }
-.search_field label { font-size: 12px; color: #666; font-weight: 500; }
-.date_range { display: flex; align-items: center; gap: 6px; }
-.date_sep { color: #999; font-size: 13px; }
-.visible_date { border: 1px solid #ddd; border-radius: 6px; padding: 7px 10px; font-size: 13px; color: #333; outline: none; cursor: pointer; }
+.tab_row { display: flex; gap: 8px; }
+.top_control_row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 4px;
+}
+.tab_row { display: flex; gap: 8px; margin-left: auto;}
+.search_box { background: transparent; padding: 0;}
+.tab_btn { padding: 6px 18px; border: 1px solid #ddd; background: #fff; border-radius: 6px; font-size: 13px; color: #666; cursor: pointer; font-weight: 500; }
+.tab_btn.active { background: #9b1b1b; border-color: #9b1b1b; color: #fff; font-weight: 700; }
+.search_box {
+  background: transparent;
+  padding: 0;
+}
+.search_row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.dropdown_btn,
+.keyword_input,
+.search_btn,
+.tab_btn {
+  height: 40px;
+  box-sizing: border-box;
+}
+.search_field {
+  display: flex;
+  align-items: center;
+}
 .dropdown_wrap { position: relative; }
 .dropdown_btn { background: #fff; border: 1px solid #ddd; border-radius: 6px; padding: 7px 12px; font-size: 13px; color: #333; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 8px; min-width: 120px; }
 .dropdown_btn:hover { border-color: #aaa; }
@@ -495,6 +614,8 @@ const handleSearch = () => {
 .badge_complete { background: #e0e0e0; color: #555; }
 .badge_pending { background: #f5a623; color: #fff; }
 .badge_hold { background: #cc1f1f; color: #fff; }
+.confirm_btn { background: #4a90d9; border: none; color: #fff; border-radius: 4px; padding: 4px 12px; font-size: 11px; cursor: pointer; font-weight: 600; }
+.confirm_btn:hover { background: #2c6faa; }
 .pagination { display: flex; justify-content: center; align-items: center; gap: 6px; padding: 8px 0; }
 .pagination button { background: none; border: none; font-size: 13px; color: #666; cursor: pointer; padding: 4px 8px; border-radius: 4px; }
 .pagination button.active { font-weight: 700; color: #cc1f1f; }

@@ -5,6 +5,7 @@ import { useLocationTracker } from '@/composables/useLocationTracker'
 import WaitingTab from '@/components/rider/WaitingTab.vue'
 import InProgressTab from '@/components/rider/InProgressTab.vue'
 import CompletedTab from '@/components/rider/CompletedTab.vue'
+import RiderHeader from '@/components/rider/RiderHeader.vue'
 
 const deliveryStore = useDeliveryStore()
 const tracker = useLocationTracker()
@@ -38,6 +39,7 @@ const countOf = (key) => {
 </script>
 
 <template>
+  <RiderHeader />
   <div class="rider_home">
     <header class="page_header">
       <h1 class="page_title">배달현황</h1>

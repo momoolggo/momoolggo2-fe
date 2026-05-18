@@ -37,6 +37,10 @@ import RiderLandingView from '@/views/rider/RiderLandingView.vue'
 import RiderSignupView from '@/views/rider/RiderSignupView.vue'
 import RiderSigninView from '@/views/rider/RiderSigninView.vue'
 import RiderHomeView   from '@/views/rider/RiderHomeView.vue'
+import RiderWorkSessionView from '@/views/rider/RiderWorkSessionView.vue'
+import RiderNoticeView from '@/views/rider/RiderNoticeView.vue'
+import RiderHistoryView from '@/views/rider/RiderHistoryView.vue'
+import RiderSettlementView from '@/views/rider/RiderSettlementView.vue'
 
 // ── 관리자
 import AdminHomeView from '@/views/admin/AdminHomeView.vue'
@@ -44,6 +48,7 @@ import AdminSettlementView from '@/views/admin/AdminSettlementView.vue'
 import AdminBlindView from '@/views/admin/AdminBlindView.vue'
 import AdminCsView from '@/views/admin/AdminCsView.vue'
 import AdminDeliveryView from '@/views/admin/AdminDeliveryView.vue'
+import AdminRiderView from '@/views/admin/AdminRiderView.vue'
 import AdminUserView from '@/views/admin/AdminUserView.vue'
 import AdminStoreView from '@/views/admin/AdminStoreView.vue'
 
@@ -70,9 +75,9 @@ const routes = [
   { path: '/admin/blind', name: 'AdminBlind', component: AdminBlindView/*, meta: { requiresAuth: true, role: 'ADMIN' }*/ },
   { path: '/admin/cs', name: 'AdminCs', component: AdminCsView /*,  meta: { requiresAuth: true, role: 'ADMIN' }*/ },
   { path: '/admin/delivery', name: 'AdminDelivery', component: AdminDeliveryView/*,  meta: { requiresAuth: true, role: 'ADMIN' }*/ },
+  { path: '/admin/rider', name: 'AdminRider', component: AdminRiderView/*,  meta: { requiresAuth: true, role: 'ADMIN' }*/ },
   { path: '/admin/user', name: 'AdminUser', component: AdminUserView/*,  meta: { requiresAuth: true, role: 'ADMIN' }*/ },
-  { path: '/admin/store', name: 'AdminStore', component: AdminStoreView/*,  meta: { requiresAuth: true, role: 'ADMIN' }*/ ,
-  },
+  { path: '/admin/store', name: 'AdminStore', component: AdminStoreView/*,  meta: { requiresAuth: true, role: 'ADMIN' }*/ },
 
 
     // /mypage는 메뉴 페이지
@@ -117,6 +122,10 @@ const routes = [
 
   // ── 라이더 전용
   { path: '/riderservice', name: 'RiderService', component: RiderHomeView, meta: { requiresAuth: true, role: 'RIDER' } },
+  { path: '/rider/work-session', name: 'RiderWorkSession', component: RiderWorkSessionView, meta: { requiresAuth: true, role: 'RIDER' } },
+  { path: '/rider/notice', name: 'RiderNotice', component: RiderNoticeView, meta: { requiresAuth: true, role: 'RIDER' } },
+  { path: '/rider/history', name: 'RiderHistory', component: RiderHistoryView, meta: { requiresAuth: true, role: 'RIDER' } },
+  { path: '/rider/settlement', name: 'RiderSettlement', component: RiderSettlementView, meta: { requiresAuth: true, role: 'RIDER' } },
 
   // ── 404 → 랜딩으로
   { path: '/:pathMatch(.*)*', redirect: '/' },

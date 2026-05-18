@@ -1,7 +1,8 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import AdminSidebar from '@/components/admin/AdminSidebar.vue'
 import AdminHeader from '@/components/admin/AdminHeader.vue'
+import AdminDeliveryMap from '@/components/admin/AdminDeliveryMap.vue'
 import adminService from '@/services/adminService'
 
 const ADMIN_TEL = '053-111-1212'
@@ -202,7 +203,29 @@ const fetchList = async () => {
   }
 }
 
-onMounted(fetchList)
+// ── 라이더 위치 폴링 (Group 10, 2026-05-17, 5초 결정 (가) Redis TTL 기준)
+const riderLocations = ref([])
+let pollIntervalId = null
+
+const fetchRiderLocations = async () => {
+  try {
+    const res = await adminService.getRiderLocations()
+    riderLocations.value = Array.isArray(res) ? res : (res?.resultData ?? [])
+  } catch {
+    // 무음 fail — 지도 빈 상태 유지 (alert 회피)
+    riderLocations.value = []
+  }
+}
+
+onMounted(() => {
+  fetchList()
+  fetchRiderLocations()
+  pollIntervalId = setInterval(fetchRiderLocations, 5000)
+})
+
+onUnmounted(() => {
+  if (pollIntervalId) clearInterval(pollIntervalId)
+})
 </script>
 
 <template>
@@ -236,6 +259,9 @@ onMounted(fetchList)
             <p class="card_value">{{ summary.completed }} <span class="card_unit">개</span></p>
           </div>
         </div>
+
+        <!-- 실시간 라이더 위치 지도 (Group 10, 5초 폴링) -->
+        <AdminDeliveryMap :rider-locations="riderLocations" />
 
         <!-- 필터 + 검색 -->
         <div class="filter_row">

@@ -180,6 +180,7 @@ class OwnerService {
         const res = await axios.post(`${this.#url}/review/${reviewId}/reply`, replyData);
     return res.data;
     }
+
     // 사장 리뷰 답글 수정
     async updateReviewReply(replyId, replyData) {
         const res = await axios.put(`${this.#url}/review/reply/${replyId}`, replyData);

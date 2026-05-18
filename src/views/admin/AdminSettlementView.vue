@@ -1,8 +1,11 @@
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import AdminSidebar from '@/components/admin/AdminSidebar.vue'
 import AdminHeader from '@/components/admin/AdminHeader.vue'
 import adminService from '@/services/adminService'
+
+
+
 
 const summary = ref({
   expectedAmount: 0,
@@ -45,18 +48,6 @@ const confirmRiderSettlement = async (settlementNo) => {
   }
 }
 
-const targetTypeOpen = ref(false)
-const targetTypeOptions = [
-  { label: '전체', value: null },
-  { label: '사장님(가게)', value: 'STORE' },
-  { label: '라이더', value: 'RIDER' },
-]
-const selectedTargetLabel = ref('전체')
-const selectTargetType = (opt) => {
-  searchForm.value.targetType = opt.value
-  selectedTargetLabel.value = opt.label
-  targetTypeOpen.value = false
-}
 
 const statusOpen = ref(false)
 const statusOptions = [
@@ -73,7 +64,6 @@ const selectStatus = (opt) => {
 }
 
 const tableStatusOpen = ref(false)
-const tableTypeOpen = ref(false)
 
 const filterByStatus = (opt) => {
   searchForm.value.status = opt.value
@@ -81,36 +71,27 @@ const filterByStatus = (opt) => {
   tableStatusOpen.value = false
 }
 
-const filterByType = (opt) => {
-  searchForm.value.targetType = opt.value
-  selectedTargetLabel.value = opt.label
-  tableTypeOpen.value = false
-}
-
-const filteredList = computed(() => {
-  return settlementList.value.filter(item => {
-    const typeMatch = !searchForm.value.targetType || item.targetType === searchForm.value.targetType
-    const statusMatch = !searchForm.value.status || item.status === searchForm.value.status
-    const keywordMatch = !searchForm.value.keyword || targetName(item).includes(searchForm.value.keyword)
-    return typeMatch && statusMatch && keywordMatch
-  })
-})
 
 const currentPage = ref(1)
-const totalPages = ref(3)
+const totalPages = ref(1)
+
+watch(currentPage, (newVal) => {
+  fetchList()
+})
 
 const statusBadge = (status) => {
   const map = {
     COMPLETED: { text: '완료', class: 'badge_complete' },
+    DONE: { text: '완료', class: 'badge_complete' },
     PENDING: { text: '대기', class: 'badge_pending' },
     HOLD: { text: '보류', class: 'badge_hold' },
+    HELD: { text: '보류', class: 'badge_hold' },
     CONFIRMED: { text: '확정', class: 'badge_complete' },
   }
   return map[status] ?? { text: status, class: '' }
 }
 
 const formatMoney = (v) => v != null ? `${v.toLocaleString()} ₩` : '-'
-const targetTypeLabel = (type) => type === 'STORE' ? '사장' : type === 'RIDER' ? '라이더' : type
 const targetName = (item) => {
   if (item.targetName) return item.targetName
   return item.targetType === 'STORE' ? `가게 #${item.targetNo}` : `라이더 #${item.targetNo}`
@@ -138,13 +119,18 @@ const fetchSummary = async () => {
 const fetchList = async () => {
   loading.value = true
   try {
-    const res = await adminService.getSettlementList({})
-    settlementList.value = res?.resultData ?? []
+    const res = await adminService.getSettlementList({
+      page: currentPage.value - 1,
+      size: 10,
+      status: searchForm.value.status ?? undefined,
+    })
+    const data = res?.resultData
+    
+    settlementList.value = data?.content ?? []
+    totalPages.value = data?.totalPages ?? (Math.ceil((data?.totalCount ?? 0) / 10) || 1)
   } catch (e) {
-    settlementList.value = [
-      { settlementId: 1, targetType: 'STORE', targetNo: 1, targetName: '숨은집(대구 중구)', grossAmount: 1520000, feeAmount: 76000, netAmount: 1444000, periodStart: '2026-04-06', periodEnd: '2026-04-12', status: 'COMPLETED' },
-      { settlementId: 2, targetType: 'STORE', targetNo: 2, targetName: '마왕 족발(대구 북구)', grossAmount: 2220000, feeAmount: 111000, netAmount: 2109000, periodStart: '2026-04-06', periodEnd: '2026-04-12', status: 'PENDING' },
-    ]
+    settlementList.value = []
+    totalPages.value = 1
   } finally {
     loading.value = false
   }
@@ -198,9 +184,13 @@ onMounted(() => {
 })
 
 const handleSearch = () => {
-  currentPage.value = 1
+  if(currentPage.value === 1){
   fetchList()
+} else {
+  currentPage.value = 1
+  }
 }
+
 </script>
 
 <template>
@@ -357,8 +347,8 @@ const handleSearch = () => {
                 </tr>
               </thead>
               <tbody>
-                <template v-if="filteredList.length > 0">
-                  <tr v-for="item in filteredList" :key="item.settlementId" class="clickable_row" @click="openDetail(item)">
+                <template v-if="settlementList.length > 0">
+                  <tr v-for="item in settlementList" :key="item.settlementId" class="clickable_row" @click="openDetail(item)">
                     <td>{{ targetName(item) }}</td>
                     <td>{{ item.periodStart }} ~ {{ item.periodEnd }}</td>
                     <td>{{ formatMoney(item.grossAmount) }}</td>
@@ -372,10 +362,10 @@ const handleSearch = () => {
                     </td>
                   </tr>
                 </template>
-                <tr v-if="filteredList.length === 0">
+                <tr v-if="settlementList.length === 0">
                   <td colspan="7" class="empty_td">조회된 정산 내역이 없습니다.</td>
                 </tr>
-                <tr v-for="i in Math.max(0, 10 - filteredList.length)" :key="'e'+i" class="empty_row">
+                <tr v-for="i in Math.max(0, 10 - settlementList.length)" :key="'e'+i" class="empty_row">
                   <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
                 </tr>
               </tbody>
@@ -385,7 +375,12 @@ const handleSearch = () => {
           <!-- 페이지네이션 -->
           <div class="pagination">
             <button @click="currentPage > 1 && currentPage--">◀</button>
-            <button v-for="p in totalPages" :key="p" :class="{ active: currentPage === p }" @click="currentPage = p">{{ p }}</button>
+            <button
+              v-for="p in totalPages"
+              :key="p"
+              :class="{ active: currentPage === p }"
+              @click="currentPage = p"
+            >{{ p }}</button>
             <button @click="currentPage < totalPages && currentPage++">▶</button>
           </div>
         </template>

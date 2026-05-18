@@ -42,7 +42,13 @@ class OrderService {
     async getMaxHistory(userId) {
         const res = await axios.get(`${this.#url}/history/max/${userId}`);
         return res.data;
-}
+    }
+
+    //취소된 주문 건 재주문 (장바구니 다시 담기)
+    async reorder(orderId) {
+        const res = await axios.post(`${this.#url}/${orderId}/reorder`);
+        return res.data;
+    }
 
 }
 export default new OrderService();

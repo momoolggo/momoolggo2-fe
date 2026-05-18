@@ -1,15 +1,14 @@
 <script setup>
 import { reactive, onMounted, watch } from 'vue'
 import { useStore } from '@/stores/useStore'
-import storeService from '@/services/storeService'
 import ownerService from '@/services/ownerService'
-
-const store = useStore()
 
 const state = reactive({
   reviews: [],
   loading: false,
 })
+
+const store = useStore()
 
 const commentModal = reactive({
   show: false,
@@ -32,13 +31,11 @@ const reportReasons = [
 ]
 
 const loadReviews = async () => {
-  if (!store.myStoreId) return
-
   state.loading = true
 
   try {
-    const res = await storeService.getStoreReviews(store.myStoreId)
-    state.reviews = res.resultData ?? []
+    const res = await ownerService.getOwnerReviews(store.myStoreId)
+    state.reviews = res.resultData?.reviews ?? []
   } catch (error) {
     console.error('리뷰 조회 실패:', error)
     state.reviews = []
@@ -55,7 +52,6 @@ watch(
     loadReviews()
   },
 )
-
 const renderStars = (score) => '★'.repeat(score) + '☆'.repeat(5 - score)
 
 const openComment = (review) => {
@@ -76,26 +72,61 @@ const saveComment = async () => {
     return
   }
 
+  const review = state.reviews.find((item) => item.reviewId === commentModal.reviewId)
+  if (!review) return
+
   try {
+    if (review.replyId) {
+      await ownerService.updateReviewReply(review.replyId, {
+        content: commentModal.content.trim(),
+      })
+
+      review.replyContent = commentModal.content.trim()
+      alert('답글이 수정되었습니다.')
+      closeComment()
+      return
+    }
+
     await ownerService.saveReviewReply(commentModal.reviewId, {
       content: commentModal.content.trim(),
     })
 
-    const review = state.reviews.find((item) => item.reviewId === commentModal.reviewId)
-
-    if (review) {
-      review.replyContent = commentModal.content.trim()
-    }
-
-    alert('답글이 저장되었습니다.')
+    await loadReviews()
+    alert('답글이 등록되었습니다.')
     closeComment()
   } catch (error) {
-    console.error('답글 등록 실패:', error.response?.status, error.response?.data || error)
+    console.error('답글 저장 실패:', error.response?.status, error.response?.data || error)
 
     const message =
       error.response?.data?.resultMessage ||
       error.response?.data?.message ||
-      '답글 등록에 실패했습니다.'
+      '답글 저장에 실패했습니다.'
+
+    alert(message)
+  }
+}
+
+const deleteReply = async (review) => {
+  if (!review.replyId) return
+
+  const ok = confirm('이 답글을 삭제하시겠습니까?')
+  if (!ok) return
+
+  try {
+    await ownerService.deleteReviewReply(review.replyId)
+
+    review.replyId = null
+    review.replyContent = null
+    review.replyWrittenAt = null
+
+    alert('답글이 삭제되었습니다.')
+  } catch (error) {
+    console.error('답글 삭제 실패:', error.response?.status, error.response?.data || error)
+
+    const message =
+      error.response?.data?.resultMessage ||
+      error.response?.data?.message ||
+      '답글 삭제에 실패했습니다.'
 
     alert(message)
   }
@@ -121,20 +152,39 @@ const submitReport = async () => {
     return
   }
 
-  // TODO: await ownerService.reportReview({
-  //   reviewId: reportModal.reviewId,
-  //   reason: reportModal.reason,
-  //   detail: reportModal.detail,
-  // })
+  const reason =
+    reportModal.reason === '기타'
+      ? reportModal.detail.trim()
+      : reportModal.reason
 
-  const review = state.reviews.find((item) => item.reviewId === reportModal.reviewId)
-
-  if (review) {
-    review.reported = true
+  if (!reason) {
+    alert('신고 사유를 입력해 주세요.')
+    return
   }
 
-  alert('신고가 접수되었습니다. 관리자 검토 후 처리됩니다.')
-  closeReport()
+  try {
+    await ownerService.reportReview(reportModal.reviewId, {
+      reason,
+    })
+
+    const review = state.reviews.find((item) => item.reviewId === reportModal.reviewId)
+
+    if (review) {
+      review.reported = true
+    }
+
+    alert('신고가 접수되었습니다.')
+    closeReport()
+  } catch (error) {
+    console.error('리뷰 신고 실패:', error.response?.status, error.response?.data || error)
+
+    const message =
+      error.response?.data?.resultMessage ||
+      error.response?.data?.message ||
+      '리뷰 신고에 실패했습니다.'
+
+    alert(message)
+  }
 }
 </script>
 
@@ -158,11 +208,18 @@ const submitReport = async () => {
             <span class="stars" :class="{ low: review.rating <= 2 }">
               {{ renderStars(review.rating) }}
             </span>
+
             <span class="score_num">{{ review.rating }}점</span>
+
             <span class="reviewer">{{ review.userName ?? '고객' }}</span>
+
+            <span class="writer_stats">
+              고객 평균 {{ Number(review.writerAvgRating || 0).toFixed(1) }}점
+              · 작성 리뷰 {{ review.writerReviewCount || 0 }}개
+            </span>
           </div>
 
-          <span class="review_date">{{ review.date }}</span>
+          <span class="review_date">{{ review.writtenAt }}</span>
         </div>
 
         <p v-if="review.menuName" class="review_menu">🍽️ {{ review.menuName }}</p>
@@ -174,7 +231,11 @@ const submitReport = async () => {
         </div>
 
         <div v-if="review.replyContent" class="owner_comment">
-          <span class="comment_label">사장님 답글</span>
+          <div class="comment_header">
+            <span class="comment_label">사장님 답글</span>
+            <button class="btn_reply_delete" @click="deleteReply(review)">삭제</button>
+          </div>
+
           <p class="comment_text">{{ review.replyContent }}</p>
         </div>
 
@@ -237,6 +298,14 @@ const submitReport = async () => {
             {{ reason }}
           </label>
         </div>
+
+        <textarea
+          v-if="reportModal.reason === '기타'"
+          v-model="reportModal.detail"
+          class="modal_textarea report_detail_textarea"
+          placeholder="신고 사유를 입력해 주세요"
+          maxlength="100"
+        ></textarea>
 
         <div class="modal_footer">
           <button class="btn_cancel" @click="closeReport">취소</button>
@@ -310,6 +379,7 @@ const submitReport = async () => {
   display: flex;
   align-items: center;
   gap: 10px;
+  flex-wrap: wrap;
 }
 
 .stars {
@@ -331,6 +401,14 @@ const submitReport = async () => {
 .reviewer {
   font-size: 14px;
   color: #666;
+}
+
+.writer_stats {
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: #f4f4f4;
+  color: #777;
+  font-size: 12px;
 }
 
 .review_date {
@@ -372,6 +450,12 @@ const submitReport = async () => {
   gap: 6px;
 }
 
+.comment_header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
 .comment_label {
   font-size: 12px;
   font-weight: 700;
@@ -383,6 +467,18 @@ const submitReport = async () => {
   color: #555;
   margin: 0;
   line-height: 1.6;
+}
+
+.btn_reply_delete {
+  border: none;
+  background: transparent;
+  color: #999;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.btn_reply_delete:hover {
+  color: #ef4444;
 }
 
 .review_actions {
@@ -487,6 +583,10 @@ const submitReport = async () => {
   resize: none;
   box-sizing: border-box;
   font-family: inherit;
+}
+
+.report_detail_textarea {
+  height: 88px;
 }
 
 .modal_textarea:focus {

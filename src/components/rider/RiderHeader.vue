@@ -1,17 +1,27 @@
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useUserStore } from '@/stores/userStore'
 import { useMessageModalStore } from '@/stores/messageModalStore'
+import { useDeliveryStore } from '@/stores/deliveryStore'
 import workSessionService from '@/services/workSessionService'
+import riderService from '@/services/riderService'
 
 const router = useRouter()
 const route = useRoute()
 const userStore = useUserStore()
 const messageModalStore = useMessageModalStore()
+const deliveryStore = useDeliveryStore()
 
 const drawerOpen = ref(false)
 const endConfirmOpen = ref(false)
+
+// rider.status (ADR-008): PENDING/ACTIVE/EATING/SUSPENDED. ACTIVE/EATING만 토글 가능.
+const riderStatus = ref(null)
+const statusLoading = ref(false)
+
+const hasActiveDelivery = computed(() => deliveryStore.state.inProgress.length > 0)
+const canToggle = computed(() => riderStatus.value === 'ACTIVE' || riderStatus.value === 'EATING')
 
 const pageTitle = computed(() => {
   if (route.path === '/riderservice') return '뭐물꼬 라이더'
@@ -21,6 +31,34 @@ const pageTitle = computed(() => {
 
 const openDrawer = () => { drawerOpen.value = true }
 const closeDrawer = () => { drawerOpen.value = false }
+
+// 사이드바 열림 시점에 활성 배달 + 본인 status 최신화 (A-3 Y 결정).
+watch(drawerOpen, async (open) => {
+  if (!open) return
+  deliveryStore.loadInProgress()
+  try {
+    const me = await riderService.getMe()
+    riderStatus.value = me?.status ?? null
+  } catch {
+    riderStatus.value = null
+  }
+})
+
+const setStatus = async (to) => {
+  if (statusLoading.value) return
+  if (to !== 'ACTIVE' && to !== 'EATING') return
+  if (riderStatus.value === to) return
+  statusLoading.value = true
+  try {
+    await workSessionService.toggleStatus(to)
+    // 토글 성공 후 페이지 전체 reload — 마이페이지 등 다른 라이더 화면에서도 status 즉시 반영.
+    // D8-a 박제(EATING 대기 풀 차단) + 사이드바 fetch 동기화 모두 reload로 일관 보장.
+    window.location.reload()
+  } catch (err) {
+    messageModalStore.setMessage(err.response?.data?.resultMessage ?? '상태 전환에 실패했습니다.')
+    statusLoading.value = false
+  }
+}
 
 const goTo = (path) => {
   closeDrawer()
@@ -68,7 +106,30 @@ const signout = async () => {
         <div class="user-name">{{ userStore.state.name }} 라이더</div>
         <button class="close-btn" @click="closeDrawer" aria-label="닫기">✕</button>
       </div>
+
+      <div v-if="canToggle" class="status-segment" role="group" aria-label="배달중/식사중 토글">
+        <button
+          type="button"
+          class="seg-btn"
+          :class="{ active: riderStatus === 'ACTIVE' }"
+          :disabled="statusLoading"
+          @click="setStatus('ACTIVE')"
+        >배달중</button>
+        <button
+          type="button"
+          class="seg-btn"
+          :class="{ active: riderStatus === 'EATING' }"
+          :disabled="statusLoading"
+          @click="setStatus('EATING')"
+        >식사중</button>
+      </div>
+
       <nav class="menu">
+        <button class="menu-item" @click="goTo('/riderservice')">
+          <span>배달 현황</span>
+          <span v-if="hasActiveDelivery" class="badge-dot" aria-label="진행 중 배달 있음"></span>
+        </button>
+        <button class="menu-item" @click="goTo('/rider/mypage')">마이페이지</button>
         <button class="menu-item" @click="goTo('/rider/notice')">공지사항</button>
         <button class="menu-item" @click="goTo('/rider/history')">배달내역</button>
         <button class="menu-item" @click="goTo('/rider/work-session')">근무관리</button>
@@ -124,18 +185,18 @@ const signout = async () => {
 }
 
 .drawer-backdrop {
-  position: fixed;
+  position: absolute;
   inset: 0;
   background: rgba(0,0,0,0.4);
   z-index: 200;
 }
 .drawer {
-  position: fixed;
+  position: absolute;
   top: 0;
   right: 0;
   width: 280px;
-  max-width: 80vw;
-  height: 100vh;
+  max-width: 80%;
+  height: 100dvh;
   background: white;
   z-index: 201;
   display: flex;
@@ -152,6 +213,47 @@ const signout = async () => {
 }
 .user-name {
   font-weight: 600;
+}
+
+.status-segment {
+  display: flex;
+  gap: 6px;
+  padding: 12px 16px;
+  background: #faf3f3;
+  border-bottom: 1px solid #f0e6e6;
+}
+.seg-btn {
+  flex: 1;
+  padding: 9px 0;
+  border: 1px solid #d9c5c5;
+  background: white;
+  color: #888;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.seg-btn:hover:not(:disabled):not(.active) {
+  background: #fff0f0;
+  color: #A40C0B;
+}
+.seg-btn.active {
+  background: #A40C0B;
+  border-color: #A40C0B;
+  color: white;
+}
+.seg-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.badge-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #A40C0B;
+  flex-shrink: 0;
 }
 .close-btn {
   background: transparent;
@@ -210,7 +312,7 @@ const signout = async () => {
 }
 
 .modal-backdrop {
-  position: fixed;
+  position: absolute;
   inset: 0;
   background: rgba(0,0,0,0.5);
   display: flex;

@@ -4,10 +4,11 @@ import axios from '@/services/httpRequester'
  * 라이더 배달 처리 — interfaces.md §6.2 9 endpoint.
  * R1-FE riderService 패턴 일관 (httpRequester + res.data.resultData 추출).
  *
- * 9 endpoint:
+ * 10 endpoint:
  * - GET  /waiting              대기 배달 목록 (ACTIVE 라이더)
  * - GET  /inprogress           본인 진행 중 배달
- * - PUT  /{deliveryNo}/accept  ASSIGNED → ARRIVED_AT_STORE
+ * - PUT  /{deliveryNo}/claim   WAITING_ASSIGN → ASSIGNED + rider_no 박기 (라이더 풀 잡기, 2026-05-19 신설)
+ * - PUT  /{deliveryNo}/accept  ASSIGNED → ARRIVED_AT_STORE (가게 도착 처리)
  * - PUT  /{deliveryNo}/reject  ASSIGNED → WAITING_ASSIGN (수락 전 거부)
  * - PUT  /{deliveryNo}/arrive  ARRIVED_AT_STORE → AWAITING_PICKUP
  * - PUT  /{deliveryNo}/pickup  AWAITING_PICKUP → PICKED_UP
@@ -26,6 +27,11 @@ class DeliveryService {
   async getInProgress() {
     const res = await axios.get(`${this.#url}/inprogress`)
     return res.data.resultData
+  }
+
+  /** 라이더 풀에서 본인 잡기 (WAITING_ASSIGN → ASSIGNED + rider_no). code-reviewer 결함 1번 정정. */
+  async claim(deliveryNo) {
+    await axios.put(`${this.#url}/${deliveryNo}/claim`)
   }
 
   async accept(deliveryNo) {

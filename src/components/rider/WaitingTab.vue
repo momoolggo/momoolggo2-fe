@@ -7,9 +7,11 @@ import { ref } from 'vue'
 const deliveryStore = useDeliveryStore()
 const selected = ref(null) // 선택된 배달 (상세 모달)
 
+// 라이더 풀에서 본인 잡기 — WAITING_ASSIGN → ASSIGNED. code-reviewer 결함 1번 정정 (2026-05-19).
+// accept는 ASSIGNED → ARRIVED_AT_STORE (가게 도착)이라 풀 잡기에 부적합.
 const accept = async (deliveryNo) => {
   try {
-    await deliveryService.accept(deliveryNo)
+    await deliveryService.claim(deliveryNo)
     selected.value = null
     await deliveryStore.loadWaiting()
     await deliveryStore.loadInProgress()
@@ -106,7 +108,7 @@ const formatFee = (fee) => `${(fee ?? 0).toLocaleString()}원`
 .addr_to { font-size: 13px; color: var(--gray); margin: 2px 0 0 12px; }
 
 .modal_backdrop {
-  position: fixed; inset: 0;
+  position: absolute; inset: 0;
   background: rgba(0,0,0,0.5);
   display: flex; align-items: center; justify-content: center;
   padding: 16px;

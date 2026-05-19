@@ -1,6 +1,7 @@
 <script setup>
 import { onMounted, ref, computed } from 'vue'
 import RiderHeader from '@/components/rider/RiderHeader.vue'
+import RiderLayout from '@/views/rider/RiderLayout.vue'
 import noticeService from '@/services/noticeService'
 
 const notices = ref([])
@@ -52,6 +53,7 @@ onMounted(async () => {
 </script>
 
 <template>
+  <RiderLayout :require-active="true">
   <RiderHeader />
   <main class="content">
     <nav class="tabs">
@@ -78,13 +80,14 @@ onMounted(async () => {
       </li>
     </ul>
   </main>
+  </RiderLayout>
 </template>
 
 <style scoped>
 .content {
   padding: 0;
   background: #f7f7f7;
-  min-height: calc(100vh - 56px);
+  min-height: calc(100dvh - 56px);
 }
 .tabs {
   display: flex;

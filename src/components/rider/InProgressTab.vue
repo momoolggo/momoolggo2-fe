@@ -11,16 +11,18 @@ const deliveryStore = useDeliveryStore()
 // 진행 중 배달 1건 (라이더 1명이 동시 1건 — R3-b 정책)
 const current = computed(() => deliveryStore.currentDelivery())
 
-// 단계별 다음 액션 매핑 — ASSIGNED는 accept(R6-FE-3)가 처리하므로 InProgressTab 진입 시점은 ARRIVED부터.
-// reviewer C-1 정정: ASSIGNED 항목 제거 (이전엔 fn:'arrive'로 잘못 매핑되어 BE 400 발생 위험).
-// ARRIVED_AT_STORE label '가게 도착 확인'으로 정정 (이전 '픽업 대기'는 라이더 관점 어색).
+// 단계별 다음 액션 매핑.
+// (D) 작업 + ARRIVED_AT_STORE 단계 제거 정정 (2026-05-19):
+//   - claim이 WAITING_ASSIGN→ASSIGNED 변경 (라이더 풀 잡기)
+//   - accept가 ASSIGNED→AWAITING_PICKUP 직행 (가게 도착 = 픽업 대기, ARRIVED_AT_STORE 건너뜀)
+//   - ARRIVED_AT_STORE는 BE enum 유지 (외부 경로 보존), FE 라이더 흐름에서 제외
 const nextAction = computed(() => {
   if (!current.value) return null
   const map = {
-    ARRIVED_AT_STORE: { label: '가게 도착 확인', fn: 'arrive',  promptText: '가게에 도착하셨습니까?'     },
-    AWAITING_PICKUP:  { label: '픽업 완료',     fn: 'pickup',  promptText: '음식을 픽업 완료하셨습니까?' },
-    PICKED_UP:        { label: '배달 시작',     fn: 'depart',  promptText: '배달지로 출발하시겠습니까?' },
-    DELIVERING:       { label: '전달 완료',     fn: 'complete', promptText: null },
+    ASSIGNED:        { label: '가게 도착',  fn: 'accept',  promptText: '가게에 도착하셨습니까?'     },
+    AWAITING_PICKUP: { label: '픽업 완료',  fn: 'pickup',  promptText: '음식을 픽업 완료하셨습니까?' },
+    PICKED_UP:       { label: '배달 시작',  fn: 'depart',  promptText: '배달지로 출발하시겠습니까?' },
+    DELIVERING:      { label: '전달 완료',  fn: 'complete', promptText: null },
   }
   return map[current.value.status] ?? null
 })
@@ -44,7 +46,7 @@ const confirmAction = async () => {
   submitting.value = true
   try {
     const fn = nextAction.value.fn
-    if (fn === 'arrive') await deliveryService.arrive(current.value.deliveryNo)
+    if (fn === 'accept') await deliveryService.accept(current.value.deliveryNo)
     else if (fn === 'pickup') await deliveryService.pickup(current.value.deliveryNo)
     else if (fn === 'depart') await deliveryService.depart(current.value.deliveryNo)
     promptOpen.value = false
@@ -217,7 +219,7 @@ const statusLabel = (s) => ({
 .btn_cancel:hover { background: var(--primary-light); }
 
 .modal_backdrop {
-  position: fixed; inset: 0;
+  position: absolute; inset: 0;
   background: rgba(0,0,0,0.5);
   display: flex; align-items: center; justify-content: center;
   padding: 16px; z-index: 100;

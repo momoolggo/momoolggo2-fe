@@ -50,5 +50,11 @@ class OrderService {
         return res.data;
     }
 
+    // 실시간 배달 현황 조회
+    async getOrderStatus(orderId) {
+        const res = await axios.get(`${this.#url}/${orderId}/status`);
+        return res.data;
+    }
+
 }
 export default new OrderService();

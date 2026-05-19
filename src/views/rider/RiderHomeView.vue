@@ -6,6 +6,7 @@ import WaitingTab from '@/components/rider/WaitingTab.vue'
 import InProgressTab from '@/components/rider/InProgressTab.vue'
 import CompletedTab from '@/components/rider/CompletedTab.vue'
 import RiderHeader from '@/components/rider/RiderHeader.vue'
+import RiderLayout from '@/views/rider/RiderLayout.vue'
 
 const deliveryStore = useDeliveryStore()
 const tracker = useLocationTracker()
@@ -39,6 +40,7 @@ const countOf = (key) => {
 </script>
 
 <template>
+  <RiderLayout :require-active="true">
   <RiderHeader />
   <div class="rider_home">
     <header class="page_header">
@@ -64,10 +66,11 @@ const countOf = (key) => {
       <CompletedTab  v-else />
     </main>
   </div>
+  </RiderLayout>
 </template>
 
 <style scoped>
-.rider_home { max-width: 420px; margin: 0 auto; min-height: 100vh; background: var(--bg); }
+.rider_home { min-height: 100dvh; background: var(--bg); }
 
 .page_header { padding: 16px 20px; background: var(--white); border-bottom: 1px solid var(--border); }
 .page_title { font-size: 18px; font-weight: 700; color: var(--black); }

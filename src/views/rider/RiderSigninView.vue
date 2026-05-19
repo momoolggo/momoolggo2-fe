@@ -3,6 +3,7 @@ import { reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/userStore'
 import userService from '@/services/userService'
+import RiderLayout from '@/views/rider/RiderLayout.vue'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -40,6 +41,7 @@ const signin = async () => {
 </script>
 
 <template>
+  <RiderLayout>
   <div class="signin_page">
     <div class="signin_card">
       <div class="logo_wrap">
@@ -83,10 +85,11 @@ const signin = async () => {
       </div>
     </div>
   </div>
+  </RiderLayout>
 </template>
 
 <style scoped>
-.signin_page { position: relative; width: 100%; height: 100vh; background: #ffffff; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+.signin_page { position: relative; width: 100%; min-height: 100dvh; background: #ffffff; display: flex; align-items: center; justify-content: center; overflow: hidden; }
 .signin_card { width: 100%; max-width: 380px; margin: 0 auto; background: #ffffff; border-radius: 20px; box-shadow: 0 4px 32px rgba(0,0,0,0.10); padding: 10px 45px 40px; display: flex; flex-direction: column; gap: 18px; z-index: 1; }
 .logo_wrap { text-align: center; }
 .signin_logo { height: 130px; width: 140px; }

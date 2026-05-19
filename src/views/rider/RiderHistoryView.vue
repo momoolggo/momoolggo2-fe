@@ -1,6 +1,7 @@
 <script setup>
 import { onMounted, ref, computed } from 'vue'
 import RiderHeader from '@/components/rider/RiderHeader.vue'
+import RiderLayout from '@/views/rider/RiderLayout.vue'
 import orderHistoryService from '@/services/orderHistoryService'
 
 const history = ref(null)
@@ -38,6 +39,7 @@ const rows = computed(() => history.value?.rows ?? [])
 </script>
 
 <template>
+  <RiderLayout :require-active="true">
   <RiderHeader />
   <main class="content">
     <section class="filter">
@@ -72,13 +74,14 @@ const rows = computed(() => history.value?.rows ?? [])
       </li>
     </ul>
   </main>
+  </RiderLayout>
 </template>
 
 <style scoped>
 .content {
   padding: 0;
   background: #f7f7f7;
-  min-height: calc(100vh - 56px);
+  min-height: calc(100dvh - 56px);
 }
 .filter {
   display: flex;

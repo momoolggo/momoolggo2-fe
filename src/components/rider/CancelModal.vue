@@ -66,7 +66,7 @@ const submit = async () => {
 
 <style scoped>
 .modal_backdrop {
-  position: fixed; inset: 0;
+  position: absolute; inset: 0;
   background: rgba(0,0,0,0.5);
   display: flex; align-items: center; justify-content: center;
   padding: 16px; z-index: 100;

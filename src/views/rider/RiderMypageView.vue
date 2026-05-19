@@ -1,42 +1,47 @@
 <script setup>
-import { onMounted, ref, computed } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import RiderHeader from '@/components/rider/RiderHeader.vue'
 import RiderLayout from '@/views/rider/RiderLayout.vue'
+import riderService from '@/services/riderService'
 import settlementService from '@/services/settlementService'
 import { useMessageModalStore } from '@/stores/messageModalStore'
 
 const messageModalStore = useMessageModalStore()
 
-const settlements = ref([])
+const me = ref(null)
 const account = ref({ accountBank: '', accountNo: '', accountHolder: '' })
 const loading = ref(true)
 
 const accountModalOpen = ref(false)
 const accountForm = ref({ accountBank: '', accountNo: '', accountHolder: '' })
+const saving = ref(false)
 
-const thisWeek = computed(() => {
-  // 가장 최근(periodStart DESC 첫번째) = 이번주 또는 가장 최신 정산
-  return settlements.value[0] ?? null
+const hasAccount = computed(() => !!(account.value?.accountBank && account.value?.accountNo))
+const statusLabel = computed(() => {
+  const s = me.value?.status
+  if (s === 'ACTIVE') return '활성'
+  if (s === 'EATING') return '식사중'
+  if (s === 'PENDING') return '승인 대기'
+  if (s === 'SUSPENDED') return '이용 제한'
+  return '-'
 })
-const pastWeeks = computed(() => settlements.value.slice(1))
-
-const fmtMoney = (n) => (n ?? 0).toLocaleString('ko-KR') + '원'
-const fmtDate = (iso) => iso ?? '-'
-const fmtDistance = (m) => {
-  if (m == null) return '0km'
-  return (m / 1000).toFixed(1) + 'km'
-}
-const statusLabel = (s) => s === 'CONFIRMED' ? '정산 완료' : '검토 중'
-const statusColor = (s) => s === 'CONFIRMED' ? '#2e7d32' : '#f5a623'
+const vehicleLabel = computed(() => {
+  const v = me.value?.vehicleType
+  if (v === 'MOTORBIKE') return '오토바이'
+  if (v === 'CAR') return '자동차'
+  if (v === 'BICYCLE') return '자전거'
+  if (v === 'WALK') return '도보'
+  return '-'
+})
 
 const load = async () => {
   loading.value = true
   try {
-    const [list, acct] = await Promise.all([
-      settlementService.history(),
+    const [profile, acct] = await Promise.all([
+      riderService.getMe(),
       settlementService.getAccount(),
     ])
-    settlements.value = list ?? []
+    me.value = profile
     account.value = acct ?? { accountBank: '', accountNo: '', accountHolder: '' }
   } finally {
     loading.value = false
@@ -55,13 +60,17 @@ const saveAccount = async () => {
     messageModalStore.setMessage('은행/계좌번호/예금주를 모두 입력하세요.')
     return
   }
+  if (saving.value) return
+  saving.value = true
   try {
     const res = await settlementService.updateAccount(accountForm.value)
     account.value = res
     messageModalStore.setMessage('정산 계좌가 변경되었습니다.')
     closeAccountModal()
   } catch {
-    // 인터셉터 모달
+    // httpRequester 인터셉터 모달
+  } finally {
+    saving.value = false
   }
 }
 
@@ -75,66 +84,39 @@ onMounted(load)
     <section v-if="loading" class="state">불러오는 중...</section>
 
     <template v-else>
-      <!-- 이번주 정산 -->
-      <section class="card primary">
-        <h2 class="card-title">이번 주 정산</h2>
-        <div v-if="!thisWeek" class="empty">집계된 정산이 없습니다.</div>
-        <div v-else>
-          <div class="period">{{ fmtDate(thisWeek.periodStart) }} ~ {{ fmtDate(thisWeek.periodEnd) }}</div>
-          <div class="payout-row">
-            <span class="payout-label">실 수령액</span>
-            <span class="payout-value">{{ fmtMoney(thisWeek.payout) }}</span>
-          </div>
-          <div class="status-row">
-            <span class="status-badge" :style="{ background: statusColor(thisWeek.status) }">
-              {{ statusLabel(thisWeek.status) }}
-            </span>
-          </div>
-          <ul class="breakdown">
-            <li><span>배달 건수</span><span>{{ thisWeek.deliveryCount }}건</span></li>
-            <li><span>이동 거리</span><span>{{ fmtDistance(thisWeek.totalDistanceM) }}</span></li>
-            <li><span>배달료</span><span>{{ fmtMoney((thisWeek.totalBaseFee ?? 0) + (thisWeek.totalExtraFee ?? 0)) }}</span></li>
-            <li class="deduction"><span>수수료</span><span>- {{ fmtMoney(thisWeek.commission) }}</span></li>
-            <li class="deduction"><span>세금 (3.3%)</span><span>- {{ fmtMoney(thisWeek.tax) }}</span></li>
-            <li class="deduction"><span>보험료</span><span>- {{ fmtMoney(thisWeek.insurance) }}</span></li>
-          </ul>
+      <section class="card">
+        <h2 class="card-title">내 정보</h2>
+        <div class="grid">
+          <div class="row"><span class="label">상태</span><span class="value">{{ statusLabel }}</span></div>
+          <div class="row"><span class="label">운전면허 번호</span><span class="value">{{ me?.licenseNo ?? '-' }}</span></div>
+          <div class="row"><span class="label">운전면허 종류</span><span class="value">{{ me?.licenseType ?? '-' }}</span></div>
+          <div class="row"><span class="label">배달 수단</span><span class="value">{{ vehicleLabel }}</span></div>
         </div>
       </section>
 
-      <!-- 정산 계좌 -->
       <section class="card">
         <div class="head">
           <h2 class="card-title">정산 계좌</h2>
-          <button class="edit-btn" @click="openAccountModal">변경</button>
+          <button class="edit-btn" @click="openAccountModal">{{ hasAccount ? '변경' : '등록' }}</button>
         </div>
-        <div v-if="account.accountBank" class="account-info">
+        <div v-if="hasAccount" class="account-info">
           <div>{{ account.accountBank }}</div>
           <div>{{ account.accountNo }}</div>
           <div>예금주: {{ account.accountHolder }}</div>
         </div>
-        <div v-else class="empty">등록된 계좌가 없습니다.</div>
+        <div v-else class="empty">등록된 계좌가 없습니다. 변경 버튼을 눌러 정산 계좌를 등록해주세요.</div>
       </section>
 
-      <!-- 과거 내역 -->
-      <section v-if="pastWeeks.length" class="card">
-        <h2 class="card-title">과거 정산 내역</h2>
-        <ul class="past-list">
-          <li v-for="s in pastWeeks" :key="s.settlementNo">
-            <div class="past-period">{{ fmtDate(s.periodStart) }} ~ {{ fmtDate(s.periodEnd) }}</div>
-            <div class="past-payout">{{ fmtMoney(s.payout) }}</div>
-            <span class="status-badge small" :style="{ background: statusColor(s.status) }">
-              {{ statusLabel(s.status) }}
-            </span>
-          </li>
-        </ul>
+      <section class="card photo-card">
+        <h2 class="card-title">프로필 / 면허 사진</h2>
+        <div class="empty">사진 업로드 기능은 준비 중입니다.</div>
       </section>
     </template>
 
-    <!-- 계좌 변경 모달 -->
     <transition name="fade">
       <div v-if="accountModalOpen" class="modal-backdrop" @click.self="closeAccountModal">
         <div class="modal" role="dialog" aria-modal="true">
-          <h3>정산 계좌 변경</h3>
+          <h3>정산 계좌 {{ hasAccount ? '변경' : '등록' }}</h3>
           <label>
             <span>은행</span>
             <input v-model="accountForm.accountBank" placeholder="예: 국민" />
@@ -148,8 +130,8 @@ onMounted(load)
             <input v-model="accountForm.accountHolder" placeholder="예: 홍길동" />
           </label>
           <div class="actions">
-            <button class="btn-secondary" @click="closeAccountModal">취소</button>
-            <button class="btn-primary" @click="saveAccount">저장</button>
+            <button class="btn-secondary" :disabled="saving" @click="closeAccountModal">취소</button>
+            <button class="btn-primary" :disabled="saving" @click="saveAccount">저장</button>
           </div>
         </div>
       </div>
@@ -176,7 +158,6 @@ onMounted(load)
   margin-bottom: 12px;
   box-shadow: 0 1px 3px rgba(0,0,0,0.06);
 }
-.card.primary { border: 2px solid #A40C0B; }
 .card-title { font-size: 16px; margin: 0 0 12px; font-weight: 600; }
 .head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
 .head .card-title { margin: 0; }
@@ -189,48 +170,22 @@ onMounted(load)
   cursor: pointer;
   font-size: 13px;
 }
-.period { color: #555; font-size: 13px; margin-bottom: 8px; }
-.payout-row {
+.grid {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px 0;
-  border-bottom: 1px solid #eee;
-}
-.payout-label { font-size: 14px; color: #333; }
-.payout-value { font-size: 24px; font-weight: 700; color: #A40C0B; }
-.status-row { margin: 10px 0; }
-.status-badge {
-  display: inline-block;
-  color: white;
-  padding: 3px 10px;
-  border-radius: 12px;
-  font-size: 12px;
-}
-.status-badge.small { font-size: 11px; padding: 2px 8px; }
-.breakdown {
-  list-style: none;
-  margin: 0; padding: 0;
-}
-.breakdown li {
-  display: flex;
-  justify-content: space-between;
-  padding: 6px 0;
-  font-size: 13px;
-}
-.breakdown li.deduction { color: #888; }
-.account-info { font-size: 14px; line-height: 1.6; }
-.past-list { list-style: none; margin: 0; padding: 0; }
-.past-list li {
-  display: grid;
-  grid-template-columns: 1fr auto auto;
+  flex-direction: column;
   gap: 8px;
-  align-items: center;
-  padding: 10px 0;
+}
+.row {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
   border-bottom: 1px solid #f0f0f0;
 }
-.past-period { font-size: 13px; color: #555; }
-.past-payout { font-size: 14px; font-weight: 600; color: #A40C0B; }
+.row:last-child { border-bottom: 0; }
+.row .label { color: #777; font-size: 14px; }
+.row .value { font-weight: 500; font-size: 14px; color: #333; }
+.account-info { font-size: 14px; line-height: 1.6; }
+.photo-card .empty { padding: 32px 16px; font-size: 13px; }
 
 .modal-backdrop {
   position: absolute; inset: 0;
@@ -240,7 +195,7 @@ onMounted(load)
 }
 .modal {
   background: white;
-  width: 320px; max-width: 86vw;
+  width: 320px; max-width: 86%;
   padding: 20px;
   border-radius: 12px;
 }
@@ -264,6 +219,7 @@ onMounted(load)
 }
 .btn-secondary { background: #f0f0f0; color: #333; }
 .btn-primary { background: #A40C0B; color: white; }
+.btn-secondary:disabled, .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
 
 .fade-enter-active, .fade-leave-active { transition: opacity 0.2s; }
 .fade-enter-from, .fade-leave-to { opacity: 0; }

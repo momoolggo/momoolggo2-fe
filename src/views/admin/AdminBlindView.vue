@@ -79,9 +79,9 @@ const statusLabel = (status) => {
 
 const reasonLabel = (reason) => {
   const map = {
-    ABUSE: '욕설 비방',
+    PROFANITY: '욕설 비방',
     FALSE_FACT: '허위 사실 기재',
-    AD: '광고성 리뷰',
+    ADVERTISENEMT: '광고성 리뷰',
     ETC: '기타',
   }
   return map[reason] ?? reason
@@ -307,14 +307,16 @@ const handleSearch = () => {
                     <td><span class="reason_badge">{{ reasonLabel(item.reason) }}</span></td>
                     <td><button class="release_btn" @click="openReleaseModal(item.blindId, item.storeName)">블라인드 해제</button></td>
                     <td>
-                      <div class="status_cell">
-                        <span :class="['status_badge', statusLabel(item.status).class]">{{ statusLabel(item.status).text }}</span>
-                        <div class="action_btns" v-if="item.status === 'BLINDED' || item.status === 'REVIEWING'">
-                          <button class="suspend_btn" @click="suspendUser(item.blindId)">계정 정지</button>
-                          <button class="permanent_btn" @click="permanentSuspend(item.blindId)">영구 정지</button>
-                        </div>
+                    <div class="status_cell">
+                      <span :class="['status_badge', statusLabel(item.status).class]">
+                        {{ statusLabel(item.status).text }}
+                      </span>
+                      <div class="action_btns" v-if="item.status === 'BLINDED'">
+                        <button class="suspend_btn" @click="suspendUser(item.blindId)">계정 정지</button>
+                        <button class="permanent_btn" @click="permanentSuspend(item.blindId)">영구 정지</button>
                       </div>
-                    </td>
+                    </div>
+                  </td>
                   </tr>
                 </template>
                 <tr v-for="i in Math.max(0, 15 - blindList.length)" :key="'empty-' + i" class="empty_row">

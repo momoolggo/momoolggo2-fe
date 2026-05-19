@@ -135,12 +135,6 @@ const submitInquiry = async () => {
   }
 }
 
-// 더미 주문 내역 (메인 팀원 API 완료 후 교체)
-const dummyOrders = (item) => [
-  { date: item.periodStart, menu: '파스타 외 2', total: 28500 },
-  { date: item.periodStart, menu: '피자 외 1', total: 18000 },
-  { date: item.periodStart, menu: '돈까스', total: 15000 },
-]
 
 onMounted(fetchSettlements)
 </script>

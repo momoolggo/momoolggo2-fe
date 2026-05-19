@@ -7,6 +7,7 @@ import adminService from '@/services/adminService'
 const activeTab = ref('all')
 const blindList = ref([])
 const loading = ref(false)
+const expandedId = ref(null)
 
 // 블라인드 해제 모달
 const showReleaseModal = ref(false)
@@ -94,8 +95,9 @@ const fetchList = async () => {
       const res = await adminService.getAllReviews(currentPage.value - 1)
       blindList.value = res?.resultData ?? []
     } else {
-      const res = await adminService.getBlindList('BLINDED')
+      const res = await adminService.getBlindList()  // status 파라미터 제거 → 전체 조회
       blindList.value = res?.resultData ?? []
+      console.log('status 값:', blindList.value.map(i => i.status))  // ← 추가
     }
   } catch (e) {
     console.error('목록 조회 실패', e)
@@ -269,7 +271,18 @@ const handleSearch = () => {
                     <td>
                       <span class="writer_link" @click="openUserModal(item)">{{ item.writer }}</span>
                     </td>
-                    <td class="col_wide content_td">{{ item.content }}</td>
+                    <td class="col_wide">
+                  <span>{{ expandedId === item.blindId 
+                    ? item.content 
+                    : (item.content?.length > 30 ? item.content?.slice(0, 30) + '...' : item.content) }}
+                  </span>
+                  <button 
+                    v-if="item.content?.length > 30"
+                    class="more_btn" 
+                    @click.stop="expandedId = expandedId === item.blindId ? null : item.blindId">
+                    {{ expandedId === item.blindId ? '접기' : '더보기' }}
+                  </button>
+                </td>
                     <td>{{ item.rating }}</td>
                     <td>{{ item.createdAt?.slice(0, 10).replaceAll('-', '.') }}</td>
                   </tr>
@@ -287,7 +300,6 @@ const handleSearch = () => {
                   <th>가게명</th>
                   <th>작성자</th>
                   <th class="col_wide">내용</th>
-                  <th>평균별점</th>
                   <th>시작일</th>
                   <th>블라인드 사유</th>
                   <th>해제</th>
@@ -301,22 +313,36 @@ const handleSearch = () => {
                     <td>
                       <span class="writer_link" @click="openUserModal(item)">{{ item.writer }}</span>
                     </td>
-                    <td class="col_wide content_td">{{ item.content }}</td>
-                    <td>{{ item.rating }}</td>
+                    <td class="col_wide">
+                    <span>{{ expandedId === item.blindId 
+                      ? item.content 
+                      : (item.content?.length > 30 ? item.content?.slice(0, 30) + '...' : item.content) }}
+                    </span>
+                    <button 
+                      v-if="item.content?.length > 30"
+                      class="more_btn" 
+                      @click.stop="expandedId = expandedId === item.blindId ? null : item.blindId">
+                      {{ expandedId === item.blindId ? '접기' : '더보기' }}
+                    </button>
+                  </td>
+                    
                     <td>{{ item.startAt?.slice(0, 10).replaceAll('-', '.') ?? item.createdAt?.slice(0, 10).replaceAll('-', '.') }}</td>
                     <td><span class="reason_badge">{{ reasonLabel(item.reason) }}</span></td>
                     <td><button class="release_btn" @click="openReleaseModal(item.blindId, item.storeName)">블라인드 해제</button></td>
                     <td>
-                    <div class="status_cell">
-                      <span :class="['status_badge', statusLabel(item.status).class]">
-                        {{ statusLabel(item.status).text }}
-                      </span>
-                      <div class="action_btns" v-if="item.status === 'BLINDED'">
-                        <button class="suspend_btn" @click="suspendUser(item.blindId)">계정 정지</button>
-                        <button class="permanent_btn" @click="permanentSuspend(item.blindId)">영구 정지</button>
+                      <div class="status_cell">
+                        <div v-if="item.status === 'BLINDED'">
+                          <span class="status_badge badge_blind">블라인드</span>
+                          
+                        </div>
+                        <div v-else-if="item.status === 'SUSPENDED'">
+                          <span class="status_badge badge_suspend">계정정지</span>
+                        </div>
+                        <div v-else-if="item.status === 'PERMANENT'">
+                          <span class="status_badge badge_permanent">영구정지</span>
+                        </div>
                       </div>
-                    </div>
-                  </td>
+                    </td>
                   </tr>
                 </template>
                 <tr v-for="i in Math.max(0, 15 - blindList.length)" :key="'empty-' + i" class="empty_row">
@@ -347,7 +373,7 @@ const handleSearch = () => {
         <div class="user_modal_body">
           <div class="user_info_row">
             <span class="user_info_label">이름</span>
-            <span class="user_info_value">{{ selectedUser.name ?? selectedUser.writer ?? '-' }}</span>
+            <span class="user_info_value">{{ selectedUser.writer ?? selectedUser.name ?? '-' }}</span>
           </div>
           <div class="user_info_row">
             <span class="user_info_label">아이디</span>
@@ -444,7 +470,7 @@ const handleSearch = () => {
 .review_table td { padding: 11px 14px; text-align: center; color: #333; border-bottom: 1px solid #f0f0f0; border-right: 1px solid #f0f0f0; }
 .review_table td:last-child { border-right: none; }
 .col_wide { width: 30%; text-align: center !important; }
-.content_td { max-width: 280px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.content_td { max-width: 280px; overflow: hidden; white-space: normal; word-break: break-all; }
 .empty_row td { height: 38px; }
 
 /* 작성자 링크 */
@@ -548,4 +574,5 @@ const handleSearch = () => {
 .badge_active { background: #e8f5e9; color: #2e7d32; }      /* 정상 */
 .badge_suspended { background: #ffdddd; color: #ff0606; }    /* 계정정지 */
 .badge_permanent { background: #222; color: #fff; }
+.more_btn { background: none; border: none; color: #4a90d9; font-size: 11px; cursor: pointer; padding: 0 4px; text-decoration: underline; }
 </style>

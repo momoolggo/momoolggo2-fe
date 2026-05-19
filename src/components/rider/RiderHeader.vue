@@ -50,11 +50,12 @@ const setStatus = async (to) => {
   if (riderStatus.value === to) return
   statusLoading.value = true
   try {
-    const res = await workSessionService.toggleStatus(to)
-    riderStatus.value = res?.status ?? to
+    await workSessionService.toggleStatus(to)
+    // 토글 성공 후 페이지 전체 reload — 마이페이지 등 다른 라이더 화면에서도 status 즉시 반영.
+    // D8-a 박제(EATING 대기 풀 차단) + 사이드바 fetch 동기화 모두 reload로 일관 보장.
+    window.location.reload()
   } catch (err) {
     messageModalStore.setMessage(err.response?.data?.resultMessage ?? '상태 전환에 실패했습니다.')
-  } finally {
     statusLoading.value = false
   }
 }

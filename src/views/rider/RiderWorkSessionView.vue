@@ -1,6 +1,7 @@
 <script setup>
 import { onMounted, onUnmounted, ref, computed } from 'vue'
 import RiderHeader from '@/components/rider/RiderHeader.vue'
+import RiderLayout from '@/views/rider/RiderLayout.vue'
 import workSessionService from '@/services/workSessionService'
 
 const today = ref(null)
@@ -51,6 +52,7 @@ onUnmounted(() => {
 </script>
 
 <template>
+  <RiderLayout :require-active="true">
   <RiderHeader />
   <main class="content">
     <section v-if="loading" class="loading">불러오는 중...</section>
@@ -77,13 +79,14 @@ onUnmounted(() => {
       </div>
     </section>
   </main>
+  </RiderLayout>
 </template>
 
 <style scoped>
 .content {
   padding: 16px;
   background: #f7f7f7;
-  min-height: calc(100vh - 56px);
+  min-height: calc(100dvh - 56px);
 }
 .loading, .empty {
   text-align: center;

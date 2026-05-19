@@ -41,6 +41,7 @@ import RiderWorkSessionView from '@/views/rider/RiderWorkSessionView.vue'
 import RiderNoticeView from '@/views/rider/RiderNoticeView.vue'
 import RiderHistoryView from '@/views/rider/RiderHistoryView.vue'
 import RiderSettlementView from '@/views/rider/RiderSettlementView.vue'
+import RiderMypageView from '@/views/rider/RiderMypageView.vue'
 
 // ── 관리자
 import AdminHomeView from '@/views/admin/AdminHomeView.vue'
@@ -124,6 +125,7 @@ const routes = [
   { path: '/rider/notice', name: 'RiderNotice', component: RiderNoticeView, meta: { requiresAuth: true, role: 'RIDER' } },
   { path: '/rider/history', name: 'RiderHistory', component: RiderHistoryView, meta: { requiresAuth: true, role: 'RIDER' } },
   { path: '/rider/settlement', name: 'RiderSettlement', component: RiderSettlementView, meta: { requiresAuth: true, role: 'RIDER' } },
+  { path: '/rider/mypage', name: 'RiderMypage', component: RiderMypageView, meta: { requiresAuth: true, role: 'RIDER' } },
 
   // ── 404 → 랜딩으로
   { path: '/:pathMatch(.*)*', redirect: '/' },

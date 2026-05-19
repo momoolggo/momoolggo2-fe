@@ -1,6 +1,7 @@
 <script setup>
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/userStore'
+import RiderLayout from '@/views/rider/RiderLayout.vue'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -11,9 +12,12 @@ const goSignup = () => {
   }
   router.push('/rider/signup')
 }
+
+const goSignin = () => router.push('/rider/signin')
 </script>
 
 <template>
+  <RiderLayout>
   <div class="rider_landing">
     <p class="page_label">라이더 랜딩</p>
 
@@ -37,6 +41,10 @@ const goSignup = () => {
       <button class="btn_primary apply_btn" @click="goSignup">
         라이더 신청하기
       </button>
+
+      <button class="btn_primary apply_btn" @click="goSignin">
+        로그인
+      </button>
     </div>
 
     <footer class="brand_footer">
@@ -53,10 +61,11 @@ const goSignup = () => {
       <p class="copy">© 2025 뭐물꼬 All rights reserved.</p>
     </footer>
   </div>
+  </RiderLayout>
 </template>
 
 <style scoped>
-.rider_landing { max-width: 420px; margin: 0 auto; background: var(--bg); min-height: 100vh; padding: 16px 0 0; }
+.rider_landing { background: var(--bg); min-height: 100dvh; padding: 16px 0 0; }
 .page_label { padding: 0 16px 12px; color: var(--gray); font-size: 13px; }
 
 .hero_card {

@@ -2,10 +2,38 @@
 import { computed, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import userService from '@/services/userService'
+import riderService from '@/services/riderService'
+import { useUserStore } from '@/stores/userStore'
+import { useMessageModalStore } from '@/stores/messageModalStore'
 import TermsModal from '@/components/common/TermsModal.vue'
 import { showAlert } from '@/composables/useAlert'
+import RiderLayout from '@/views/rider/RiderLayout.vue'
 
 const router = useRouter()
+const userStore = useUserStore()
+const messageModalStore = useMessageModalStore()
+
+// BE GlobalExceptionHandler가 DataIntegrityViolationException raw 메시지를 그대로 전달하는 박제 결함(mmg-common 영역 외) 대응.
+// SQL/Hibernate raw 메시지 패턴 감지해서 친화 메시지로 변환. team-handoff 등재 후 BE 정정 시 본 함수 단순화 가능.
+const mapSignupError = (raw, status) => {
+  const msg = typeof raw === 'string' ? raw : ''
+  if (msg.includes('Duplicate entry') && msg.includes('uq_user_id')) {
+    return '이미 사용 중인 아이디입니다. 다른 아이디로 가입해주세요.'
+  }
+  if (msg.includes('Duplicate entry') && msg.includes('uq_rider_user_no')) {
+    return '이미 라이더로 등록된 계정입니다.'
+  }
+  if (msg.includes('Duplicate entry')) {
+    return '이미 등록된 정보가 있습니다. 입력값을 확인해주세요.'
+  }
+  if (msg.includes('could not execute statement') || msg.includes('SQLException') || msg.includes('JDBC') || msg.includes('SQLIntegrityConstraint')) {
+    return '서버 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.'
+  }
+  if (status === 500 && (msg.includes('execute') || msg.includes('insert into') || msg.includes('update '))) {
+    return '서버 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.'
+  }
+  return msg || '회원가입에 실패했습니다. 잠시 후 다시 시도해주세요.'
+}
 
 const state = reactive({
   form: {
@@ -16,6 +44,7 @@ const state = reactive({
     gender: null,
     birth: '',
     tel: '',
+    licenseNo: '',
     licenseType: '',
     vehicleType: '',
     role: 'RIDER',
@@ -85,22 +114,41 @@ const signup = async () => {
     state.errorMsg = '비밀번호가 일치하지 않습니다.'; return
   }
   if (!state.form.tel)         { state.errorMsg = '연락처를 입력해 주세요.';       return }
+  if (!state.form.licenseNo)   { state.errorMsg = '운전면허 번호를 입력해 주세요.'; return }
   if (!state.form.licenseType) { state.errorMsg = '운전면허증을 선택해 주세요.';   return }
   if (!state.form.vehicleType) { state.errorMsg = '배달 수단을 선택해 주세요.';    return }
   if (!requiredAgreed.value)   { state.errorMsg = '필수 약관에 동의해 주세요.';    return }
 
   try {
     state.errorMsg = ''
-    await userService.signup({ ...state.form, agreedToTerms: requiredAgreed.value })
-    await showAlert('회원가입이 완료되었습니다!', { title: '회원가입', type: 'success' })
-    router.push('/rider/signin')
+    // 1. auth 회원가입 (POST /api/user/join) — 응답 시점에 AT/RT 쿠키 자동 발급 (UserService.signup:73-77 박제)
+    const userRes = await userService.signup({ ...state.form, agreedToTerms: requiredAgreed.value })
+    const userData = userRes?.resultData
+    if (userData?.userNo) {
+      userStore.signIn(userData)
+    }
+    // 2. rider 프로필 등록 (PUT /api/rider/profile) — ADR-001 (C) 박제 2단계 흐름 일관. account_*는 마이페이지에서 (A1' 결정).
+    await riderService.putProfile({
+      licenseNo: state.form.licenseNo,
+      licenseType: state.form.licenseType,
+      vehicleType: state.form.vehicleType,
+      accountBank: null,
+      accountNo: null,
+      accountHolder: null,
+    })
+    await showAlert('회원가입이 완료되었습니다. 관리자 승인 후 이용 가능합니다. 마이페이지에서 정산 계좌를 등록해주세요.', { title: '회원가입', type: 'success' })
+    router.push('/riderservice')
   } catch (err) {
-    state.errorMsg = err.response?.data?.resultMessage ?? '회원가입에 실패했습니다.'
+    const friendly = mapSignupError(err.response?.data?.resultMessage, err.response?.status)
+    state.errorMsg = friendly
+    // httpRequester 인터셉터가 이미 raw 메시지로 모달 띄웠을 수 있어 친화 메시지로 overwrite.
+    messageModalStore.setMessage(friendly)
   }
 }
 </script>
 
 <template>
+  <RiderLayout>
   <div class="signup_page">
     <div class="signup_card">
       <div class="logo_wrap">
@@ -158,6 +206,11 @@ const signup = async () => {
       <div class="field">
         <label class="label">휴대폰 번호 <span class="required">*</span></label>
         <input v-model="state.form.tel" type="tel" class="inp" placeholder="010-0000-0000" />
+      </div>
+
+      <div class="field">
+        <label class="label">운전면허 번호 <span class="required">*</span></label>
+        <input v-model="state.form.licenseNo" type="text" class="inp" placeholder="예: 11-22-333333-44" />
       </div>
 
       <div class="field">
@@ -260,11 +313,12 @@ const signup = async () => {
       </div>
     </div>
   </div>
+  </RiderLayout>
 </template>
 
 <style scoped>
-.signup_page { min-height: 100vh; background: var(--primary); display: flex; align-items: center; justify-content: center; padding: 40px 16px; }
-.signup_card { background: var(--white); border-radius: var(--radius-lg); padding: 36px 32px; width: 520px; box-shadow: var(--shadow-card); display: flex; flex-direction: column; gap: 14px; }
+.signup_page { min-height: 100dvh; background: var(--primary); display: flex; align-items: center; justify-content: center; padding: 40px 16px; }
+.signup_card { background: var(--white); border-radius: var(--radius-lg); padding: 36px 32px; width: 100%; max-width: 100%; box-shadow: var(--shadow-card); display: flex; flex-direction: column; gap: 14px; }
 .logo_wrap { text-align: center; }
 .signup_logo { height: 80px; width: 80px;}
 .signup_title { text-align: center; font-size: 20px; font-weight: 700; color: var(--black); }

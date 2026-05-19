@@ -137,29 +137,27 @@ const fetchList = async () => {
 }
 
 const openDetail = async (item) => {
-  try {
-    const res = await adminService.getSettlementDetail(item.settlementId)
-    selectedSettlement.value = res?.resultData ?? item
-  } catch (e) {
-    selectedSettlement.value = {
-      ...item,
-      periodStart: item.periodStart ?? '2026-04-06',
-      periodEnd: item.periodEnd ?? '2026-04-12',
-      orders: [
-        { orderNo: '000001A', datetime: '2026-04-10 15:26', menu: '파스타 외 2', total: 380000 },
-        { orderNo: '000002A', datetime: '2026-04-08 15:26', menu: '피자 외 3', total: 360000 },
-        { orderNo: '000003A', datetime: '2026-04-07 15:26', menu: '파스타 외 2', total: 420000 },
-        { orderNo: '000004A', datetime: '2026-04-06 12:35', menu: '피자 외 1', total: 360000 },
-      ]
-    }
-  }
+  selectedSettlement.value = item
   showDetailModal.value = true
+  settlementOrders.value = []
+  settlementTotalSales.value = 0
+  try {
+    const res = await adminService.getSettlementOrders(item.settlementId)
+    const data = res?.resultData
+    settlementOrders.value = data?.dailySales ?? []
+    settlementTotalSales.value = data?.totalSales ?? 0
+  } catch (e) {
+    settlementOrders.value = []
+  }
 }
 
 const closeDetail = () => {
   showDetailModal.value = false
   selectedSettlement.value = null
+  settlementOrders.value = []
+  settlementTotalSales.value = 0
 }
+
 
 const completeSettlement = async (settlementId) => {
   try {
@@ -189,6 +187,21 @@ const handleSearch = () => {
 } else {
   currentPage.value = 1
   }
+}
+
+const settlementOrders = ref([])
+const settlementTotalSales = ref(0)
+
+const expectedPayoutDate = (periodEnd) => {
+  if (!periodEnd) return '-'
+  const date = new Date(periodEnd)
+  let added = 0
+  while (added < 2) {
+    date.setDate(date.getDate() + 1)
+    const day = date.getDay()
+    if (day !== 0 && day !== 6) added++
+  }
+  return date.toISOString().substring(0, 10) + ' 예정'
 }
 
 </script>
@@ -463,46 +476,79 @@ const handleSearch = () => {
           </div>
         </div>
 
-        <p class="modal_sub_title">주문 건별 상세 내역</p>
+            <!-- 기존 주문건별 상세 내역 테이블 교체 -->
+            <p class="modal_sub_title">날짜별 매출 내역</p>
+              <div class="modal_table_wrap">
+                <table class="modal_table">
+                  <thead>
+                    <tr>
+                      <th>날짜</th>
+                      <th>주문 건수</th>
+                      <th>일 매출</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <template v-if="settlementOrders.length > 0">
+                      <tr v-for="row in settlementOrders" :key="row.date">
+                        <td>{{ row.date }}</td>
+                        <td>{{ row.count }}건</td>
+                        <td>{{ formatMoney(row.amount) }}</td>
+                      </tr>
+                    </template>
+                    <tr v-else>
+                      <td colspan="3" class="empty_td">주문 내역이 없습니다.</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
 
-        <div class="modal_table_wrap">
-          <table class="modal_table">
-            <thead>
-              <tr>
-                <th>주문 번호</th>
-                <th>일시</th>
-                <th>메뉴</th>
-                <th>결제금액</th>
-              </tr>
-            </thead>
-            <tbody>
-              <template v-if="selectedSettlement.orders?.length > 0">
-                <tr v-for="(order, idx) in selectedSettlement.orders" :key="idx">
-                  <td>{{ order.orderNo }}</td>
-                  <td>{{ order.datetime }}</td>
-                  <td>{{ order.menu }}</td>
-                  <td>₩{{ order.total?.toLocaleString() }}</td>
-                </tr>
-              </template>
-              <tr v-else>
-                <td colspan="4" class="empty_td">주문 내역이 없습니다.</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+              <div class="modal_total_wrap">
+                <div class="modal_total_row">
+                  <span class="total_label">총 매출</span>
+                  <span class="total_value">{{ formatMoney(selectedSettlement.grossAmount) }}</span>
+                </div>
+                <div class="modal_total_row">
+                  <span class="total_label">수수료 (5%)</span>
+                  <span class="total_value fee_color">- {{ formatMoney(selectedSettlement.feeAmount) }}</span>
+                </div>
+                <div class="modal_total_row total_final">
+                  <span class="total_label">실 지급액</span>
+                  <span class="total_value final_color">{{ formatMoney(selectedSettlement.netAmount) }}</span>
+                </div>
+              </div>
 
-        <div class="modal_total_wrap">
-          <div class="modal_total_row">
-            <span class="total_label">총 매출</span>
-            <span class="total_value">{{ formatMoney(selectedSettlement.grossAmount) }}</span>
-          </div>
-          <div class="modal_total_row">
-            <span class="total_label">수수료 (5%)</span>
-            <span class="total_value fee_color">- {{ formatMoney(selectedSettlement.feeAmount) }}</span>
-          </div>
-          <div class="modal_total_row total_final">
-            <span class="total_label">실 지급액</span>
-            <span class="total_value final_color">{{ formatMoney(selectedSettlement.netAmount) }}</span>
+            <!-- 지급 정보 -->
+        <div class="modal_payout_wrap">
+          <p class="modal_sub_title">지급 정보</p>
+          <div class="modal_payout_grid">
+            <div class="payout_row">
+              <span class="payout_label">입금 계좌</span>
+              <span class="payout_value">{{ selectedSettlement.bankAccount ?? '-' }}</span>
+            </div>
+            <div class="payout_row">
+              <span class="payout_label">입금 예정일</span>
+              <span class="payout_value">
+                {{ selectedSettlement.status === 'PENDING'
+                  ? expectedPayoutDate(selectedSettlement.periodEnd)
+                  : selectedSettlement.paidAt
+                    ? selectedSettlement.paidAt.toString().substring(0, 10) + ' 입금 완료'
+                    : '-' }}
+              </span>
+            </div>
+            <div class="payout_row">
+              <span class="payout_label">정산 방식</span>
+              <span class="payout_value">토스페이먼츠 지급대행</span>
+            </div>
+            <div class="payout_row">
+              <span class="payout_label">정산 상태</span>
+              <span :class="['status_badge', statusBadge(selectedSettlement.status).class]">
+                {{ statusBadge(selectedSettlement.status).text }}
+              </span>
+            </div>
+            <div v-if="selectedSettlement.tossPayoutId" class="payout_row">
+              <span class="payout_label">지급 ID</span>
+              <span class="payout_value toss_id">{{ selectedSettlement.tossPayoutId }}</span>
+            </div>
           </div>
         </div>
 
@@ -647,4 +693,10 @@ const handleSearch = () => {
 .action_hold:hover { background: #f5f5f5; }
 .action_complete { padding: 9px 24px; border: none; background: #9b1b1b; border-radius: 8px; font-size: 13px; color: #fff; cursor: pointer; font-weight: 700; }
 .action_complete:hover { background: #7f1515; }
+.modal_payout_wrap { padding: 0 0 20px; }
+.modal_payout_grid { display: flex; flex-direction: column; gap: 10px; background: #f9f9f9; border-radius: 10px; padding: 16px 28px; }
+.payout_row { display: flex; justify-content: space-between; align-items: center; }
+.payout_label { font-size: 13px; color: #888; font-weight: 500; }
+.payout_value { font-size: 13px; font-weight: 600; color: #333; }
+.toss_id { font-size: 11px; color: #aaa; font-family: monospace; }
 </style>

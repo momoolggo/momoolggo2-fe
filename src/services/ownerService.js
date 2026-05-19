@@ -209,6 +209,13 @@ class OwnerService {
         const res = await axios.post(`${this.#url}/settlement/inquiry`, { content })
         return res.data
     }
+    
+
+    //정산 상세 내역
+    async getSettlementOrders(settlementId) {
+        const res = await axios.get(`http://localhost:8083/api/admin/settlement/${settlementId}/orders`)
+        return res.data
+      }
 
     
 }

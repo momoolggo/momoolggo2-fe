@@ -3,6 +3,22 @@ import { ref, onMounted, computed } from 'vue'
 import { useStore } from '@/stores/useStore'
 import ownerService from '@/services/ownerService'
 
+
+const settlementOrders = ref([])
+const settlementTotalSales = ref(0)
+
+const expectedPayoutDate = (periodEnd) => {
+  if (!periodEnd) return '-'
+  const date = new Date(periodEnd)
+  let added = 0
+  while (added < 2) {
+    date.setDate(date.getDate() + 1)
+    const day = date.getDay()
+    if (day !== 0 && day !== 6) added++
+  }
+  return date.toISOString().substring(0, 10) + ' 예정'
+}
+
 const storeInfo = useStore()
 const settlementList = ref([])
 const loading = ref(false)
@@ -47,9 +63,11 @@ const formatMoney = (v) => v != null ? `₩${Number(v).toLocaleString()}` : '-'
 
 const statusLabel = (status) => {
   const map = {
-    PENDING: { text: '대기', class: 'badge_pending' },
+    PENDING:   { text: '대기', class: 'badge_pending' },
+    DONE:      { text: '완료', class: 'badge_done' },
     COMPLETED: { text: '완료', class: 'badge_done' },
-    HOLD: { text: '보류', class: 'badge_held' },
+    HELD:      { text: '보류', class: 'badge_held' },
+    HOLD:      { text: '보류', class: 'badge_held' },
   }
   return map[status] ?? { text: status, class: '' }
 }
@@ -62,17 +80,28 @@ const fetchSettlements = async () => {
     settlementList.value = res?.resultData ?? []
   } catch (e) {
     console.error('정산 조회 실패', e)
+    console.log('storeId:', storeInfo.myStoreId)
     settlementList.value = []
   } finally {
     loading.value = false
   }
 }
 
-const openDetail = (item) => {
+const openDetail = async (item) => {
   selectedSettlement.value = item
   showInquiryForm.value = false
   inquiryContent.value = ''
+  settlementOrders.value = []
+  settlementTotalSales.value = 0
   showDetailModal.value = true
+  try {
+    const res = await ownerService.getSettlementOrders(item.settlementId)
+    const data = res?.resultData
+    settlementOrders.value = data?.dailySales ?? []
+    settlementTotalSales.value = data?.totalSales ?? 0
+  } catch (e) {
+    settlementOrders.value = []
+  }
 }
 
 const closeDetail = () => {
@@ -80,6 +109,8 @@ const closeDetail = () => {
   selectedSettlement.value = null
   showInquiryForm.value = false
   inquiryContent.value = ''
+  settlementOrders.value = []
+  settlementTotalSales.value = 0
 }
 
 const toggleInquiryForm = () => {
@@ -181,26 +212,58 @@ onMounted(fetchSettlements)
         </div>
       </div>
 
-      <!-- 주문 건별 내역 -->
+            <!-- 날짜별 매출 내역 -->
       <div class="order-section">
-        <p class="section-title">주문 건별 내역</p>
+        <p class="section-title">날짜별 매출 내역</p>
         <table class="order-table">
           <thead>
             <tr>
               <th>날짜</th>
-              <th>메뉴</th>
-              <th>결제금액</th>
+              <th>주문 건수</th>
+              <th>일 매출</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="(order, idx) in dummyOrders(selectedSettlement)" :key="idx">
-              <td>{{ order.date }}</td>
-              <td>{{ order.menu }}</td>
-              <td>₩{{ order.total.toLocaleString() }}</td>
+            <template v-if="settlementOrders.length > 0">
+              <tr v-for="row in settlementOrders" :key="row.date">
+                <td>{{ row.date }}</td>
+                <td>{{ row.count }}건</td>
+                <td>₩{{ Number(row.amount).toLocaleString() }}</td>
+              </tr>
+            </template>
+            <tr v-else>
+              <td colspan="3" style="text-align:center; color:#aaa; padding:16px;">
+                주문 내역이 없습니다.
+              </td>
             </tr>
           </tbody>
         </table>
       </div>
+
+      <!-- 지급 정보 -->
+      <div class="payout-section">
+        <p class="section-title">지급 정보</p>
+        <div class="payout-grid">
+          <div class="payout-row">
+            <span class="payout-label">입금 계좌</span>
+            <span class="payout-value">{{ selectedSettlement.bankAccount ?? '-' }}</span>
+          </div>
+          <div class="payout-row">
+            <span class="payout-label">입금 예정일</span>
+            <span class="payout-value">
+              {{ selectedSettlement.status === 'PENDING'
+                ? expectedPayoutDate(selectedSettlement.periodEnd)
+                : selectedSettlement.paidAt
+                  ? selectedSettlement.paidAt.toString().substring(0, 10) + ' 입금 완료'
+                  : '-' }}
+            </span>
+          </div>
+          <div class="payout-row">
+            <span class="payout-label">정산 방식</span>
+            <span class="payout-value">토스페이먼츠 지급대행</span>
+          </div>
+        </div>
+</div>
 
       <!-- 정산 문의 -->
       <div class="inquiry-section">
@@ -286,5 +349,11 @@ onMounted(fetchSettlements)
 .inquiry-submit-btn { padding: 9px 20px; background: #9b1b1b; color: #fff; border: none; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; }
 .inquiry-submit-btn:hover { background: #7f1515; }
 .inquiry-submit-btn:disabled { background: #ccc; cursor: default; }
+
+.payout-section { display: flex; flex-direction: column; gap: 10px; }
+.payout-grid { display: flex; flex-direction: column; gap: 10px; background: #fafafa; border-radius: 12px; padding: 16px 20px; }
+.payout-row { display: flex; justify-content: space-between; align-items: center; font-size: 14px; }
+.payout-label { color: #777; }
+.payout-value { font-weight: 600; color: #222; }
 
 </style>

@@ -1,6 +1,6 @@
 <script setup>
 import router from '@/router'
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import orderService from '@/services/orderService';
 import { showAlert, showConfirm } from '@/composables/useAlert';
 import { useRoute } from 'vue-router';
@@ -46,8 +46,14 @@ const loadOrderDetail = async () => {
   order.value = result
 }
 
-onMounted( () => {
-  loadOrderDetail()
+onMounted(async () => {
+  await loadOrderDetail()
+  await loadOrderStatus()
+  connectOrderStatusSse()
+})
+
+onBeforeUnmount(() => {
+  eventSource.value?.close()
 })
 
 const totalPrice = computed(() => {
@@ -61,7 +67,6 @@ const totalPrice = computed(() => {
  * 5: 배달중 (라이더배차완료)
  * 6: 배달완료
  */
-const currentOrderState = computed(() => order.value.orderState)
 
 const canCancelOrder = computed(() => !!order.value.orderId && currentOrderState.value === 1 )
 
@@ -78,7 +83,6 @@ const closeOptionModal = () => {
   optionCategories.value = []
   resetOptionForm()
 }
-
 
 const cancelOrder = async () => {
   const reason = selectedCancelReason.value === '기타' 
@@ -163,6 +167,84 @@ const statusMessage = computed(
   () => statusMap[currentOrderState.value]?.msg ?? '상태 확인 중...',
 )
 const progressWidth = computed(() => (currentStepIndex.value / (steps.value.length - 1)) * 100 + '%')
+
+const eventSource = ref(null)
+
+const deliveryStatus = ref({
+  orderId: null,
+  orderState: null,
+  orderStateText: '',
+  deliveryState: null,
+  deliveryStateText: '',
+})
+
+const applyDeliveryStatus = (data) => {
+  const status = data?.resultData ?? data
+  if (!status) return
+
+  const nextDeliveryState = status.deliveryState ?? status.newDeliveryState
+
+  deliveryStatus.value = {
+    orderId: status.orderId,
+    orderState: status.orderState ?? deliveryStatus.value.orderState,
+    orderStateText: status.orderStateText || deliveryStatus.value.orderStateText,
+    deliveryState: nextDeliveryState ?? deliveryStatus.value.deliveryState,
+    deliveryStateText: status.deliveryStateText || deliveryStatus.value.deliveryStateText,
+  }
+
+  if (status.orderState != null) {
+    order.value.orderState = Number(status.orderState)
+  }
+}
+
+const currentOrderState = computed(() => {
+  const deliveryState = Number(deliveryStatus.value.deliveryState)
+
+  if (deliveryState === 2) return 5
+  if (deliveryState === 3) return 6
+
+  return Number(order.value.orderState)
+})
+
+const loadOrderStatus = async () => {
+  try {
+    const res = await orderService.getOrderStatus(id)
+    console.log('현재 배달 현황 조회 응답:', res)
+    applyDeliveryStatus(res)
+  } catch(error) {
+    console.error('배달 현황 조회 실패:', error)
+  }
+}
+
+
+const connectOrderStatusSse = () => {
+  if(!id) return
+
+  eventSource.value?.close()
+
+  eventSource.value = new EventSource(
+    `http://localhost:8080/api/order/${id}/status/subscribe`,
+    { withCredentials: true }
+  )
+  eventSource.value.addEventListener('delivery-status', async (event) => {
+  const data = JSON.parse(event.data)
+  console.log('delivery-status', data)
+
+  applyDeliveryStatus(data)
+  await loadOrderStatus()
+})
+
+eventSource.value.onerror = (error) => {
+    console.error('배달 현황 SSE 오류:', error)
+  }
+}
+
+const closeCancelModal = () => {
+  isCancelModalOpen.value = false
+  selectedCancelReason.value = ''
+  customCancelReason.value = ''
+}
+
 </script>
 
 <template>
@@ -541,6 +623,18 @@ const progressWidth = computed(() => (currentStepIndex.value / (steps.value.leng
   color: #584949;
   font-size: 21px;
 }
+
+.delivery-live-text {
+  margin-bottom: 18px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: #fff4f4;
+  color: #b21f1f;
+  font-size: 13px;
+  font-weight: 800;
+  text-align: center;
+}
+
 
 /* 버튼 스타일 */
 

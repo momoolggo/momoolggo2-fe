@@ -28,7 +28,15 @@ defineEmits(['click-menu'])
     </div>
 
     <div class="menu-img-wrapper" v-if="menu.menuPic">
-      <img :src="getImageUrl(menu.menuPic)" class="menu-img" alt="메뉴 이미지" />
+      <img
+      :src="getImageUrl(menu.menuPic)"
+      class="menu-img"
+      alt="메뉴 이미지"
+      loading="lazy"
+      decoding="async"
+      width="100"
+      height="100"
+      />
     </div>
     <div class="menu-img-wrapper" v-else>
       <div class="menu-img-placeholder">No Image</div>
@@ -60,6 +68,12 @@ defineEmits(['click-menu'])
 .menu-price { font-size: 1.05rem; font-weight: 700; color: #333; }
 .soldout-badge { margin-left: 10px; font-size: 0.75rem; color: #ff4d4f; border: 1px solid #ff4d4f; padding: 2px 6px; border-radius: 4px; }
 .menu-img-wrapper { flex-shrink: 0; }
-.menu-img { width: 100px; height: 100px; border-radius: 8px; object-fit: cover; }
+.menu-img {
+  display: block;
+  width: 100px;
+  height: 100px;
+  border-radius: 8px;
+  object-fit: cover;
+}
 .menu-img-placeholder { width: 100px; height: 100px; background-color: #f5f5f5; color: #ccc; display: flex; align-items: center; justify-content: center; border-radius: 8px; font-size: 0.8rem; }
 </style>

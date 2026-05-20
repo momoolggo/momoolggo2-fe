@@ -387,9 +387,9 @@ const deleteFaq = async (faqId) => {
             <thead>
               <tr>
                 <th>문의 ID</th>
-                <th>카테고리</th>
+                <th>구분</th>
                 <th class="col_wide">질문내용</th>
-                <th>구분(아이디)</th>
+                <th>아이디</th>
                 <th>등록일</th>
               </tr>
             </thead>
@@ -597,7 +597,7 @@ const deleteFaq = async (faqId) => {
 .faq_table th:last-child { border-right: none; }
 .faq_table td { padding: 11px 14px; text-align: center; color: #333; border-bottom: 1px solid #f0f0f0; border-right: 1px solid #f0f0f0; }
 .faq_table td:last-child { border-right: none; }
-.col_wide { width: 40%; text-align: left !important; }
+.col_wide { width: 40%; text-align: center !important; }
 .content_td { max-width: 340px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .empty_row td { height: 38px; }
 .empty_td { color: #aaa; padding: 24px; text-align: center; }

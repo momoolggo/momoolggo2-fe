@@ -55,13 +55,6 @@ const onEndDateChange = (e) => {
   searchForm.value.endDate = `${y}.${m}.${d}`
 }
 
-// 분류 드롭다운
-const categoryOpen = ref(false)
-const categoryOptions = ['고객', '사장']
-const selectCategory = (val) => {
-  searchForm.value.category = val
-  categoryOpen.value = false
-}
 
 // 페이지네이션
 const currentPage = ref(1)
@@ -82,7 +75,7 @@ const reasonLabel = (reason) => {
   const map = {
     PROFANITY: '욕설 비방',
     FALSE_FACT: '허위 사실 기재',
-    ADVERTISENEMT: '광고성 리뷰',
+    ADVERTISEMENT: '광고성 리뷰',
     ETC: '기타',
   }
   return map[reason] ?? reason
@@ -217,20 +210,6 @@ const handleSearch = () => {
                   <img src="@/assets/calender.png" alt="calendar" class="blind_search_img" @click="endDateRef.showPicker()" />
                   <span class="date_text">{{ searchForm.endDate }}</span>
                   <input ref="endDateRef" type="date" class="hidden_date" @change="onEndDateChange" />
-                </div>
-              </div>
-            </div>
-
-            <!-- 분류 커스텀 드롭다운 -->
-            <div class="search_field">
-              <label>분류</label>
-              <div class="dropdown_wrap">
-                <button class="dropdown_btn" @click="categoryOpen = !categoryOpen">
-                  {{ searchForm.category }}
-                  <span class="dropdown_arrow">▼</span>
-                </button>
-                <div v-if="categoryOpen" class="dropdown_menu">
-                  <button v-for="opt in categoryOptions" :key="opt" class="dropdown_item" @click="selectCategory(opt)">{{ opt }}</button>
                 </div>
               </div>
             </div>

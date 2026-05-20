@@ -14,8 +14,6 @@ const formatDate = (d) =>
 
 const searchForm = ref({
   storeName: '',
-  businessNo: '',
-  userId: '',
   date: '',
   storeCategory: '',
   name: '',
@@ -23,6 +21,7 @@ const searchForm = ref({
 
 const dateRef = ref(null)
 const onDateChange = (e) => {
+  if (!e.target.value) return
   const [y, m, d] = e.target.value.split('-')
   searchForm.value.date = `${y}.${m}.${d}`
 }
@@ -41,22 +40,49 @@ const formatCreatedAt = (dateStr) => {
   return String(dateStr).slice(0, 10).replaceAll('-', '.')
 }
 
+
 const fetchStoreList = async () => {
+  
   loading.value = true
   try {
-    const params = { page: currentPage.value - 1 }
-    if (searchForm.value.storeName) params.storeName = searchForm.value.storeName
-    if (searchForm.value.businessNo) params.businessNo = searchForm.value.businessNo
-    if (searchForm.value.userId) params.userId = searchForm.value.userId
-    if (searchForm.value.date) params.date = searchForm.value.date
-    if (searchForm.value.storeCategory) params.category = searchForm.value.storeCategory
-    if (searchForm.value.name) params.name = searchForm.value.name
+    // 1. 백엔드 Pageable 규격 (0번 페이지부터 시작)
+    const params = {
+    page: currentPage.value - 1,
+    size: 15,
+  }
 
+      if (searchForm.value.storeName?.trim()) {
+    params.storeName = searchForm.value.storeName.trim()
+  }
+
+      
+    if (searchForm.value.userId?.trim()) {
+      params.userId = searchForm.value.userId.trim()
+    }
+
+        if (searchForm.value.name?.trim()) {
+      params.name = searchForm.value.name.trim()
+    }
+
+    if (searchForm.value.date?.trim()) {
+      params.date = searchForm.value.date.trim().replaceAll('.', '-')
+    }
+
+    if (searchForm.value.date && searchForm.value.date.trim() !== '') {
+      params.date = searchForm.value.date.trim().replaceAll('.', '-');
+    }
+
+    // 5. API 통신 및 데이터 주입
     const res = await adminService.getStoreList(params)
+    console.log("📦 백엔드 응답 결과 데이터:", res)
+
     const data = res?.resultData?.content ?? []
-    storeList.value = data
-    totalPages.value = Math.ceil((res?.resultData?.totalCount ?? 0) / 15) || 1
-  } catch {
+    storeList.value = Array.isArray(data) ? data : []
+    
+    const totalCount = res?.resultData?.totalCount ?? 0
+    totalPages.value = Math.ceil(totalCount / 15) || 1
+  } catch (error) {
+    console.error('🚨 API 통신 실패:', error)
     storeList.value = []
     totalPages.value = 1
   } finally {
@@ -64,7 +90,10 @@ const fetchStoreList = async () => {
   }
 }
 
-const handleSearch = () => {
+
+const handleSearch = (e) => {
+  if (e) e.preventDefault(); 
+  console.log("🔎 검색 버튼 클릭 감지됨! 현재 searchForm 상태:", searchForm.value)
   currentPage.value = 1
   fetchStoreList()
 }
@@ -81,7 +110,7 @@ const openDetail = async (store) => {
     const res = await adminService.getStoreDetail(store.storeId)
     selectedStore.value = res?.resultData ?? store
   } catch {
-    // 더미 유지
+    // 예외 유지
   } finally {
     detailLoading.value = false
   }
@@ -92,7 +121,10 @@ const closeDetail = () => {
   selectedStore.value = null
 }
 
-onMounted(fetchStoreList)
+onMounted(() => {
+  console.log("Mounted: 최초 리스트 로드 시작")
+  fetchStoreList()
+})
 </script>
 
 <template>
@@ -111,14 +143,6 @@ onMounted(fetchStoreList)
               <input v-model="searchForm.storeName" type="text" class="form_input" />
             </div>
             <div class="search_field">
-              <label>사업자 번호</label>
-              <input v-model="searchForm.businessNo" type="text" class="form_input" />
-            </div>
-            <div class="search_field">
-              <label>아이디</label>
-              <input v-model="searchForm.userId" type="text" class="form_input" />
-            </div>
-            <div class="search_field">
               <label>가게등록일</label>
               <div class="date_picker_wrap" @click="dateRef.showPicker()">
                 <img src="@/assets/calender.png" alt="calendar" class="blind_search_img" />
@@ -133,7 +157,7 @@ onMounted(fetchStoreList)
               <input v-model="searchForm.storeCategory" type="text" class="form_input" placeholder="카테고리명" />
             </div>
             <div class="search_field">
-              <label>이름</label>
+              <label>대표자 이름</label>
               <input v-model="searchForm.name" type="text" class="form_input" />
             </div>
             <button class="search_btn" @click="handleSearch">검색</button>

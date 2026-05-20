@@ -21,9 +21,13 @@ const getImageUrl = (path) => {
       <span class="closed-badge"> 준비중이예요🤗</span>
     </div>
     <img
-      :src="getImageUrl(store.pic) || '/images/default-store.png'"
-      class="store-thumbnail"
-      alt="가게 이미지"
+    :src="getImageUrl(store.pic) || '/images/default-store.png'"
+    class="store-thumbnail"
+    alt="가게 이미지"
+    loading="lazy"
+    decoding="async"
+    width="100"
+    height="100"
     />
 
     <div class="store-details">
@@ -59,7 +63,7 @@ const getImageUrl = (path) => {
   transition: transform 0.2s ease;
   position: relative;
 }
-.is-closed {
+.is_closed {
   cursor: not-allowed;
   filter: grayscale(80%);
   opacity: 0.7;
@@ -87,7 +91,15 @@ const getImageUrl = (path) => {
   letter-spacing: 0.5px;
 }
 .store-card:hover { transform: translateY(-2px); }
-.store-thumbnail { width: 100px; height: 100px; border-radius: 12px; object-fit: cover; }
+
+.store-thumbnail {
+  display: block;
+  width: 100px;
+  height: 100px;
+  border-radius: 12px;
+  object-fit: cover;
+}
+
 .store-details { display: flex; flex-direction: column; justify-content: flex-start; }
 .store-name { margin: 0 0 8px 0; font-size: 1.2rem; font-weight: 700; color: #111; }
 .store-meta { font-size: 0.95rem; color: #666; margin-bottom: 8px; display: flex; align-items: center; }

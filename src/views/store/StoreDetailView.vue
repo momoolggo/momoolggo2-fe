@@ -142,8 +142,14 @@ const handleAddToCart = async () => {
   <div class="store-detail-view">
     <section class="store-cover">
       <img
-        :src="getImageUrl(state.storeInfo.storePic) || '/images/default-store.png'"
-        class="cover-img"
+      :src="getImageUrl(state.storeInfo.storePic) || '/images/default-store.png'"
+      class="cover-img"
+      alt="가게 대표 이미지"
+      loading="eager"
+      fetchpriority="high"
+      decoding="async"
+      width="480"
+      height="250"
       />
       <button class="back-btn" @click="$router.back()">←</button>
     </section>
@@ -280,11 +286,14 @@ const handleAddToCart = async () => {
   width: 100%;
   height: 250px;
 }
+
 .cover-img {
+  display: block;
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
+
 .back-btn {
   position: absolute;
   top: 15px;

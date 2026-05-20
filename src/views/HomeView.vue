@@ -1,4 +1,4 @@
-<script setup>
+﻿<script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import Footer from '@/components/common/Footer.vue'
@@ -71,7 +71,15 @@ function goCategory(label) {
           class="banner-item"
           @click="onBannerClick(banner.route)"
         >
-          <img :src="banner.img" :alt="`배너 ${i + 1}`" />
+          <img
+            :src="banner.img"
+            :alt="`배너 ${i + 1}`"
+            :loading="i === 0 ? 'eager' : 'lazy'"
+            :fetchpriority="i === 0 ? 'high' : 'auto'"
+            decoding="async"
+            width="480"
+            height="160"
+          />
         </div>
       </div>
  
@@ -97,7 +105,14 @@ function goCategory(label) {
           class="category-item"
           @click="goCategory(cat.label)"
         >
-          <img :src="`/image/${cat.img}.png`" :alt="cat.label" />
+          <img
+            :src="`/image/${cat.img}.png`"
+            :alt="cat.label"
+            loading="lazy"
+            decoding="async"
+            width="85"
+            height="85"
+          />
           <span>{{ cat.label }}</span>
         </div>
       </div>
@@ -150,6 +165,7 @@ function goCategory(label) {
   scroll-snap-align: start;
 }
 .banner-item img {
+  display: block;
   width: 100%;
   height: 160px; 
   object-fit: cover;
@@ -235,6 +251,7 @@ function goCategory(label) {
 }
 
 .category-item img {
+  display: block;
   width: 100%;
   max-width: 85px;
   height: auto;

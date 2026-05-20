@@ -15,7 +15,7 @@ const formatDate = (d) =>
 const searchForm = ref({
   storeName: '',
   date: '',
-  storeCategory: '',
+  storeCategory: '전체',
   name: '',
 })
 
@@ -25,6 +25,10 @@ const onDateChange = (e) => {
   const [y, m, d] = e.target.value.split('-')
   searchForm.value.date = `${y}.${m}.${d}`
 }
+
+const categoryOptions = ['전체', '한식', '중식', '일식', '양식', '디저트', '분식', '패스트푸드', '찜·탕', '치킨', '야식', '족발', '피자']
+const categoryOpen = ref(false)
+const selectCategory = (val) => { searchForm.value.storeCategory = val; categoryOpen.value = false }
 
 const stateLabel = (state) => {
   const map = { 0: '준비중', 1: '영업중' }
@@ -53,6 +57,10 @@ const fetchStoreList = async () => {
 
       if (searchForm.value.storeName?.trim()) {
     params.storeName = searchForm.value.storeName.trim()
+  }
+
+    if (searchForm.value.storeCategory && searchForm.value.storeCategory !== '전체') {
+    params.category = searchForm.value.storeCategory
   }
 
       
@@ -154,7 +162,14 @@ onMounted(() => {
             </div>
             <div class="search_field">
               <label>카테고리</label>
-              <input v-model="searchForm.storeCategory" type="text" class="form_input" placeholder="카테고리명" />
+              <div class="dropdown_wrap">
+                <button class="dropdown_btn" @click="categoryOpen = !categoryOpen">
+                  {{ searchForm.storeCategory }}<span class="dropdown_arrow">▼</span>
+                </button>
+                <div v-if="categoryOpen" class="dropdown_menu">
+                  <button v-for="opt in categoryOptions" :key="opt" class="dropdown_item" @click="selectCategory(opt)">{{ opt }}</button>
+                </div>
+              </div>
             </div>
             <div class="search_field">
               <label>대표자 이름</label>
@@ -271,6 +286,13 @@ onMounted(() => {
 .search_field { display: flex; flex-direction: column; gap: 6px; }
 .search_field label { font-size: 12px; color: #666; font-weight: 500; }
 .form_input { border: 1px solid #ddd; border-radius: 6px; padding: 7px 10px; font-size: 13px; color: #333; outline: none; min-width: 110px; }
+.dropdown_wrap { position: relative; }
+.dropdown_btn { background: #fff; border: 1px solid #ddd; border-radius: 6px; padding: 7px 12px; font-size: 13px; color: #333; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 8px; min-width: 110px; }
+.dropdown_btn:hover { border-color: #aaa; }
+.dropdown_arrow { font-size: 10px; color: #999; }
+.dropdown_menu { position: absolute; top: calc(100% + 4px); left: 0; background: #fff; border: 1px solid #ddd; border-radius: 6px; min-width: 110px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); z-index: 20; overflow: hidden; }
+.dropdown_item { display: block; width: 100%; padding: 9px 14px; font-size: 13px; color: #333; background: none; border: none; text-align: left; cursor: pointer; }
+.dropdown_item:hover { background: #f5f5f5; }
 .date_picker_wrap { position: relative; display: flex; align-items: center; gap: 6px; border: 1px solid #ddd; border-radius: 6px; padding: 6px 10px; cursor: pointer; background: #fff; }
 .date_picker_wrap:hover { border-color: #aaa; }
 .blind_search_img { width: 16px; height: auto; cursor: pointer; flex-shrink: 0; }

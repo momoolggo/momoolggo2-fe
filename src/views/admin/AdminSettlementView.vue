@@ -41,6 +41,10 @@ const fetchRiderSettlements = async () => {
   }
 }
 
+// riderSettlementList는 /pending 엔드포인트 → PENDING 건만 반환
+const riderPendingCount = computed(() => riderSettlementList.value.length)
+const totalPendingCount = computed(() => (summary.value.pendingStoreCount ?? 0) + riderPendingCount.value)
+
 const confirmRiderSettlement = async (settlementNo) => {
   try {
     await adminService.confirmRiderSettlement(settlementNo, ADMIN_NO)
@@ -250,11 +254,11 @@ const expectedPayoutDate = (periodEnd) => {
               </div>
               <div class="card_info">
                 <p class="card_label">대기 건수</p>
-                <p class="card_value yellow_val">{{ summary.pendingCount }}건</p>
+                <p class="card_value yellow_val">{{ totalPendingCount }}건</p>
               </div>
             </div>
             <div class="card_sub_bar yellow_sub">
-              확인 필요 (라이더 {{ summary.pendingRiderCount }}, 가게 {{ summary.pendingStoreCount }})
+              확인 필요 · 가게 {{ summary.pendingStoreCount }}건 / 라이더 {{ riderPendingCount }}건
             </div>
           </div>
         </div>

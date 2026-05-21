@@ -44,6 +44,7 @@ import RiderSettlementView from '@/views/rider/RiderSettlementView.vue'
 import RiderMypageView from '@/views/rider/RiderMypageView.vue'
 
 // ── 관리자
+import AdminSigninView from '@/views/admin/AdminSigninView.vue'
 import AdminHomeView from '@/views/admin/AdminHomeView.vue'
 import AdminSettlementView from '@/views/admin/AdminSettlementView.vue'
 import AdminBlindView from '@/views/admin/AdminBlindView.vue'
@@ -69,14 +70,17 @@ const routes = [
   // ── 고객 전용
   { path: '/home', name: 'Home', component: HomeView, meta: { requiresAuth: true, role: 'CUSTOMER' } },
 
+  // ── 관리자 인증
+  { path: '/admin/signin', name: 'AdminSignin', component: AdminSigninView, meta: { guestOnly: true } },
+
   // ── 관리자 전용
-  { path: '/admin', name: 'AdminHome', component: AdminHomeView /*,  meta: { requiresAuth: true, role: 'ADMIN' }*/ },
-  { path: '/admin/settlement', name: 'AdminSettlement', component: AdminSettlementView/*, meta: { requiresAuth: true, role: 'ADMIN' }*/ },
-  { path: '/admin/blind', name: 'AdminBlind', component: AdminBlindView/*, meta: { requiresAuth: true, role: 'ADMIN' }*/ },
-  { path: '/admin/cs', name: 'AdminCs', component: AdminCsView /*,  meta: { requiresAuth: true, role: 'ADMIN' }*/ },
-  { path: '/admin/delivery', name: 'AdminDelivery', component: AdminDeliveryView/*,  meta: { requiresAuth: true, role: 'ADMIN' }*/ },
-  { path: '/admin/user', name: 'AdminUser', component: AdminUserView/*,  meta: { requiresAuth: true, role: 'ADMIN' }*/ },
-  { path: '/admin/store', name: 'AdminStore', component: AdminStoreView/*,  meta: { requiresAuth: true, role: 'ADMIN' }*/ },
+  { path: '/admin', name: 'AdminHome', component: AdminHomeView, meta: { requiresAuth: true, role: 'ADMIN' } },
+  { path: '/admin/settlement', name: 'AdminSettlement', component: AdminSettlementView, meta: { requiresAuth: true, role: 'ADMIN' } },
+  { path: '/admin/blind', name: 'AdminBlind', component: AdminBlindView, meta: { requiresAuth: true, role: 'ADMIN' } },
+  { path: '/admin/cs', name: 'AdminCs', component: AdminCsView, meta: { requiresAuth: true, role: 'ADMIN' } },
+  { path: '/admin/delivery', name: 'AdminDelivery', component: AdminDeliveryView, meta: { requiresAuth: true, role: 'ADMIN' } },
+  { path: '/admin/user', name: 'AdminUser', component: AdminUserView, meta: { requiresAuth: true, role: 'ADMIN' } },
+  { path: '/admin/store', name: 'AdminStore', component: AdminStoreView, meta: { requiresAuth: true, role: 'ADMIN' } },
 
 
     // /mypage는 메뉴 페이지

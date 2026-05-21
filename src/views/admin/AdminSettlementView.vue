@@ -29,10 +29,12 @@ const searchForm = ref({
 const settlementTab = ref('store')
 const riderSettlementList = ref([])
 
+const ADMIN_NO = 1
+
 const fetchRiderSettlements = async () => {
   try {
-    const res = await adminService.getRiderSettlements()
-    riderSettlementList.value = res?.resultData ?? []
+    const res = await adminService.getRiderSettlementPending()
+    riderSettlementList.value = res?.resultData ?? res ?? []
   } catch (e) {
     console.error('라이더 정산 조회 실패', e)
     riderSettlementList.value = []
@@ -41,10 +43,10 @@ const fetchRiderSettlements = async () => {
 
 const confirmRiderSettlement = async (settlementNo) => {
   try {
-    await adminService.confirmRiderSettlement(settlementNo)
+    await adminService.confirmRiderSettlement(settlementNo, ADMIN_NO)
     await fetchRiderSettlements()
   } catch (e) {
-    alert('정산 확정 실패')
+    alert('정산 확정 실패: ' + (e.response?.data?.resultMessage || e.message))
   }
 }
 

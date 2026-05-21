@@ -72,11 +72,21 @@ export const useNotificationStore = defineStore('notification', () => {
             console.log('notification sse connected:', event.data)
         })
 
-        eventSource.value.addEventListener('notification', event => {
+        eventSource.value.addEventListener('notification', async event => {
+            console.log('notification sse received:', event.data)
+        
             try {
-                addNotification(JSON.parse(event.data))
+                const notification = JSON.parse(event.data)
+        
+                if (notification.notificationId) {
+                    addNotification(notification)
+                    return
+                }
+        
+                await fetchNotifications()
             } catch (e) {
                 console.error('notification sse parse error:', e)
+                await fetchNotifications()
             }
         })
 

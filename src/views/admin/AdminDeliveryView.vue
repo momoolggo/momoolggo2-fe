@@ -14,7 +14,7 @@ const loading = ref(false)
 const statusFilter = ref(null)
 const searchKeyword = ref('')
 const currentPage = ref(1)
-const totalPages = ref(3)
+const totalPages = ref(1)
 
 const statusFilterOpen = ref(false)
 const statusFilterOptions = [
@@ -189,6 +189,7 @@ const fetchList = async () => {
     const res = await adminService.getDeliveryMonitor(statusFilter.value, currentPage.value - 1)
     if (res?.summary) summary.value = res.summary
     deliveryList.value = res?.deliveries ?? []
+    totalPages.value = res?.totalPages > 0 ? res.totalPages : 1
   } catch (e) {
     summary.value = { waiting: 3, assigned: 7, delivering: 12, completed: 54 }
     deliveryList.value = [

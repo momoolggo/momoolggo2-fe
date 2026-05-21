@@ -128,6 +128,7 @@ const signup = async () => {
       userStore.signIn(userData)
     }
     // 2. rider 프로필 등록 (PUT /api/rider/profile) — ADR-001 (C) 박제 2단계 흐름 일관. account_*는 마이페이지에서 (A1' 결정).
+    // phone = 가입 시점 snapshot (정산 시연 UX 트랙 #9, 2026-05-21, 옵션 A) — admin 배달관리 연결 박제
     await riderService.putProfile({
       licenseNo: state.form.licenseNo,
       licenseType: state.form.licenseType,
@@ -135,6 +136,7 @@ const signup = async () => {
       accountBank: null,
       accountNo: null,
       accountHolder: null,
+      phone: state.form.tel,
     })
     await showAlert('회원가입이 완료되었습니다. 관리자 승인 후 이용 가능합니다. 마이페이지에서 정산 계좌를 등록해주세요.', { title: '회원가입', type: 'success' })
     router.push('/riderservice')

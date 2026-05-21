@@ -37,8 +37,8 @@ const formatDate = (d) =>
 const searchForm = ref({
   storeName: '',
   userId: '',
-  startDate: formatDate(today),
-  endDate: formatDate(today),
+  startDate: '',
+  endDate: '',
   category: '고객',
   name: '',
 })
@@ -82,14 +82,22 @@ const reasonLabel = (reason) => {
   return map[reason] ?? reason
 }
 
+const buildSearchParams = () => ({
+  storeName: searchForm.value.storeName?.trim() || null,
+  writer: searchForm.value.name?.trim() || null,
+  startDate: searchForm.value.startDate ? searchForm.value.startDate.replaceAll('.', '-') : null,
+  endDate: searchForm.value.endDate ? searchForm.value.endDate.replaceAll('.', '-') : null,
+})
+
 const fetchList = async () => {
   loading.value = true
   try {
+    const search = buildSearchParams()
     if (activeTab.value === 'all') {
-      const res = await adminService.getAllReviews(currentPage.value - 1)
+      const res = await adminService.getAllReviews(currentPage.value - 1, 15, search)
       blindList.value = res?.resultData ?? []
     } else {
-      const res = await adminService.getBlindList()
+      const res = await adminService.getBlindList(null, search)
       blindList.value = (res?.resultData ?? []).filter(item => item.status !== 'RELEASED')
     }
   } catch (e) {
@@ -223,20 +231,20 @@ const handleSearch = () => {
               <div class="date_range">
                 <div class="date_picker_wrap">
                   <img src="@/assets/calender.png" alt="calendar" class="blind_search_img" @click="startDateRef.showPicker()" />
-                  <span class="date_text">{{ searchForm.startDate }}</span>
+                  <span class="date_text" :class="{ placeholder: !searchForm.startDate }">{{ searchForm.startDate || '날짜 선택' }}</span>
                   <input ref="startDateRef" type="date" class="hidden_date" @change="onStartDateChange" />
                 </div>
                 <span class="date_sep">-</span>
                 <div class="date_picker_wrap">
                   <img src="@/assets/calender.png" alt="calendar" class="blind_search_img" @click="endDateRef.showPicker()" />
-                  <span class="date_text">{{ searchForm.endDate }}</span>
+                  <span class="date_text" :class="{ placeholder: !searchForm.endDate }">{{ searchForm.endDate || '날짜 선택' }}</span>
                   <input ref="endDateRef" type="date" class="hidden_date" @change="onEndDateChange" />
                 </div>
               </div>
             </div>
 
             <div class="search_field">
-              <label>이름</label>
+              <label>작성자</label>
               <input v-model="searchForm.name" type="text" />
             </div>
             <button class="search_btn" @click="handleSearch">검색</button>
@@ -441,6 +449,7 @@ const handleSearch = () => {
 .date_picker_wrap:hover { border-color: #aaa; }
 .blind_search_img { width: 16px; height: auto; cursor: pointer; flex-shrink: 0; }
 .date_text { font-size: 13px; color: #333; min-width: 80px; user-select: none; }
+.date_text.placeholder { color: #aaa; }
 .hidden_date { position: absolute; opacity: 0; width: 0; height: 0; pointer-events: none; }
 
 /* 드롭다운 */

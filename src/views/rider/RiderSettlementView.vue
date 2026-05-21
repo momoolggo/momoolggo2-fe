@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, ref, computed } from 'vue'
+import { onMounted, onUnmounted, ref, computed } from 'vue'
 import RiderHeader from '@/components/rider/RiderHeader.vue'
 import RiderLayout from '@/views/rider/RiderLayout.vue'
 import settlementService from '@/services/settlementService'
@@ -78,7 +78,30 @@ const saveAccount = async () => {
   }
 }
 
-onMounted(load)
+// SSE 자동화 트랙(2026-05-21) — 배달 완료 시 BE 자동 UPSERT + 본 emitter에 push.
+// settlementNo 일치 시 in-place 교체, 미일치 시 prepend (이번 주 신규 row).
+let eventSource = null
+const handleStreamUpdate = (updated) => {
+  if (!updated || updated.settlementNo == null) return
+  const idx = settlements.value.findIndex(s => s.settlementNo === updated.settlementNo)
+  if (idx >= 0) {
+    settlements.value.splice(idx, 1, updated)
+  } else {
+    settlements.value.unshift(updated)
+  }
+}
+
+onMounted(async () => {
+  await load()
+  eventSource = settlementService.subscribeStream(handleStreamUpdate)
+})
+
+onUnmounted(() => {
+  if (eventSource) {
+    eventSource.close()
+    eventSource = null
+  }
+})
 </script>
 
 <template>

@@ -187,45 +187,13 @@ class AdminService {
     }
 
     // ─── 라이더 관리 (Group 8 신설, Q-A1 (라++)) ──────
-    // PATCH = admin 외부 (BlindController 패턴) + rider Internal Feign POST 분리 (Q-A19 (다)).
-    // case-#34 FE 변종: BE DTO 1:1 매핑.
-
-    /** 라이더 목록 조회 — GET /api/admin/rider/list?status= (status null=전체). */
-    async getRiderList(status = null) {
-        const params = {};
-        if (status) params.status = status;
-        const res = await axios.get(`${this.#url}/rider/list`, { params });
-        return res.data;
-    }
-
-    /** 라이더 승인 — PATCH /api/admin/rider/{riderNo}/approve. */
-    async approveRider(riderNo, adminNo) {
-        const res = await axios.patch(`${this.#url}/rider/${riderNo}/approve`, {
-            approvedByAdminNo: adminNo,
-        });
-        return res.data;
-    }
-
-    /** 라이더 제재 — PATCH /api/admin/rider/{riderNo}/suspend. */
-    async suspendRider(riderNo, adminNo, reason, untilAt = null) {
-        const res = await axios.patch(`${this.#url}/rider/${riderNo}/suspend`, {
-            suspendedByAdminNo: adminNo,
-            reason,
-            untilAt,
-        });
-        return res.data;
-    }
+    // SSE 자동화 트랙(2026-05-21) — 라이더 신원 승인/제재 화면 폐기 (AdminRiderView 삭제).
+    // 사용자 결정 — 가입 즉시 ACTIVE (auto-approve true), 회원 정지/해제는 user 도메인으로 단일화.
+    // BE dead code 정리는 별 트랙(학원 발표 후).
 
     // ─── 라이더 정산 (Group 5/5.5 신설, Q-A10) ──────
-
-    /** 주간 정산 집계 — POST /api/admin/rider-settlement/calculate. */
-    async calculateRiderSettlement(periodStart, periodEnd) {
-        const res = await axios.post(`${this.#url}/rider-settlement/calculate`, {
-            periodStart,
-            periodEnd,
-        });
-        return res.data;
-    }
+    // SSE 자동화 트랙(2026-05-21) — calculateRiderSettlement 폐기.
+    // 배달 완료 시 rider DeliveryService에서 자동 UPSERT.
 
     /** 정산 확정 — PATCH /api/admin/rider-settlement/{settlementNo}/confirm. */
     async confirmRiderSettlement(settlementNo, adminNo) {

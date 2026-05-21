@@ -16,9 +16,9 @@ const formatDate = (d) =>
   const searchForm = ref({
   userId: '',
   name: '',
-  startDate: formatDate(today),
-  endDate: formatDate(today),
-  category: '전체',  // 변경
+  startDate: '',
+  endDate: '',
+  category: '전체',
 })
 
 const categoryOptions = ['전체', '고객', '사장', '라이더']  // '전체' 추가
@@ -81,7 +81,13 @@ const fetchUserList = async () => {
   try {
     const roleMap = { '고객': 'CUSTOMER', '사장': 'OWNER', '라이더': 'RIDER' }
     const role = roleMap[searchForm.value.category] ?? null
-    const res = await adminService.getUserList(role, currentPage.value - 1)
+    const searchParams = {
+      userId: searchForm.value.userId?.trim() || null,
+      name: searchForm.value.name?.trim() || null,
+      startDate: searchForm.value.startDate ? searchForm.value.startDate.replaceAll('.', '-') : null,
+      endDate: searchForm.value.endDate ? searchForm.value.endDate.replaceAll('.', '-') : null,
+    }
+    const res = await adminService.getUserList(role, currentPage.value - 1, searchParams)
     userList.value = res.resultData?.content ?? []
     totalPages.value = res.resultData?.totalPages ?? 1
   } catch {
@@ -244,13 +250,13 @@ onMounted(fetchUserList)
               <div class="date_range">
                 <div class="date_picker_wrap">
                   <img src="@/assets/calender.png" alt="calendar" class="blind_search_img" @click="startDateRef.showPicker()" />
-                  <span class="date_text">{{ searchForm.startDate }}</span>
+                  <span class="date_text" :class="{ placeholder: !searchForm.startDate }">{{ searchForm.startDate || '날짜 선택' }}</span>
                   <input ref="startDateRef" type="date" class="hidden_date" @change="onStartDateChange" />
                 </div>
                 <span class="date_sep">-</span>
                 <div class="date_picker_wrap">
                   <img src="@/assets/calender.png" alt="calendar" class="blind_search_img" @click="endDateRef.showPicker()" />
-                  <span class="date_text">{{ searchForm.endDate }}</span>
+                  <span class="date_text" :class="{ placeholder: !searchForm.endDate }">{{ searchForm.endDate || '날짜 선택' }}</span>
                   <input ref="endDateRef" type="date" class="hidden_date" @change="onEndDateChange" />
                 </div>
               </div>
@@ -513,6 +519,7 @@ onMounted(fetchUserList)
 .date_picker_wrap:hover { border-color: #aaa; }
 .blind_search_img { width: 16px; height: auto; cursor: pointer; flex-shrink: 0; }
 .date_text { font-size: 13px; color: #333; min-width: 80px; user-select: none; }
+.date_text.placeholder { color: #aaa; }
 .hidden_date { position: absolute; opacity: 0; width: 0; height: 0; pointer-events: none; }
 .dropdown_wrap { position: relative; }
 .dropdown_btn { background: #fff; border: 1px solid #ddd; border-radius: 6px; padding: 7px 12px; font-size: 13px; color: #333; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 8px; min-width: 110px; }

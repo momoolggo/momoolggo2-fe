@@ -88,9 +88,13 @@ class AdminService {
     }
 
     // 리뷰,블라인드
-    async getBlindList(status = null) {
+    async getBlindList(status = null, searchParams = {}) {
         const params = {};
         if (status) params.status = status;
+        if (searchParams.storeName) params.storeName = searchParams.storeName;
+        if (searchParams.writer) params.writer = searchParams.writer;
+        if (searchParams.startDate) params.startDate = searchParams.startDate;
+        if (searchParams.endDate) params.endDate = searchParams.endDate;
         const res = await axios.get(`${this.#url}/blind`, { params });
         return res.data;
     }
@@ -247,10 +251,13 @@ class AdminService {
     }
 
     // 회원 관리
-    async getUserList(role = null, page = 0) {
-        const params = {}
-        params['page'] = page
-        if (role) params['role'] = role
+    async getUserList(role = null, page = 0, searchParams = {}) {
+        const params = { page }
+        if (role) params.role = role
+        if (searchParams.userId) params.userId = searchParams.userId
+        if (searchParams.name) params.name = searchParams.name
+        if (searchParams.startDate) params.startDate = searchParams.startDate
+        if (searchParams.endDate) params.endDate = searchParams.endDate
         const res = await axios.get(`${this.#url}/user`, { params })
         return res.data
     }
@@ -295,32 +302,37 @@ class AdminService {
         return res.data
     }
 
-    async getAllReviews(page = 0, size = 15) {
-        const res = await axios.get(`${this.#url}/review`, { params: { page, size } })
+    async getAllReviews(page = 0, size = 15, searchParams = {}) {
+        const params = { page, size };
+        if (searchParams.storeName) params.storeName = searchParams.storeName;
+        if (searchParams.writer) params.writer = searchParams.writer;
+        if (searchParams.startDate) params.startDate = searchParams.startDate;
+        if (searchParams.endDate) params.endDate = searchParams.endDate;
+        const res = await axios.get(`${this.#url}/review`, { params })
         return res.data
     }
 
     async getChartStats(period = 'weekly', metric = 'memberCount') {
         const res = await axios.get(`${this.#url}/dashboard/chart`, { params: { period, metric } })
         return res.data
-      }
+    }
+
+    async getCategoryOrderStats() {
+        const res = await axios.get(`${this.#url}/dashboard/category-orders`)
+        return res.data
+    }
+
+    async getOrderTrend(period = 'daily') {
+        const res = await axios.get(`${this.#url}/dashboard/order-trend`, { params: { period } })
+        return res.data
+    }
 
       async getUserDetail(userNo) {
         const res = await axios.get(`${this.#url}/user/${userNo}/detail`)
         return res.data
     }
 
-    async getRiderSettlements() {
-        const res = await axios.get(`${this.#url}/settlement/rider`)
-        return res.data
-      }
-      
-      async confirmRiderSettlement(settlementNo) {
-        const res = await axios.post(`${this.#url}/settlement/rider/${settlementNo}/confirm`)
-        return res.data
-      }
-
-      async getSettlementOrders(settlementId) {
+    async getSettlementOrders(settlementId) {
         const res = await axios.get(`${this.#url}/settlement/${settlementId}/orders`)
         return res.data
     }

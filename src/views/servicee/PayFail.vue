@@ -10,7 +10,6 @@ onMounted(async() => {
     const params = new URLSearchParams(window.location.search);
     state.code    = params.get('code') ?? '알 수 없는 오류';
     state.message = params.get('message') ?? '결제에 실패했습니다.';
-    await orderService.deleteOrder(params.get('orderId'));
 });
 </script>
 

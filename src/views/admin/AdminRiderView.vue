@@ -123,15 +123,16 @@ const loadSettlementPending = async () => {
 }
 
 const openCalculateModal = () => {
-  // 기본값: 지난 주 월~일
+  // 기본값: 이번 주 월~일 (PENDING 재집계 허용 — admin 재트리거 시 진행 중 배달 즉시 반영)
   const today = new Date()
   const day = today.getDay()
-  const lastMon = new Date(today)
-  lastMon.setDate(today.getDate() - day - 6)
-  const lastSun = new Date(today)
-  lastSun.setDate(today.getDate() - day)
-  calculateForm.value.periodStart = lastMon.toISOString().slice(0, 10)
-  calculateForm.value.periodEnd = lastSun.toISOString().slice(0, 10)
+  const diffToMon = day === 0 ? -6 : 1 - day
+  const mon = new Date(today.getFullYear(), today.getMonth(), today.getDate() + diffToMon)
+  const sun = new Date(today.getFullYear(), today.getMonth(), today.getDate() + diffToMon + 6)
+  const pad = (n) => String(n).padStart(2, '0')
+  const fmt = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
+  calculateForm.value.periodStart = fmt(mon)
+  calculateForm.value.periodEnd = fmt(sun)
   showCalculateModal.value = true
 }
 

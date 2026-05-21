@@ -2,11 +2,14 @@
 import { onMounted, reactive } from 'vue';
 import { useRouter } from 'vue-router';
 import orderService from '@/services/orderService';
-import axios from 'axios';
 import { showAlert } from '@/composables/useAlert'
 
 const router = useRouter();
-const state = reactive({ paymentKey: '', orderId: '', amount: '' });
+const state = reactive({
+    paymentKey: '',
+    orderId: '',
+    amount: '',
+});
 
 onMounted(async () => {
     const params = new URLSearchParams(window.location.search);

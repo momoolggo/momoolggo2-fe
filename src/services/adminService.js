@@ -332,7 +332,7 @@ class AdminService {
         return res.data
     }
 
-    async getSettlementOrders(settlementId) {
+      async getSettlementOrders(settlementId) {
         const res = await axios.get(`${this.#url}/settlement/${settlementId}/orders`)
         return res.data
     }

@@ -1,16 +1,8 @@
 <script setup>
-import { reactive, onMounted, ref, computed } from 'vue'
+import { reactive, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import orderService from '@/services/orderService'
-import CartView from './CartView.vue'
-import { useUserStore } from '@/stores/userStore'
-import cartService from '@/services/cartService'
 import { showAlert } from '@/composables/useAlert'
-
-const userStore = useUserStore()
-const userNo = computed(() => userStore.state.userNo)
-
-
 
 const router = useRouter()
 
@@ -30,6 +22,8 @@ const state = reactive({
 
 let widgets = null
 const isWidgetReady = ref(false)
+const isOrdering = ref(false)
+const createdOrderId = ref('')
 
 const loadTossScript = () => {
   return new Promise((resolve, reject) => {
@@ -49,7 +43,7 @@ const initTossWidget = async (amount) => {
   const tossPayments = window.TossPayments(CLIENT_KEY)
   widgets = tossPayments.widgets({ customerKey: CUSTOMER_KEY })
 
-  await widgets.setAmount({ currency: 'KRW', value: amount })
+  await widgets.setAmount({ currency: 'KRW', value: Number(amount) })
 
   await Promise.all([
     widgets.renderPaymentMethods({
@@ -100,6 +94,8 @@ const loadOrderInfo = async () => {
 onMounted(loadOrderInfo)
 
 const handleOrder = async () => {
+  if (isOrdering.value) return
+
   if (!state.address) {
     await showAlert('배송지를 설정해주세요.', { title: '배송지 필요', type: 'warning' })
     return
@@ -109,26 +105,36 @@ const handleOrder = async () => {
     return
   }
 
+  isOrdering.value = true
+
   try {
     // ✅ 1. 주문 저장 → 서버에서 발급한 orderId 사용
-    const orderRes = await orderService.placeOrder({
-      request:      state.request,
-      riderRequest: state.riderRequest,
-      payState:     state.payState,
-    })
-    const orderId = String(orderRes.orderId)
-    console.log('주문 저장 성공, orderId:', orderId)
+    if (!createdOrderId.value) {
+      const orderRes = await orderService.placeOrder({
+        request: state.request,
+        riderRequest: state.riderRequest,
+        payState: state.payState,
+      })
+      createdOrderId.value = String(orderRes.orderId)
+    }
 
-    await cartService.clearCart(userNo.value)
+    const orderId = createdOrderId.value
+    console.log('주문 저장 성공, orderId:', orderId)
 
     // ✅ 2. payState 저장 (success 페이지에서 사용)
     sessionStorage.setItem('payState', state.payState)
 
     // ✅ 3. 주문명 생성
+    const firstItemName =
+      state.items[0]?.menuName ||
+      state.items[0]?.name ||
+      '뭐물꼬 주문'
+
     const orderName =
       state.items.length > 1
-        ? `${state.items[0].name} 외 ${state.items.length - 1}건`
-        : (state.items[0]?.name ?? '주문')
+        ? `${firstItemName} 외 ${state.items.length - 1}건`
+        : firstItemName
+    const customerMobilePhone = String(state.tel || '').replace(/\D/g, '')
 
     // ✅ 4. 토스 결제창 호출
     await widgets.requestPayment({
@@ -136,11 +142,13 @@ const handleOrder = async () => {
       orderName,
       successUrl: `${window.location.origin}/payment/success`,
       failUrl:    `${window.location.origin}/payment/fail`,
-      customerMobilePhone: state.tel,
+      customerMobilePhone,
     })
   } catch (e) {
     console.error('결제 요청 실패:', e)
     await showAlert('결제 요청에 실패했습니다.', { title: '결제 오류', type: 'error' })
+  } finally {
+    isOrdering.value = false
   }
 }
 </script>
@@ -225,7 +233,7 @@ const handleOrder = async () => {
           </div>
         </div>
 
-        <button class="order-btn" @click="handleOrder" :disabled="!isWidgetReady">
+        <button class="order-btn" @click="handleOrder" :disabled="!isWidgetReady || isOrdering">
           {{ isWidgetReady ? `${state.totalAmount.toLocaleString()}원 결제하기` : '로딩 중...' }}
         </button>
       </section>

@@ -14,11 +14,24 @@ const loading = ref(true)
 const accountModalOpen = ref(false)
 const accountForm = ref({ accountBank: '', accountNo: '', accountHolder: '' })
 
+const isoOfThisMonday = () => {
+  const t = new Date()
+  const dayJs = t.getDay()
+  const diffToMon = dayJs === 0 ? -6 : 1 - dayJs
+  const mon = new Date(t.getFullYear(), t.getMonth(), t.getDate() + diffToMon)
+  const pad = (n) => String(n).padStart(2, '0')
+  return `${mon.getFullYear()}-${pad(mon.getMonth() + 1)}-${pad(mon.getDate())}`
+}
+
 const thisWeek = computed(() => {
-  // 가장 최근(periodStart DESC 첫번째) = 이번주 또는 가장 최신 정산
-  return settlements.value[0] ?? null
+  const first = settlements.value[0]
+  if (first && first.periodStart === isoOfThisMonday()) return first
+  return null
 })
-const pastWeeks = computed(() => settlements.value.slice(1))
+const pastWeeks = computed(() => {
+  if (thisWeek.value) return settlements.value.slice(1)
+  return settlements.value
+})
 
 const fmtMoney = (n) => (n ?? 0).toLocaleString('ko-KR') + '원'
 const fmtDate = (iso) => iso ?? '-'
@@ -78,7 +91,7 @@ onMounted(load)
       <!-- 이번주 정산 -->
       <section class="card primary">
         <h2 class="card-title">이번 주 정산</h2>
-        <div v-if="!thisWeek" class="empty">집계된 정산이 없습니다.</div>
+        <div v-if="!thisWeek" class="empty">이번 주 정산은 관리자 집계 후 표시됩니다.</div>
         <div v-else>
           <div class="period">{{ fmtDate(thisWeek.periodStart) }} ~ {{ fmtDate(thisWeek.periodEnd) }}</div>
           <div class="payout-row">

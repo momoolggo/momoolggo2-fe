@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import AdminSidebar from '@/components/admin/AdminSidebar.vue'
 import AdminHeader from '@/components/admin/AdminHeader.vue'
 import adminService from '@/services/adminService'
@@ -8,6 +8,7 @@ const activeTab = ref('all')
 const blindList = ref([])
 const loading = ref(false)
 const expandedId = ref(null)
+const pollTimer = ref(null)
 
 // 블라인드 해제 모달
 const showReleaseModal = ref(false)
@@ -88,9 +89,8 @@ const fetchList = async () => {
       const res = await adminService.getAllReviews(currentPage.value - 1)
       blindList.value = res?.resultData ?? []
     } else {
-      const res = await adminService.getBlindList()  // status 파라미터 제거 → 전체 조회
-      blindList.value = res?.resultData ?? []
-      console.log('status 값:', blindList.value.map(i => i.status))  // ← 추가
+      const res = await adminService.getBlindList()
+      blindList.value = (res?.resultData ?? []).filter(item => item.status !== 'RELEASED')
     }
   } catch (e) {
     console.error('목록 조회 실패', e)
@@ -100,11 +100,32 @@ const fetchList = async () => {
   }
 }
 
-onMounted(fetchList)
+const startPolling = () => {
+  stopPolling()
+  pollTimer.value = setInterval(fetchList, 20000)
+}
+
+const stopPolling = () => {
+  if (pollTimer.value) {
+    clearInterval(pollTimer.value)
+    pollTimer.value = null
+  }
+}
+
+onMounted(() => {
+  fetchList()
+})
+
+onUnmounted(stopPolling)
 
 const handleTabChange = (tab) => {
   activeTab.value = tab
   fetchList()
+  if (tab === 'blind') {
+    startPolling()
+  } else {
+    stopPolling()
+  }
 }
 
 const closeUserModal = () => {

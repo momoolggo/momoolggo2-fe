@@ -215,9 +215,9 @@ class OwnerService {
     async getSettlementOrders(settlementId) {
         const res = await axios.get(`http://localhost:8083/api/admin/settlement/${settlementId}/orders`)
         return res.data
-      }
+    }
 
-    
+
 }
 
 

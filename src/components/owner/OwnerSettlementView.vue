@@ -257,7 +257,7 @@ onMounted(fetchSettlements)
             <span class="payout-value">토스페이먼츠 지급대행</span>
           </div>
         </div>
-</div>
+      </div>
 
       <!-- 정산 문의 -->
       <div class="inquiry-section">
@@ -349,5 +349,14 @@ onMounted(fetchSettlements)
 .payout-row { display: flex; justify-content: space-between; align-items: center; font-size: 14px; }
 .payout-label { color: #777; }
 .payout-value { font-weight: 600; color: #222; }
+.bank-account-row { align-items: flex-start; flex-wrap: wrap; gap: 8px; }
+.bank-input-wrap { display: flex; gap: 8px; flex: 1; }
+.bank-input { flex: 1; border: 1.5px solid #ddd; border-radius: 8px; padding: 7px 12px; font-size: 13px; outline: none; min-width: 0; }
+.bank-input:focus { border-color: #9b1b1b; }
+.bank-save-btn { padding: 7px 16px; background: #9b1b1b; color: #fff; border: none; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+.bank-save-btn:disabled { background: #ccc; cursor: default; }
+.bank-display-wrap { display: flex; align-items: center; gap: 10px; }
+.bank-edit-btn { padding: 4px 12px; background: #fff; border: 1.5px solid #9b1b1b; color: #9b1b1b; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; }
+.bank-edit-btn:hover { background: #fff4f4; }
 
 </style>

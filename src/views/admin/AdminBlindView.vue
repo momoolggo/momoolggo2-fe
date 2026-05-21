@@ -436,7 +436,7 @@ const handleSearch = () => {
 .page_title { font-size: 20px; font-weight: 700; color: #222; margin: 0; }
 
 /* 검색 */
-.search_box { background: #fff; border-radius: 10px; padding: 20px 24px; }
+.search_box { background: #fff; border-radius: 10px; padding: 20px 0px; margin-bottom: 20px;}
 .search_row { display: flex; align-items: flex-end; gap: 16px; flex-wrap: wrap; }
 .search_field { display: flex; flex-direction: column; gap: 6px; }
 .search_field label { font-size: 12px; color: #666; font-weight: 500; }

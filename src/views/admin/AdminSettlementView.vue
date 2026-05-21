@@ -608,6 +608,7 @@ const expectedPayoutDate = (periodEnd) => {
 .search_box {
   background: transparent;
   padding: 0;
+  margin-top: 40px;
 }
 .search_row {
   display: flex;

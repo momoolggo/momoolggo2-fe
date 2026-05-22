@@ -9,6 +9,7 @@ import adminService from '@/services/adminService'
 
 const summary = ref({
   expectedAmount: 0,
+  monthlyExpectedAmount: 0,
   completedAmount: 0,
   completedCount: 0,
   pendingCount: 0,
@@ -109,6 +110,7 @@ const fetchSummary = async () => {
     if (res?.resultData) {
       summary.value = {
         expectedAmount: res.resultData.expectedAmount ?? 0,
+        monthlyExpectedAmount: res.resultData.monthlyExpectedAmount ?? 0,
         completedAmount: res.resultData.completedAmount ?? 0,
         completedCount: res.resultData.completedCount ?? 0,
         pendingCount: res.resultData.pendingCount ?? 0,
@@ -129,6 +131,7 @@ const fetchList = async () => {
       page: currentPage.value - 1,
       size: 10,
       status: searchForm.value.status ?? undefined,
+      keyword: searchForm.value.keyword || undefined,
     })
     const data = res?.resultData
     
@@ -144,6 +147,7 @@ const fetchList = async () => {
 
 const openDetail = async (item) => {
   selectedSettlement.value = item
+  editBankAccount.value = item.bankAccount ?? ''
   showDetailModal.value = true
   settlementOrders.value = []
   settlementTotalSales.value = 0
@@ -173,9 +177,33 @@ const completeSettlement = async (settlementId) => {
   } catch (e) { alert('처리 실패') }
 }
 
+const editBankAccount = ref('')
+const bankAccountSaving = ref(false)
+
+const saveBankAccount = async () => {
+  if (!editBankAccount.value.trim()) { alert('계좌 정보를 입력해주세요.'); return }
+  bankAccountSaving.value = true
+  try {
+    await adminService.updateBankAccount(selectedSettlement.value.settlementId, editBankAccount.value.trim())
+    selectedSettlement.value = { ...selectedSettlement.value, bankAccount: editBankAccount.value.trim() }
+  } catch (e) {
+    alert('계좌 변경 실패')
+  } finally {
+    bankAccountSaving.value = false
+  }
+}
+
 const holdSettlement = async (settlementId) => {
   try {
     await adminService.holdSettlement(settlementId)
+    await fetchList()
+    closeDetail()
+  } catch (e) { alert('처리 실패') }
+}
+
+const releaseHold = async (settlementId) => {
+  try {
+    await adminService.releaseHold(settlementId)
     await fetchList()
     closeDetail()
   } catch (e) { alert('처리 실패') }
@@ -219,7 +247,7 @@ const expectedPayoutDate = (periodEnd) => {
       <AdminHeader />
 
       <div class="content">
-        <h2 class="page_title">정산 관리</h2>
+        <h2 class="page_title">이번주 정산 관리</h2>
 
         <!-- 요약 카드 -->
         <div class="summary_grid">
@@ -228,12 +256,19 @@ const expectedPayoutDate = (periodEnd) => {
               <div class="icon_area blue_area">
                 <img src="@/assets/calculator.png" alt="calculator" class="card_img" />
               </div>
-              <div class="card_info">
-                <p class="card_label">총 정산 예정액</p>
-                <p class="card_value blue_val">{{ formatMoney(summary.expectedAmount) }}</p>
+              <div class="card_info card_info_dual">
+                <div class="dual_section">
+                  <p class="card_label">이번 주 정산 예정액</p>
+                  <p class="card_value_sm blue_val">{{ formatMoney(summary.expectedAmount) }}</p>
+                </div>
+                <div class="dual_divider"></div>
+                <div class="dual_section">
+                  <p class="card_label">이번 달 전체 정산액</p>
+                  <p class="card_value_sm card_monthly_val">{{ formatMoney(summary.monthlyExpectedAmount) }}</p>
+                </div>
               </div>
             </div>
-            <div class="card_sub_bar blue_sub">이번 주 총 예정액</div>
+            <div class="card_sub_bar blue_sub">이번 주 예정 / 이번 달 전체</div>
           </div>
           <div class="summary_card">
             <div class="card_main">
@@ -562,6 +597,10 @@ const expectedPayoutDate = (periodEnd) => {
           <button class="action_hold" @click="holdSettlement(selectedSettlement.settlementId)">보류</button>
           <button class="action_complete" @click="completeSettlement(selectedSettlement.settlementId)">정산 완료</button>
         </div>
+        <div v-else-if="selectedSettlement.status === 'HELD'" class="modal_actions">
+          <button class="action_release" @click="releaseHold(selectedSettlement.settlementId)">보류 해제</button>
+          <button class="action_complete" @click="completeSettlement(selectedSettlement.settlementId)">정산 완료</button>
+        </div>
       </div>
     </div>
   </div>
@@ -591,6 +630,11 @@ const expectedPayoutDate = (periodEnd) => {
 .card_label { font-size: 13px; color: #888; font-weight: 500; }
 .card_value { font-size: 24px; font-weight: 800; }
 .blue_val { color: #222; }
+.card_info_dual { justify-content: space-around; gap: 0; padding: 14px 16px; }
+.dual_section { display: flex; flex-direction: column; gap: 4px; }
+.dual_divider { border-top: 1px dashed #d0e4f7; margin: 6px 0; }
+.card_value_sm { font-size: 18px; font-weight: 800; }
+.card_monthly_val { color: #4a90d9; }
 .green_val { color: #4caf50; }
 .yellow_val { color: #f5a623; }
 .card_sub_bar { padding: 9px 20px; font-size: 12px; text-align: center; font-weight: 500; }
@@ -603,17 +647,13 @@ const expectedPayoutDate = (periodEnd) => {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
+  margin-top: 20px;
   margin-bottom: 4px;
 }
 .tab_row { display: flex; gap: 8px; margin-left: auto;}
 .search_box { background: transparent; padding: 0;}
 .tab_btn { padding: 6px 18px; border: 1px solid #ddd; background: #fff; border-radius: 6px; font-size: 13px; color: #666; cursor: pointer; font-weight: 500; }
 .tab_btn.active { background: #9b1b1b; border-color: #9b1b1b; color: #fff; font-weight: 700; }
-.search_box {
-  background: transparent;
-  padding: 0;
-  margin-top: 40px;
-}
 .search_row {
   display: flex;
   align-items: center;
@@ -638,7 +678,7 @@ const expectedPayoutDate = (periodEnd) => {
 .dropdown_item { display: block; width: 100%; padding: 9px 14px; font-size: 13px; color: #333; background: none; border: none; text-align: left; cursor: pointer; }
 .dropdown_item:hover { background: #f5f5f5; }
 .keyword_input { border: 1px solid #ddd; border-radius: 6px; padding: 7px 10px; font-size: 13px; color: #333; outline: none; min-width: 160px; }
-.search_btn { background: #9b1b1b; color: #fff; border: none; border-radius: 6px; padding: 8px 20px; font-size: 13px; font-weight: 600; cursor: pointer; height: 34px; align-self: flex-end; }
+.search_btn { background: #9b1b1b; color: #fff; border: none; border-radius: 6px; padding: 0 20px; font-size: 13px; font-weight: 600; cursor: pointer; }
 .search_btn:hover { background: #7f1515; }
 .table_wrap { background: #fff; border-radius: 10px; overflow: hidden; }
 .settlement_table { width: 100%; border-collapse: collapse; font-size: 13px; }
@@ -698,6 +738,8 @@ const expectedPayoutDate = (periodEnd) => {
 .modal_actions { display: flex; gap: 10px; padding: 20px 28px; justify-content: flex-end; }
 .action_hold { padding: 9px 24px; border: 1px solid #ddd; background: #fff; border-radius: 8px; font-size: 13px; color: #666; cursor: pointer; font-weight: 500; }
 .action_hold:hover { background: #f5f5f5; }
+.action_release { padding: 9px 24px; border: 1px solid #f5a623; background: #fff; border-radius: 8px; font-size: 13px; color: #f5a623; cursor: pointer; font-weight: 600; }
+.action_release:hover { background: #fff8ee; }
 .action_complete { padding: 9px 24px; border: none; background: #9b1b1b; border-radius: 8px; font-size: 13px; color: #fff; cursor: pointer; font-weight: 700; }
 .action_complete:hover { background: #7f1515; }
 .modal_payout_wrap { padding: 0 0 20px; }
@@ -705,5 +747,11 @@ const expectedPayoutDate = (periodEnd) => {
 .payout_row { display: flex; justify-content: space-between; align-items: center; }
 .payout_label { font-size: 13px; color: #888; font-weight: 500; }
 .payout_value { font-size: 13px; font-weight: 600; color: #333; }
+.bank_edit_wrap { display: flex; align-items: center; gap: 8px; }
+.bank_input { border: 1px solid #ddd; border-radius: 6px; padding: 5px 10px; font-size: 13px; color: #333; outline: none; min-width: 200px; }
+.bank_input:focus { border-color: #9b1b1b; }
+.bank_save_btn { background: #9b1b1b; color: #fff; border: none; border-radius: 6px; padding: 5px 14px; font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+.bank_save_btn:hover { background: #7f1515; }
+.bank_save_btn:disabled { background: #ccc; cursor: not-allowed; }
 .toss_id { font-size: 11px; color: #aaa; font-family: monospace; }
 </style>

@@ -29,6 +29,24 @@ const showInquiryForm = ref(false)
 const inquiryContent = ref('')
 const inquirySubmitting = ref(false)
 
+const editBankAccount = ref('')
+const bankAccountSaving = ref(false)
+
+const saveBankAccount = async () => {
+  if (!editBankAccount.value.trim()) { alert('계좌 정보를 입력해주세요.'); return }
+  bankAccountSaving.value = true
+  try {
+    await ownerService.updateBankAccount(selectedSettlement.value.settlementId, editBankAccount.value.trim())
+    selectedSettlement.value = { ...selectedSettlement.value, bankAccount: editBankAccount.value.trim() }
+    const idx = settlementList.value.findIndex(s => s.settlementId === selectedSettlement.value.settlementId)
+    if (idx !== -1) settlementList.value[idx] = { ...settlementList.value[idx], bankAccount: editBankAccount.value.trim() }
+  } catch (e) {
+    alert('계좌 변경 실패')
+  } finally {
+    bankAccountSaving.value = false
+  }
+}
+
 const today = new Date()
 const currentYear = ref(today.getFullYear())
 const currentMonth = ref(today.getMonth() + 1)
@@ -89,6 +107,7 @@ const fetchSettlements = async () => {
 
 const openDetail = async (item) => {
   selectedSettlement.value = item
+  editBankAccount.value = item.bankAccount ?? ''
   showInquiryForm.value = false
   inquiryContent.value = ''
   settlementOrders.value = []
@@ -238,9 +257,22 @@ onMounted(fetchSettlements)
       <div class="payout-section">
         <p class="section-title">지급 정보</p>
         <div class="payout-grid">
-          <div class="payout-row">
+          <div class="payout-row bank-account-row">
             <span class="payout-label">입금 계좌</span>
-            <span class="payout-value">{{ selectedSettlement.bankAccount ?? '-' }}</span>
+            <template v-if="['PENDING', 'HELD'].includes(selectedSettlement.status)">
+              <div class="bank-input-wrap">
+                <input
+                  v-model="editBankAccount"
+                  type="text"
+                  class="bank-input"
+                  placeholder="예: 국민은행 111-2222-3333"
+                />
+                <button class="bank-save-btn" :disabled="bankAccountSaving" @click="saveBankAccount">
+                  {{ bankAccountSaving ? '저장 중...' : '저장' }}
+                </button>
+              </div>
+            </template>
+            <span v-else class="payout-value">{{ selectedSettlement.bankAccount ?? '-' }}</span>
           </div>
           <div class="payout-row">
             <span class="payout-label">입금 예정일</span>

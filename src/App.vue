@@ -15,7 +15,7 @@ const globalAlert = ref(null)
 
 // 헤더를 숨길 페이지
 
-const noHeaderPages = ['/','/ownerlanding' ,'/owner/signin', '/owner/signup', '/customer/signin', '/customer/signup'
+const noHeaderPages = ['/','/find-account','/ownerlanding' ,'/owner/signin', '/owner/signup', '/customer/signin', '/customer/signup'
                           ,'/admin','/admin/notice','/admin/faq','/admin/settlement','/admin/blind','/admin/cs',
                           '/admin/delivery','/admin/user','/admin/store','/admin/signin',
                           ,'/riderlanding','/rider/signin','/rider/signup','/riderservice','/rider/work-session','/rider/notice','/rider/history','/rider/settlement','/rider/mypage']

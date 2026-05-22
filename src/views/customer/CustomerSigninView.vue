@@ -73,6 +73,10 @@ const signin = async () => {
 
       <button class="btn_primary" @click="signin">로그인</button>
 
+      <div class="find_link">
+        <router-link to="/find-account">아이디 찾기 / 비밀번호 재설정</router-link>
+      </div>
+
       <div class="auth_link">
         <span>계정이 없으신가요?</span>
         <router-link to="/customer/signup">회원가입</router-link>
@@ -97,4 +101,7 @@ const signin = async () => {
 .back_link { text-align: center; font-size: 13px; }
 .back_link a { color: var(--gray); text-decoration: none; }
 .back_link a:hover { color: var(--primary); }
+.find_link { text-align: center; font-size: 13px; }
+.find_link a { color: var(--gray); text-decoration: none; }
+.find_link a:hover { color: var(--primary); }
 </style>

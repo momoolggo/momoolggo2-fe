@@ -13,6 +13,17 @@ const orders = ref([])          // 화면에 표시될 주문 목록
 const currentPage = ref(1);      // 현재 페이지
 const pageSize = 5;         // 한 페이지당 아이템 수
 const totalPages = ref(5);       // 전체 페이지 수 (백엔드에서 받아와야 함)
+
+const getPayState = order => order.payState ?? order.pay_state ?? order.paymentState ?? order.payment_state
+
+// 결제 완료/환불(payState 2/3) 주문만 주문내역에 노출한다.
+const isVisibleOrder = order => {
+  const payState = getPayState(order)
+  if (payState === undefined || payState === null || payState === '') return false
+
+  return [2, 3].includes(Number(payState))
+}
+
 onMounted(async () => {
   try {
     const result = await orderService.getMaxHistory(userId);
@@ -34,7 +45,7 @@ const loadOrders = async (page) => {
   };
   try {
     const result = await orderService.getOrderHistory(params);
-    orders.value = result || [];
+    orders.value = (result || []).filter(isVisibleOrder);
 
     // 페이지 변경 시 상단으로 스크롤 이동
     window.scrollTo({ top: 0, behavior: 'smooth' });

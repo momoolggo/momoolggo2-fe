@@ -24,6 +24,16 @@ const stats = ref({
   cancel: 0
 });
 
+const getPayState = order => order.payState ?? order.pay_state ?? order.paymentState ?? order.payment_state
+
+// 결제 완료/환불(payState 2/3) 주문만 사장 주문관리 통계에 포함한다.
+const isVisibleOrder = order => {
+  const payState = getPayState(order)
+  if (payState === undefined || payState === null || payState === '') return false
+
+  return [2, 3].includes(Number(payState))
+}
+
 const fetchStats = async () => {
   if (!storeInfo.myStoreId) return;
   try {
@@ -32,7 +42,7 @@ const fetchStats = async () => {
       null,
       selectedDate.value
     );
-    const orders = response?.resultData ?? [];
+    const orders = (response?.resultData ?? []).filter(isVisibleOrder);
 
       stats.value = {
         total: orders.length,

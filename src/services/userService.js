@@ -42,6 +42,13 @@ class UserService {
     return res.data.resultData
   }
 
+  // ── 마이페이지 요약 조회 GET /api/mypage/summary
+  // 응답: ResultResponse<MyPageSummaryRes> → resultData: { userNo, userId, name, tel, green, greenGrade, usableCouponCount }
+  async getMyPageSummary() {
+    const res = await axios.get('/mypage/summary')
+    return res.data.resultData
+  }
+
   // ── 내 정보 수정 PUT /api/user
   async updateMe(updateData) {
     const res = await axios.put(this.#url, updateData)

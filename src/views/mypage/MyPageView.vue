@@ -10,7 +10,7 @@ const isMainPage = computed(() => route.name === 'MyPage')
 const menus = [
   { icon: 'bi bi-person',            label: '내 정보 수정', path: '/mypage/profile' },
   { icon: 'bi bi-geo-alt',           label: '주소 관리',  path: '/mypage/address' },
-  { icon: 'bi bi-ticket-perforated', label: '쿠폰함',       path: '/mypage/coupon', badge: '쿠폰 2차' },
+  { icon: 'bi bi-ticket-perforated', label: '쿠폰함',       path: '/mypage/coupon' },
   { icon: 'bi bi-receipt',           label: '주문 내역',    path: '/mypage/orders'  },
   { icon: 'bi bi-star',              label: '내 리뷰 관리', path: '/mypage/review'  },
   { icon: 'bi bi-egg',           label: '내 펫',     path: '/mypage/pet'      },

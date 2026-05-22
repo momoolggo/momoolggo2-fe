@@ -10,14 +10,17 @@ const getImageUrl = (path) => {
   return `${path}`
 }
 
-const router = useRouter();
+const router = useRouter()
 
 const props = defineProps({
   date: String,
   storeName: String,
   storeImage: String,
   items: Array,       // order_detail 행들 → [{ name, count, price }]
-  totalPrice: Number,
+  amount: Number,     // 쿠폰 할인 반영 후 최종 결제금액
+  deliveryFee: Number,
+  totalPrice: Number, // 기존 호환용 필드
+  couponDiscount: Number,
   orderState: Number,
   orderId: Number,
   hasReview: Number, // 리뷰 작성 여부 (0: 작성 가능, 1: 작성 완료)
@@ -26,6 +29,25 @@ const props = defineProps({
 // order_state 2 = 주문취소
 const isCancelled = computed(() => props.orderState === 2)
 const emit = defineEmits(['goToDetail'])
+
+// 주문 내역 API 응답 기준 금액 표시
+const displayDeliveryFee = computed(() => Number(props.deliveryFee || 0))
+const displayAmount = computed(() => Number(props.amount || props.totalPrice || 0))
+const menuTotal = computed(() => {
+  return props.items?.reduce((sum, item) => {
+    return sum + Number(item.price || 0)
+  }, 0) || 0
+})
+const displayCouponDiscount = computed(() => {
+  const couponDiscount = Number(props.couponDiscount || 0)
+  if (couponDiscount > 0) return couponDiscount
+
+  if (displayAmount.value > 0) {
+    return Math.max(menuTotal.value + displayDeliveryFee.value - displayAmount.value, 0)
+  }
+
+  return 0
+})
 
 const goToHistory = () => {
   emit('goToDetail', props.orderId)
@@ -38,21 +60,21 @@ const goToPost = () => {
 const reorder = async () => {
   try {
     await orderService.reorder(props.orderId)
-    await showAlert('메뉴를 장바구니에 다시 담았습니다', { title: '재주문 완료', type: 'success',})
-  router.push('/cart')
-}  catch(error)  {
-  const message =
-  error.response?.data?.resultMessage ||
-  error.response?.data?.message ||
-  '재주문에 실패했습니다.'
+    await showAlert('메뉴를 장바구니에 다시 담았습니다.', {
+      title: '재주문 완료',
+      type: 'success',
+    })
+    router.push('/cart')
+  } catch (error) {
+    const message =
+      error.response?.data?.resultMessage ||
+      error.response?.data?.message ||
+      '재주문에 실패했습니다.'
 
-  await showAlert(message, { title: '오류', type: 'error'})
-
-}}
-
-
+    await showAlert(message, { title: '오류', type: 'error' })
+  }
+}
 </script>
-
 
 <template>
   <div class="order-item-card">
@@ -72,12 +94,12 @@ const reorder = async () => {
         </div>
       </div>
       <div class="button-group">
-          <!-- 배달완료(6) + 리뷰 없을 때만 리뷰 등록 -->
-          <button v-if="orderState === 6 && !hasReview" class="btn-outline" @click="goToPost()">리뷰 등록</button>
-          <!-- 배달완료 + 리뷰 이미 있으면 -->
-          <button v-else-if="orderState === 6 && hasReview" class="btn-outline btn-done" disabled>리뷰 작성완료</button>
-          <!-- 주문 취소면 재주문 -->
-          <button v-else-if="isCancelled" class="btn-outline" @click="reorder">재주문</button>
+        <!-- 배달완료(6) + 리뷰 없을 때만 리뷰 등록 -->
+        <button v-if="orderState === 6 && !hasReview" class="btn-outline" @click="goToPost()">리뷰 등록</button>
+        <!-- 배달완료 + 리뷰 이미 있으면 -->
+        <button v-else-if="orderState === 6 && hasReview" class="btn-outline btn-done" disabled>리뷰 작성완료</button>
+        <!-- 주문 취소면 재주문 -->
+        <button v-else-if="isCancelled" class="btn-outline" @click="reorder">재주문</button>
         <button class="btn-primary" @click="goToHistory">상세정보</button>
       </div>
     </div>
@@ -86,25 +108,29 @@ const reorder = async () => {
       <div v-for="(item, idx) in items" :key="idx" class="menu-row">
         <span class="menu-name">{{ item.name }}</span>
         <span class="menu-count">{{ item.count }}개</span>
-        <span class="menu-price">{{ item.price.toLocaleString() }}원</span>
+        <span class="menu-price">{{ Number(item.price || 0).toLocaleString() }}원</span>
       </div>
       <div class="menu-row delivery-row">
         <span class="menu-name">배달팁</span>
         <span></span>
-        <span class="menu-price">1,500원</span>
+        <span class="menu-price">{{ displayDeliveryFee.toLocaleString() }}원</span>
+      </div>
+      <div v-if="displayCouponDiscount > 0" class="menu-row discount-row">
+        <span class="menu-name">쿠폰 할인</span>
+        <span></span>
+        <span class="menu-price">-{{ displayCouponDiscount.toLocaleString() }}원</span>
       </div>
     </div>
 
     <div class="total-section">
       <span class="total-label">총 결제 금액</span>
       <div class="total-price-group">
-        <span class="total-price">{{ totalPrice.toLocaleString() }}원</span>
+        <span class="total-price">{{ displayAmount.toLocaleString() }}원</span>
         <span v-if="isCancelled" class="cancel-badge">취소</span>
       </div>
     </div>
   </div>
 </template>
-
 
 <style scoped>
 .menu-row {
@@ -134,6 +160,16 @@ const reorder = async () => {
 .menu-price {
   text-align: right;
   white-space: nowrap;
+}
+
+.discount-row {
+  color: #b21f1f;
+  font-weight: 800;
+}
+
+.discount-row .menu-price {
+  color: #b21f1f;
+  font-weight: 800;
 }
 
 /* 기존 카드 스타일 유지 */

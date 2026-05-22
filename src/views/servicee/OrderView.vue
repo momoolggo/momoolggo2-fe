@@ -18,6 +18,7 @@ const state = reactive({
   request: '',
   riderRequest: '',
   payState: 1,
+  ecoSelected: false,
 
   // 쿠폰 관련 상태
   coupons: [],
@@ -148,6 +149,13 @@ watch(
   }
 )
 
+watch(
+  () => state.ecoSelected,
+  () => {
+    createdOrderId.value = ''
+  }
+)
+
 const handleOrder = async () => {
   if (isOrdering.value) return
 
@@ -171,6 +179,7 @@ const handleOrder = async () => {
       const orderPayload = {
         request: state.request,
         riderRequest: state.riderRequest,
+        ecoSelected: state.ecoSelected,
         payState: state.payState,
       }
 
@@ -319,6 +328,27 @@ await widgets.requestPayment({
           </p>
         </div>
 
+        <div
+          class="eco-card"
+          :class="{ active: state.ecoSelected }"
+          @click="state.ecoSelected = !state.ecoSelected"
+        >
+          <div class="eco-content">
+            <div class="eco-checkbox-row">
+              <div class="eco-checkbox" :class="{ checked: state.ecoSelected }">
+                <span v-if="state.ecoSelected">✓</span>
+              </div>
+              <span class="eco-title">일회용 수저, 포크 안 주셔도 돼요 🌱</span>
+            </div>
+            <p class="eco-desc">
+              주변에 사용할 수 있는 식기류가 있다면<br>
+              일회용품 줄이기와 함께<br>
+              내 <strong>친환경 점수</strong>를 높여보세요!
+            </p>
+          </div>
+          <div class="eco-icon">🌍</div>
+        </div>
+
         <div class="price-box">
           <div class="price-row">
             <span>메뉴 금액</span>
@@ -445,6 +475,74 @@ await widgets.requestPayment({
 
 .coupon-info {
   color: #a40c0b;
+}
+
+.eco-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #f0faf0;
+  border: 1.5px solid #c8e6c9;
+  border-radius: 12px;
+  padding: 16px;
+  margin: 0 0 20px;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.eco-card.active {
+  background: #e8f5e9;
+  border-color: #4caf50;
+}
+
+.eco-content { flex: 1; }
+
+.eco-checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.eco-checkbox {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  border: 2px solid #ccc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: bold;
+  color: white;
+  background: #fff;
+  flex-shrink: 0;
+  transition: all 0.2s;
+}
+
+.eco-checkbox.checked {
+  background: #43a047;
+  border-color: #43a047;
+}
+
+.eco-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #1b5e20;
+}
+
+.eco-desc {
+  font-size: 0.8rem;
+  color: #388e3c;
+  line-height: 1.6;
+  margin: 0 0 0 30px;
+}
+
+.eco-icon {
+  font-size: 2.5rem;
+  margin-left: 12px;
+  flex-shrink: 0;
 }
 
 .price-box {

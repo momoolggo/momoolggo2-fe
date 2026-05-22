@@ -62,7 +62,7 @@ const toggleNotificationDropdown = async () => {
 
   isNotificationOpen.value = !isNotificationOpen.value
 
-  if (isNotificationOpen.value && notificationStore.notifications.length === 0) {
+  if (isNotificationOpen.value) {
     await notificationStore.fetchNotifications()
   }
 }
@@ -195,7 +195,7 @@ const isOwner = computed(() => userStore.state.role === 'OWNER')
       </router-link>
       <span class="owner_title">사장님 서비스</span>
       <div class="owner_nav">
-        <span class="nav_username">{{ userInfo?.name ?? '' }}님</span>
+        <span class="nav_username">{{ userStore.state.name || userInfo?.name || '' }}님</span>
         <button class="nav_text_btn" @click="emit('signout')">로그아웃</button>
       </div>
     </div>
@@ -343,6 +343,12 @@ const isOwner = computed(() => userStore.state.role === 'OWNER')
   align-items: center;
   gap: 8px;
   margin-left: auto;
+}
+
+.owner_nav .nav_username {
+  max-width: none;
+  overflow: visible;
+  text-overflow: initial;
 }
 
 .logo_img {

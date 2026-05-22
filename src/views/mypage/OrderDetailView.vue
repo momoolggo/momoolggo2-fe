@@ -24,6 +24,12 @@ const order = ref({
   storeId: '',
   items: [],
   deliveryFee: 0,
+  // 금액 관련 필드
+  // amount는 백엔드 orders.amount 기준, 즉 쿠폰 할인 반영 후 최종 결제금액이어야 함
+  amount: null,
+  totalAmount: null,
+  paymentAmount: null,
+  couponDiscount: 0,
   orderState: 1     // 기본값: 주문수락전(1)
 })
 
@@ -43,7 +49,8 @@ const cancelReasons = [
 
 const loadOrderDetail = async () => {
   const result = await orderService.getOrderDetail(id)
-  order.value = result
+  // 서버 응답이 resultData로 감싸져 오거나, 바로 객체로 오는 경우 모두 대응
+  order.value = result?.resultData ?? result
 }
 
 onMounted(async () => {
@@ -56,8 +63,34 @@ onBeforeUnmount(() => {
   eventSource.value?.close()
 })
 
+// 메뉴 금액
+const menuTotal = computed(() => {
+  return order.value.items?.reduce((sum, item) => {
+    return sum + Number(item.price || 0)
+  }, 0) || 0
+})
+
+// 메뉴 금액 + 배달팁 기준 할인 전 금액
+// 백엔드가 내려준 최종 결제금액
+// 쿠폰 할인 금액
+// 1순위: 주문 상세 API에 내려온 할인 금액
+// 2순위: 할인 전 금액 - 백엔드 최종 결제금액으로 역산
+const couponDiscount = computed(() => {
+  const discount = Number(order.value.couponDiscount || 0)
+  if (discount > 0) return discount
+
+  if (totalPrice.value > 0) {
+    return Math.max(menuTotal.value + Number(order.value.deliveryFee || 0) - totalPrice.value, 0)
+  }
+
+  return 0
+})
+
+// 총 결제 금액
+// 1순위: 백엔드가 내려준 최종 결제금액
+// 2순위: 메뉴금액 + 배달팁 - 쿠폰할인
 const totalPrice = computed(() => {
-  return (order.value.items?.reduce((s, i) => s + i.price, 0) || 0) + (order.value.deliveryFee || 0)
+  return Number(order.value.amount || order.value.totalPrice || 0)
 })
 /**
  * 수빈님의 확정 상태값 규칙 적용
@@ -282,6 +315,11 @@ const closeCancelModal = () => {
             <span class="name">배달팁</span>
             <span class="spacer"></span>
             <span class="price">{{ (order.deliveryFee || 0).toLocaleString() }}원</span>
+          </div>
+          <div v-if="couponDiscount > 0" class="menu-item discount">
+            <span class="name">쿠폰 할인</span>
+            <span class="spacer"></span>
+            <span class="price">-{{ couponDiscount.toLocaleString() }}원</span>
           </div>
         </div>
 
@@ -516,6 +554,14 @@ const closeCancelModal = () => {
 .menu-item .price {
   text-align: right;
   font-weight: 500;
+}
+.menu-item.discount {
+  color: #b21f1f;
+  font-weight: 800;
+}
+.menu-item.discount .price {
+  color: #b21f1f;
+  font-weight: 800;
 }
 .total-row {
   display: flex;

@@ -1,5 +1,5 @@
 <script setup>
-import { reactive, onMounted, ref } from 'vue'
+import { reactive, onMounted, ref, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import orderService from '@/services/orderService'
 import { showAlert } from '@/composables/useAlert'
@@ -18,6 +18,11 @@ const state = reactive({
   request: '',
   riderRequest: '',
   payState: 1,
+
+  // 쿠폰 관련 상태
+  coupons: [],
+  selectedCouponId: '',
+  couponLoading: false,
 })
 
 let widgets = null
@@ -25,9 +30,29 @@ const isWidgetReady = ref(false)
 const isOrdering = ref(false)
 const createdOrderId = ref('')
 
+// 선택된 쿠폰
+const selectedCoupon = computed(() =>
+  state.coupons.find(coupon => String(coupon.couponId) === String(state.selectedCouponId)) || null
+)
+
+// 쿠폰 할인 금액
+const discountAmount = computed(() => {
+  if (!selectedCoupon.value) return 0
+  return Number(selectedCoupon.value.discount || 0)
+})
+
+// 화면에 표시할 최종 결제 금액
+const displayTotalAmount = computed(() => {
+  const total = Number(state.totalAmount || 0) - discountAmount.value
+  return Math.max(total, 0)
+})
+
+const formatPrice = value => `${Number(value || 0).toLocaleString()}원`
+
 const loadTossScript = () => {
   return new Promise((resolve, reject) => {
     if (window.TossPayments) return resolve()
+
     const script = document.createElement('script')
     script.src = 'https://js.tosspayments.com/v2/standard'
     script.onload = resolve
@@ -36,7 +61,7 @@ const loadTossScript = () => {
   })
 }
 
-const initTossWidget = async (amount) => {
+const initTossWidget = async amount => {
   const CLIENT_KEY = 'test_gck_docs_Ovk5rk1EwkEbP0W43n07xlzm'
   const CUSTOMER_KEY = 'eK4YFpGSvYQvtfwVK6L3a'
 
@@ -59,39 +84,69 @@ const initTossWidget = async (amount) => {
   isWidgetReady.value = true
 }
 
+// 쿠폰 선택 후 Toss 위젯 결제 금액 동기화
+const syncTossAmount = async amount => {
+  if (!widgets || !isWidgetReady.value) return
+  await widgets.setAmount({ currency: 'KRW', value: Number(amount) })
+}
+
+// 보유 쿠폰 목록 조회
+const loadCoupons = async () => {
+  state.couponLoading = true
+
+  try {
+    const res = await orderService.getUserCoupons()
+    state.coupons = res.resultData || []
+  } catch (e) {
+    console.error('쿠폰 목록 조회 실패:', e)
+    state.coupons = []
+  } finally {
+    state.couponLoading = false
+  }
+}
+
+// 주문 화면 초기 정보 조회
 const loadOrderInfo = async () => {
   try {
     const res = await orderService.getOrderInfo()
     const data = res.resultData
+
     state.storeName = data.storeName
     state.tel = data.tel
     state.address = data.address
     state.addressDetail = data.addressDetail
-    state.items = data.items
-    state.menuTotal = data.menuTotal
-    state.deliveryFee = data.deliveryFee
-    state.totalAmount = data.totalAmount
+    state.items = data.items || []
+    state.menuTotal = Number(data.menuTotal || 0)
+    state.deliveryFee = Number(data.deliveryFee || 0)
+    state.totalAmount = Number(data.totalAmount || 0)
   } catch (e) {
     console.error('주문 정보 로드 실패:', e)
-    state.storeName = '테스트 가게'
-    state.tel = '01012341234'
-    state.address = '서울시 강남구'
-    state.addressDetail = '101호'
-    state.items = [{ name: '테스트 메뉴' }]
-    state.menuTotal = 45000
-    state.deliveryFee = 3000
-    state.totalAmount = 48000
+    await showAlert('주문 정보를 불러오지 못했습니다.', { title: '오류', type: 'error' })
+    router.push('/cart')
+    return
   }
+
+  await loadCoupons()
 
   try {
     await loadTossScript()
-    await initTossWidget(state.totalAmount)
+    await initTossWidget(displayTotalAmount.value)
   } catch (e) {
-    console.error('토스 위젯 초기화 실패:', e)
+    console.error('토스 결제 위젯 초기화 실패:', e)
+    await showAlert('결제 위젯을 불러오지 못했습니다.', { title: '결제 오류', type: 'error' })
   }
 }
 
 onMounted(loadOrderInfo)
+
+// 쿠폰을 바꾸면 기존 생성 주문 ID를 버리고 다시 주문 생성
+watch(
+  () => state.selectedCouponId,
+  async () => {
+    createdOrderId.value = ''
+    await syncTossAmount(displayTotalAmount.value)
+  }
+)
 
 const handleOrder = async () => {
   if (isOrdering.value) return
@@ -100,6 +155,7 @@ const handleOrder = async () => {
     await showAlert('배송지를 설정해주세요.', { title: '배송지 필요', type: 'warning' })
     return
   }
+
   if (!isWidgetReady.value) {
     await showAlert('결제 위젯이 아직 준비되지 않았습니다.', { title: '잠시만요', type: 'info' })
     return
@@ -108,23 +164,37 @@ const handleOrder = async () => {
   isOrdering.value = true
 
   try {
-    // ✅ 1. 주문 저장 → 서버에서 발급한 orderId 사용
+    let paymentAmount = displayTotalAmount.value
+
+    // 1. 주문 저장 후 서버에서 발급된 orderId 사용
     if (!createdOrderId.value) {
-      const orderRes = await orderService.placeOrder({
+      const orderPayload = {
         request: state.request,
         riderRequest: state.riderRequest,
         payState: state.payState,
-      })
-      createdOrderId.value = String(orderRes.orderId)
+      }
+
+      if (state.selectedCouponId) {
+        orderPayload.couponId = Number(state.selectedCouponId)
+      }
+
+      const orderRes = await orderService.placeOrder(orderPayload)
+      const orderData = orderRes.resultData || orderRes
+
+      createdOrderId.value = String(orderData.orderId)
+      paymentAmount = Number(orderData.totalAmount)
+
+      // 백엔드가 계산한 최종 결제 금액으로 Toss 금액 동기화
+      await syncTossAmount(paymentAmount)
     }
 
     const orderId = createdOrderId.value
     console.log('주문 저장 성공, orderId:', orderId)
 
-    // ✅ 2. payState 저장 (success 페이지에서 사용)
+    // 2. payState 저장
     sessionStorage.setItem('payState', state.payState)
 
-    // ✅ 3. 주문명 생성
+    // 3. 주문명 생성
     const firstItemName =
       state.items[0]?.menuName ||
       state.items[0]?.name ||
@@ -134,16 +204,29 @@ const handleOrder = async () => {
       state.items.length > 1
         ? `${firstItemName} 외 ${state.items.length - 1}건`
         : firstItemName
+
     const customerMobilePhone = String(state.tel || '').replace(/\D/g, '')
 
-    // ✅ 4. 토스 결제창 호출
-    await widgets.requestPayment({
-      orderId,
-      orderName,
-      successUrl: `${window.location.origin}/payment/success`,
-      failUrl:    `${window.location.origin}/payment/fail`,
-      customerMobilePhone,
-    })
+    const successUrl = `${window.location.origin}/payment/success`
+const failUrl = `${window.location.origin}/payment/fail`
+
+console.log('Toss 결제 요청 정보:', {
+  orderId,
+  orderName,
+  successUrl,
+  failUrl,
+  amount: paymentAmount,
+})
+
+// 4. Toss 결제창 호출
+await widgets.requestPayment({
+  orderId,
+  orderName,
+  successUrl,
+  failUrl,
+  customerMobilePhone,
+})
+
   } catch (e) {
     console.error('결제 요청 실패:', e)
     await showAlert('결제 요청에 실패했습니다.', { title: '결제 오류', type: 'error' })
@@ -153,7 +236,7 @@ const handleOrder = async () => {
 }
 </script>
 
-<!-- template, style 변경 없음 -->
+<!-- template, style 변경 있음 -->
 <template>
   <div class="order-page">
     <h2 class="order-title">결제하기</h2>
@@ -169,11 +252,11 @@ const handleOrder = async () => {
           <div class="section-label">배달 정보</div>
           <div class="input-row">
             <input
-              :value="state.address + ' ' + state.addressDetail"
+              :value="`${state.address} ${state.addressDetail}`"
               readonly
               class="input-field"
             />
-            <button class="change-btn">변경</button>
+            <button class="change-btn" type="button">변경</button>
           </div>
         </div>
 
@@ -181,7 +264,7 @@ const handleOrder = async () => {
           <div class="section-label">휴대폰 번호</div>
           <div class="input-row">
             <input :value="state.tel" readonly class="input-field" />
-            <button class="change-btn">변경</button>
+            <button class="change-btn" type="button">변경</button>
           </div>
         </div>
 
@@ -212,29 +295,56 @@ const handleOrder = async () => {
         </div>
 
         <div class="info-group">
-          <div class="section-label">쿠폰 선택 <span class="badge">2차 개발</span></div>
-          <select class="input-field full" disabled>
-            <option>사용 가능한 쿠폰이 없습니다</option>
+          <div class="section-label">쿠폰 선택</div>
+          <select
+            v-model="state.selectedCouponId"
+            class="input-field full"
+            :disabled="state.couponLoading || state.coupons.length === 0 || isOrdering"
+          >
+            <option value="">쿠폰 사용 안 함</option>
+            <option
+              v-for="coupon in state.coupons"
+              :key="coupon.couponId"
+              :value="coupon.couponId"
+            >
+              {{ coupon.name }} - {{ formatPrice(coupon.discount) }} 할인
+            </option>
           </select>
+
+          <p v-if="!state.couponLoading && state.coupons.length === 0" class="coupon-empty">
+            사용 가능한 쿠폰이 없습니다.
+          </p>
+          <p v-if="selectedCoupon" class="coupon-info">
+            {{ selectedCoupon.expiry }}까지 사용 가능
+          </p>
         </div>
 
         <div class="price-box">
           <div class="price-row">
             <span>메뉴 금액</span>
-            <span>{{ state.menuTotal.toLocaleString() }}원</span>
+            <span>{{ formatPrice(state.menuTotal) }}</span>
           </div>
           <div class="price-row">
             <span>배달팁</span>
-            <span>{{ state.deliveryFee.toLocaleString() }}원</span>
+            <span>{{ formatPrice(state.deliveryFee) }}</span>
+          </div>
+          <div v-if="discountAmount > 0" class="price-row discount">
+            <span>쿠폰 할인</span>
+            <span>-{{ formatPrice(discountAmount) }}</span>
           </div>
           <div class="price-row total">
             <span>총 결제 금액</span>
-            <span class="total-price">{{ state.totalAmount.toLocaleString() }}원</span>
+            <span class="total-price">{{ formatPrice(displayTotalAmount) }}</span>
           </div>
         </div>
 
-        <button class="order-btn" @click="handleOrder" :disabled="!isWidgetReady || isOrdering">
-          {{ isWidgetReady ? `${state.totalAmount.toLocaleString()}원 결제하기` : '로딩 중...' }}
+        <button
+          class="order-btn"
+          type="button"
+          @click="handleOrder"
+          :disabled="!isWidgetReady || isOrdering"
+        >
+          {{ isWidgetReady ? `${formatPrice(displayTotalAmount)} 결제하기` : '로딩 중...' }}
         </button>
       </section>
     </div>
@@ -249,21 +359,25 @@ const handleOrder = async () => {
   box-sizing: border-box;
   margin: 0 auto;
 }
+
 .order-title {
   text-align: left;
   font-size: 1.3rem;
   font-weight: 700;
   margin-bottom: 20px;
 }
+
 .order-layout {
   display: flex;
   flex-direction: column;
   gap: 30px;
 }
+
 .order-section {
   display: flex;
   flex-direction: column;
 }
+
 .store-name-row {
   display: flex;
   align-items: center;
@@ -274,24 +388,29 @@ const handleOrder = async () => {
   padding-bottom: 10px;
   border-bottom: 1px solid #eee;
 }
+
 .store-icon {
   width: 28px;
   height: 28px;
   border-radius: 6px;
 }
+
 .info-group {
   margin-bottom: 20px;
 }
+
 .section-label {
   font-size: 0.85rem;
   color: #666;
   font-weight: 600;
   margin-bottom: 8px;
 }
+
 .input-row {
   display: flex;
   gap: 8px;
 }
+
 .input-field {
   flex: 1;
   min-width: 0;
@@ -301,10 +420,12 @@ const handleOrder = async () => {
   font-size: 0.95rem;
   background: #f9f9f9;
 }
+
 .input-field.full {
   width: 100%;
   box-sizing: border-box;
 }
+
 .change-btn {
   padding: 0 15px;
   border: 1px solid #ddd;
@@ -314,36 +435,49 @@ const handleOrder = async () => {
   cursor: pointer;
   white-space: nowrap;
 }
-.badge {
-  background: #ff4d4f;
-  color: #fff;
-  font-size: 0.65rem;
-  padding: 2px 6px;
-  border-radius: 4px;
-  vertical-align: middle;
+
+.coupon-empty,
+.coupon-info {
+  margin: 8px 0 0;
+  font-size: 0.82rem;
+  color: #888;
 }
+
+.coupon-info {
+  color: #a40c0b;
+}
+
 .price-box {
   background: #f8f9fa;
   border-radius: 12px;
   padding: 20px;
   margin: 10px 0 20px;
 }
+
 .price-row {
   display: flex;
   justify-content: space-between;
   font-size: 0.95rem;
   padding: 6px 0;
 }
+
+.price-row.discount {
+  color: #a40c0b;
+  font-weight: 700;
+}
+
 .price-row.total {
   margin-top: 10px;
   padding-top: 15px;
   border-top: 1px solid #eee;
   font-weight: 700;
 }
+
 .total-price {
   color: #4a90e2;
   font-size: 1.1rem;
 }
+
 .order-btn {
   width: 100%;
   padding: 16px;
@@ -356,12 +490,15 @@ const handleOrder = async () => {
   cursor: pointer;
   transition: background 0.2s;
 }
+
 .order-btn:active {
   background: #357abd;
 }
+
 .order-btn:disabled {
   background: #ccc;
 }
+
 #payment-method {
   margin-left: -8px;
   margin-right: -8px;

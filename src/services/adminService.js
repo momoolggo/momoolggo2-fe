@@ -82,6 +82,16 @@ class AdminService {
         return res.data;
     }
 
+    async updateBankAccount(settlementId, bankAccount) {
+        const res = await axios.patch(`${this.#url}/settlement/${settlementId}/bank-account`, null, { params: { bankAccount } });
+        return res.data;
+    }
+
+    async releaseHold(settlementId) {
+        const res = await axios.patch(`${this.#url}/settlement/${settlementId}/release`);
+        return res.data;
+    }
+
     async holdSettlement(settlementId) {
         const res = await axios.patch(`${this.#url}/settlement/${settlementId}/hold`);
         return res.data;

@@ -21,7 +21,7 @@ const formatDate = (d) =>
   category: '전체',
 })
 
-const categoryOptions = ['전체', '고객', '사장', '라이더']  // '전체' 추가
+const categoryOptions = ['전체', '고객', '사장', '라이더','관리자']  // '전체' 추가
 
 const categoryOpen = ref(false)
 const selectCategory = (val) => { searchForm.value.category = val; categoryOpen.value = false }
@@ -60,11 +60,11 @@ const greenLabel = (green) => {
 }
 
 const roleLabel = (role) => {
-  const map = { CUSTOMER: '고객', OWNER: '사장', RIDER: '라이더' }
+  const map = { CUSTOMER: '고객', OWNER: '사장', RIDER: '라이더' , ADMIN: '관리자'}
   return map[role] ?? role
 }
 const roleBadgeClass = (role) => {
-  const map = { CUSTOMER: 'badge_customer', OWNER: 'badge_owner', RIDER: 'badge_rider' }
+  const map = { CUSTOMER: 'badge_customer', OWNER: 'badge_owner', RIDER: 'badge_rider', ADMIN: 'badge_admin' }
   return map[role] ?? ''
 }
 
@@ -79,7 +79,7 @@ const formatCreatedAt = (isoString) => {
 const fetchUserList = async () => {
   loading.value = true
   try {
-    const roleMap = { '고객': 'CUSTOMER', '사장': 'OWNER', '라이더': 'RIDER' }
+    const roleMap = { '고객': 'CUSTOMER', '사장': 'OWNER', '라이더': 'RIDER', '관리자': 'ADMIN' }
     const role = roleMap[searchForm.value.category] ?? null
     const searchParams = {
       userId: searchForm.value.userId?.trim() || null,
@@ -558,6 +558,7 @@ onMounted(fetchUserList)
 .badge_customer { background: #4a90d9; }
 .badge_owner { background: #7150db; }
 .badge_rider { background: #4caf50; }
+.badge_admin { background: #9b1b1b; }
 .green_text { font-size: 13px; font-weight: 700; color: #2e7d32; display: flex; align-items: center; justify-content: center; gap: 4px; }
 .green_dash { color: #aaa; font-size: 13px; }
 .approve_btn { background: #4caf50; border: none; color: #fff; border-radius: 4px; padding: 4px 12px; font-size: 12px; cursor: pointer; font-weight: 600; white-space: nowrap; }

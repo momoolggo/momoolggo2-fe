@@ -92,6 +92,8 @@ const routes = [
 
 //고객 서비스
   {path: '/mypage/pet' , name: 'MyPagePet', component: () => import('@/views/servicee/PetView.vue') },
+  // 공용 CS 챗봇 — 자잘 에러 트랙(2026-05-23). 사장/라이더/고객 모두 진입 가능 (role 무관).
+  {path: '/chatbot/cs' , name: 'CsChatbot', component: () => import('@/views/servicee/CsChatbotView.vue'), meta: { requiresAuth: true } },
   {path: '/mypage/review/:id', name: 'ReviewDetail', component: () => import('@/views/mypage/ReviewPostView.vue'), meta: { requiresAuth: true} },
   {path: '/mypage/orders/:id', name: 'OrderDetail', component: () => import('@/views/mypage/OrderDetailView.vue'), meta: { requiresAuth: true, role: 'CUSTOMER' } },
   { path: '/cart',     name: 'Cart',     component: CartView,     meta: { requiresAuth: true, role: 'CUSTOMER' } },

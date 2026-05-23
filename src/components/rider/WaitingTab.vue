@@ -2,10 +2,11 @@
 import { useDeliveryStore } from '@/stores/deliveryStore'
 import deliveryService from '@/services/deliveryService'
 import RiderDeliveryMap from '@/components/rider/RiderDeliveryMap.vue'
-import { ref } from 'vue'
+import { ref, onMounted, onBeforeUnmount } from 'vue'
 
 const deliveryStore = useDeliveryStore()
 const selected = ref(null) // 선택된 배달 (상세 모달)
+const eventSource = ref(null)
 
 // 라이더 풀에서 본인 잡기 — WAITING_ASSIGN → ASSIGNED. code-reviewer 결함 1번 정정 (2026-05-19).
 // accept는 ASSIGNED → ARRIVED_AT_STORE (가게 도착)이라 풀 잡기에 부적합.
@@ -22,6 +23,36 @@ const accept = async (deliveryNo) => {
 }
 
 const formatFee = (fee) => `${(fee ?? 0).toLocaleString()}원`
+
+// 자잘 에러 트랙(2026-05-23) — SSE 배차 알림 구독.
+// order-assigned: 새 배차 도착 → state.waiting 갱신 + 자동 모달 popup
+// order-claimed:  다른 라이더가 잡음 → 같은 deliveryNo면 모달 자동 close + 목록에서 제거
+onMounted(() => {
+  eventSource.value = deliveryService.subscribeStream(
+    (row) => {
+      const exists = deliveryStore.state.waiting.some((d) => d.deliveryNo === row.deliveryNo)
+      if (!exists) {
+        deliveryStore.state.waiting.unshift(row)
+      }
+      selected.value = row
+    },
+    (deliveryNo) => {
+      deliveryStore.state.waiting = deliveryStore.state.waiting.filter(
+        (d) => d.deliveryNo !== deliveryNo
+      )
+      if (selected.value && selected.value.deliveryNo === deliveryNo) {
+        selected.value = null
+      }
+    }
+  )
+})
+
+onBeforeUnmount(() => {
+  if (eventSource.value) {
+    eventSource.value.close()
+    eventSource.value = null
+  }
+})
 </script>
 
 <template>
@@ -108,11 +139,11 @@ const formatFee = (fee) => `${(fee ?? 0).toLocaleString()}원`
 .addr_to { font-size: 13px; color: var(--gray); margin: 2px 0 0 12px; }
 
 .modal_backdrop {
-  position: absolute; inset: 0;
+  position: fixed; inset: 0;
   background: rgba(0,0,0,0.5);
   display: flex; align-items: center; justify-content: center;
   padding: 16px;
-  z-index: 100;
+  z-index: 1000;
 }
 .modal {
   background: var(--white);

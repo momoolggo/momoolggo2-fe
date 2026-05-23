@@ -12,17 +12,16 @@ const deliveryStore = useDeliveryStore()
 const current = computed(() => deliveryStore.currentDelivery())
 
 // 단계별 다음 액션 매핑.
-// (D) 작업 + ARRIVED_AT_STORE 단계 제거 정정 (2026-05-19):
-//   - claim이 WAITING_ASSIGN→ASSIGNED 변경 (라이더 풀 잡기)
-//   - accept가 ASSIGNED→AWAITING_PICKUP 직행 (가게 도착 = 픽업 대기, ARRIVED_AT_STORE 건너뜀)
-//   - ARRIVED_AT_STORE는 BE enum 유지 (외부 경로 보존), FE 라이더 흐름에서 제외
+// 자잘 에러 트랙 #8 (2026-05-23): 라이더 UX 4단계 — 배차 수락(WaitingTab claim) / 가게 도착 / 픽업 완료 / 배달 완료.
+// PICKED_UP은 race fallback 매핑 유지 (pickup 후 depart 자동 호출이 실패하면 다시 시도 가능).
+// 색: 가게 도착=파랑 / 픽업 완료=주황 / 배달 완료=초록. (배차 수락은 WaitingTab의 빨강 그대로)
 const nextAction = computed(() => {
   if (!current.value) return null
   const map = {
-    ASSIGNED:        { label: '가게 도착',  fn: 'accept',  promptText: '가게에 도착하셨습니까?'     },
-    AWAITING_PICKUP: { label: '픽업 완료',  fn: 'pickup',  promptText: '음식을 픽업 완료하셨습니까?' },
-    PICKED_UP:       { label: '배달 시작',  fn: 'depart',  promptText: '배달지로 출발하시겠습니까?' },
-    DELIVERING:      { label: '전달 완료',  fn: 'complete', promptText: null },
+    ASSIGNED:        { label: '가게 도착',  fn: 'accept',   promptText: '가게에 도착하셨습니까?',     colorClass: 'btn_arrive' },
+    AWAITING_PICKUP: { label: '픽업 완료',  fn: 'pickup',   promptText: '음식을 픽업 완료하셨습니까?', colorClass: 'btn_pickup' },
+    PICKED_UP:       { label: '배달 시작',  fn: 'depart',   promptText: '배달지로 출발하시겠습니까?', colorClass: 'btn_pickup' },
+    DELIVERING:      { label: '배달 완료',  fn: 'complete', promptText: null,                          colorClass: 'btn_complete' },
   }
   return map[current.value.status] ?? null
 })
@@ -47,7 +46,16 @@ const confirmAction = async () => {
   try {
     const fn = nextAction.value.fn
     if (fn === 'accept') await deliveryService.accept(current.value.deliveryNo)
-    else if (fn === 'pickup') await deliveryService.pickup(current.value.deliveryNo)
+    else if (fn === 'pickup') {
+      // 자잘 에러 트랙 #8 — 4단계 UX: pickup 직후 depart 자동 호출하여 PICKED_UP 화면을 건너뛰고
+      // DELIVERING 상태에서 "배달 완료" 버튼을 노출. depart 실패 시 PICKED_UP fallback 매핑이 다음 화면을 책임짐.
+      await deliveryService.pickup(current.value.deliveryNo)
+      try {
+        await deliveryService.depart(current.value.deliveryNo)
+      } catch (e) {
+        // depart만 실패한 경우 — 화면 reload 후 PICKED_UP 상태에서 "배달 시작" 버튼 fallback
+      }
+    }
     else if (fn === 'depart') await deliveryService.depart(current.value.deliveryNo)
     promptOpen.value = false
     await deliveryStore.loadInProgress()
@@ -121,7 +129,7 @@ const statusLabel = (s) => ({
       <p class="order_no">주문번호 {{ current.orderId }}</p>
 
       <div class="action_btns">
-        <button v-if="nextAction" class="btn_primary action_btn" @click="onActionClick">
+        <button v-if="nextAction" class="action_btn" :class="nextAction.colorClass" @click="onActionClick">
           {{ nextAction.label }}
         </button>
         <button class="btn_cancel" @click="cancelOpen = true">반려</button>
@@ -204,7 +212,22 @@ const statusLabel = (s) => ({
 .order_no { font-size: 12px; color: var(--gray); text-align: right; }
 
 .action_btns { display: flex; gap: 8px; margin-top: 4px; }
-.action_btn { flex: 2; padding: 12px 0; }
+.action_btn {
+  flex: 2;
+  padding: 12px 0;
+  color: #fff;
+  border: 0;
+  border-radius: var(--radius-md);
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: filter 0.15s;
+}
+.action_btn:hover { filter: brightness(0.92); }
+/* 자잘 에러 트랙 #8 — 단계별 색 분리 UX */
+.btn_arrive   { background: #1976d2; }  /* 가게 도착 = 파랑 */
+.btn_pickup   { background: #f57c00; }  /* 픽업 완료 / 배달 시작 = 주황 */
+.btn_complete { background: #2e7d32; }  /* 배달 완료 = 초록 */
 .btn_cancel {
   flex: 1;
   background: var(--white);

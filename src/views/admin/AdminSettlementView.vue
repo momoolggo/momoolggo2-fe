@@ -19,6 +19,8 @@ const settlementList = ref([])
 const loading = ref(false)
 const showDetailModal = ref(false)
 const selectedSettlement = ref(null)
+const showRiderDetailModal = ref(false)
+const selectedRiderSettlement = ref(null)
 
 const searchForm = ref({
   targetType: null,
@@ -45,9 +47,20 @@ const confirmRiderSettlement = async (settlementNo) => {
   try {
     await adminService.confirmRiderSettlement(settlementNo, ADMIN_NO)
     await fetchRiderSettlements()
+    closeRiderDetail()
   } catch (e) {
     alert('정산 확정 실패: ' + (e.response?.data?.resultMessage || e.message))
   }
+}
+
+const openRiderDetail = (item) => {
+  selectedRiderSettlement.value = item
+  showRiderDetailModal.value = true
+}
+
+const closeRiderDetail = () => {
+  showRiderDetailModal.value = false
+  selectedRiderSettlement.value = null
 }
 
 
@@ -420,7 +433,7 @@ const expectedPayoutDate = (periodEnd) => {
               </thead>
               <tbody>
                 <template v-if="riderSettlementList.length > 0">
-                  <tr v-for="item in riderSettlementList" :key="item.settlementNo">
+                  <tr v-for="item in riderSettlementList" :key="item.settlementNo" class="clickable_row" @click="openRiderDetail(item)">
                     <td>{{ item.riderNo }}</td>
                     <td>{{ item.periodStart }} ~ {{ item.periodEnd }}</td>
                     <td>{{ item.deliveryCount }}건</td>
@@ -434,7 +447,7 @@ const expectedPayoutDate = (periodEnd) => {
                         {{ statusBadge(item.status).text }}
                       </span>
                     </td>
-                    <td>
+                    <td @click.stop>
                       <button v-if="item.status === 'PENDING'" class="confirm_btn" @click="confirmRiderSettlement(item.settlementNo)">확정</button>
                       <span v-else style="color:#aaa; font-size:12px;">완료</span>
                     </td>
@@ -557,6 +570,102 @@ const expectedPayoutDate = (periodEnd) => {
         <div v-if="selectedSettlement.status === 'PENDING'" class="modal_actions">
           <button class="action_hold" @click="holdSettlement(selectedSettlement.settlementId)">보류</button>
           <button class="action_complete" @click="completeSettlement(selectedSettlement.settlementId)">정산 완료</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 라이더 정산 상세 모달 -->
+    <div v-if="showRiderDetailModal && selectedRiderSettlement" class="modal_overlay" @click.self="closeRiderDetail">
+      <div class="modal">
+        <div class="modal_header">
+          <div class="modal_title_row">
+            <span class="modal_title">라이더 정산 상세 - 라이더 #{{ selectedRiderSettlement.riderNo }}</span>
+          </div>
+          <button class="modal_close" @click="closeRiderDetail">✕</button>
+        </div>
+
+        <div class="modal_summary">
+          <div class="modal_info_card">
+            <div class="modal_icon_area blue_icon_area">
+              <img src="@/assets/calendar-check.png" alt="calendar" class="modal_icon_img" />
+            </div>
+            <span class="modal_card_text">정산 기간: {{ selectedRiderSettlement.periodStart }} ~ {{ selectedRiderSettlement.periodEnd }}</span>
+          </div>
+          <div class="modal_info_card">
+            <div class="modal_icon_area green_icon_area">
+              <img src="@/assets/money-bag.png" alt="moneybag" class="modal_icon_img" />
+            </div>
+            <span class="modal_card_text">실수령액: {{ formatMoney(selectedRiderSettlement.payout) }}</span>
+          </div>
+        </div>
+
+        <p class="modal_sub_title">배달 실적</p>
+        <div class="modal_table_wrap">
+          <table class="modal_table">
+            <thead>
+              <tr>
+                <th>배달 건수</th>
+                <th>총 이동거리</th>
+                <th>기본 배달료</th>
+                <th>추가 배달료</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>{{ selectedRiderSettlement.deliveryCount ?? 0 }}건</td>
+                <td>{{ ((selectedRiderSettlement.totalDistanceM ?? 0) / 1000).toFixed(2) }} km</td>
+                <td>{{ formatMoney(selectedRiderSettlement.totalBaseFee) }}</td>
+                <td>{{ formatMoney(selectedRiderSettlement.totalExtraFee) }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="modal_total_wrap">
+          <div class="modal_total_row">
+            <span class="total_label">총 배달료</span>
+            <span class="total_value">{{ formatMoney((selectedRiderSettlement.totalBaseFee ?? 0) + (selectedRiderSettlement.totalExtraFee ?? 0)) }}</span>
+          </div>
+          <div class="modal_total_row">
+            <span class="total_label">수수료 (10%)</span>
+            <span class="total_value fee_color">- {{ formatMoney(selectedRiderSettlement.commission) }}</span>
+          </div>
+          <div class="modal_total_row">
+            <span class="total_label">세금 (3.3%)</span>
+            <span class="total_value fee_color">- {{ formatMoney(selectedRiderSettlement.tax) }}</span>
+          </div>
+          <div class="modal_total_row">
+            <span class="total_label">보험료</span>
+            <span class="total_value fee_color">- {{ formatMoney(selectedRiderSettlement.insurance) }}</span>
+          </div>
+          <div class="modal_total_row total_final">
+            <span class="total_label">실수령액</span>
+            <span class="total_value final_color">{{ formatMoney(selectedRiderSettlement.payout) }}</span>
+          </div>
+        </div>
+
+        <div class="modal_payout_wrap">
+          <p class="modal_sub_title">상태 정보</p>
+          <div class="modal_payout_grid">
+            <div class="payout_row">
+              <span class="payout_label">정산 상태</span>
+              <span :class="['status_badge', statusBadge(selectedRiderSettlement.status).class]">
+                {{ statusBadge(selectedRiderSettlement.status).text }}
+              </span>
+            </div>
+            <div v-if="selectedRiderSettlement.confirmedAt" class="payout_row">
+              <span class="payout_label">확정일</span>
+              <span class="payout_value">{{ selectedRiderSettlement.confirmedAt.toString().substring(0, 10) }}</span>
+            </div>
+            <div v-if="selectedRiderSettlement.paidAt" class="payout_row">
+              <span class="payout_label">지급일</span>
+              <span class="payout_value">{{ selectedRiderSettlement.paidAt.toString().substring(0, 10) }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div v-if="selectedRiderSettlement.status === 'PENDING'" class="modal_actions">
+          <button class="action_complete" @click="confirmRiderSettlement(selectedRiderSettlement.settlementNo)">정산 확정</button>
         </div>
       </div>
     </div>

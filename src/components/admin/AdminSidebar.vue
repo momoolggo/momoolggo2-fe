@@ -46,8 +46,11 @@ const goTo = (path) => {
 </template>
 
 <style scoped>
+/* 2026-05-25 9건 트랙 정정 — 사이드바 잘림 fix.
+   이전: width 220px + logo 230px → 로고가 사이드바보다 큼 + main_content margin-left 190px라 우측 30px 가림.
+   이후: width 240px + logo 200px + 모든 admin View main_content margin-left 240px. */
 .sidebar {
-  width: 220px;
+  width: 240px;
   height: 100vh;
   background: #F9F9FB;
   border-right: 1px solid #eee;
@@ -56,17 +59,18 @@ const goTo = (path) => {
   position: fixed;
   left: 0;
   top: 0;
+  z-index: 50;
 }
 
 .logo_section {
- 
   text-align: center;
   margin-bottom: 60px;
   margin-top: 20px;
 }
 
 .logo {
-  width: 230px;
+  width: 200px;
+  max-width: 100%;
 }
 
 .menu_list {

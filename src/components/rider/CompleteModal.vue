@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, onUnmounted } from 'vue'
 import deliveryService from '@/services/deliveryService'
 import RiderDeliveryMap from '@/components/rider/RiderDeliveryMap.vue'
 
@@ -11,11 +11,14 @@ const props = defineProps({
 })
 const emit = defineEmits(['close', 'completed'])
 
-// 1단계: 전달 방식 선택. 2단계: DIRECT는 사진(선택), 그 외는 사유 라디오 + 사진(선택).
+// 1단계: 전달 방식 선택. 2단계: 사진(선택) + 완료.
 const step = ref(1)
 const method = ref(null)         // 'DIRECT' | 'CUSTOMER_REQUEST' | 'CUSTOMER_ABSENT'
-const photoUrl = ref(null)       // 임시: text input (R6-FE-7 또는 별건에서 file upload 통합)
+const photoUrl = ref(null)       // 업로드 성공 시 main이 반환한 URL
+const photoPreview = ref(null)   // 미리보기 (브라우저 ObjectURL)
+const uploading = ref(false)
 const submitting = ref(false)
+const fileInputRef = ref(null)
 
 const methodOptions = [
   { key: 'DIRECT',           label: '고객에게 직접 전달했습니다' },
@@ -27,6 +30,41 @@ const goNext = () => {
   if (!method.value) return
   step.value = 2
 }
+
+// 자잘 에러 트랙 #9 (2026-05-23) — 파일 선택 즉시 업로드 후 URL 받음
+const onFileSelect = async (e) => {
+  const file = e.target.files?.[0]
+  if (!file) return
+  if (!file.type.startsWith('image/')) {
+    alert('이미지 파일만 업로드 가능합니다.')
+    return
+  }
+  // 미리보기 즉시 표시 (업로드 전이라도)
+  photoPreview.value = URL.createObjectURL(file)
+  uploading.value = true
+  try {
+    photoUrl.value = await deliveryService.uploadDeliveryPhoto(file)
+  } catch (err) {
+    alert(err.response?.data?.resultMessage ?? '사진 업로드에 실패했습니다.')
+    photoPreview.value = null
+    photoUrl.value = null
+  } finally {
+    uploading.value = false
+  }
+}
+
+const removePhoto = () => {
+  // reviewer W-2 정정 — ObjectURL leak 차단 (반복 사용 시 메모리 누적 방지)
+  if (photoPreview.value) URL.revokeObjectURL(photoPreview.value)
+  photoUrl.value = null
+  photoPreview.value = null
+  if (fileInputRef.value) fileInputRef.value.value = ''
+}
+
+onUnmounted(() => {
+  // reviewer W-2 정정 — 컴포넌트 소멸 시 미해제 ObjectURL revoke
+  if (photoPreview.value) URL.revokeObjectURL(photoPreview.value)
+})
 
 const submit = async () => {
   if (!method.value) return
@@ -83,16 +121,27 @@ const submit = async () => {
           <span v-if="method === 'DIRECT'">직접 전달 인증 사진 (선택)</span>
           <span v-else>전달 위치 사진을 첨부해주세요</span>
         </p>
+
+        <div v-if="!photoPreview" class="upload_area" @click="fileInputRef?.click()">
+          <span class="upload_icon">📷</span>
+          <span class="upload_text">사진 선택</span>
+        </div>
+        <div v-else class="photo_preview_wrap">
+          <img :src="photoPreview" alt="배달 완료 사진" class="photo_preview" />
+          <button class="remove_photo_btn" @click="removePhoto" :disabled="uploading || submitting">✕</button>
+          <span v-if="uploading" class="uploading_overlay">업로드 중...</span>
+        </div>
         <input
-          v-model="photoUrl"
-          type="text"
-          placeholder="사진 URL (예: /uploads/delivery/x.jpg) — 업로드 통합은 별건"
-          class="inp"
+          ref="fileInputRef"
+          type="file"
+          accept="image/*"
+          style="display: none"
+          @change="onFileSelect"
         />
-        <p class="caption">※ 사진 업로드 UI는 main-service /internal/files/upload 통합 시 본격.</p>
+
         <div class="modal_btns">
-          <button class="btn_outline" @click="step = 1" :disabled="submitting">이전</button>
-          <button class="btn_primary" @click="submit" :disabled="submitting">완료 처리</button>
+          <button class="btn_outline" @click="step = 1" :disabled="submitting || uploading">이전</button>
+          <button class="btn_primary" @click="submit" :disabled="submitting || uploading">완료 처리</button>
         </div>
       </div>
     </div>
@@ -144,13 +193,64 @@ const submit = async () => {
 
 .next_btn { width: 100%; padding: 12px 0; margin-top: 4px; }
 
-.inp {
-  border: 1.5px solid var(--border);
+/* 자잘 에러 트랙 #9 (2026-05-23) — 파일 업로드 UI */
+.upload_area {
+  border: 2px dashed var(--border);
   border-radius: var(--radius-md);
-  padding: 10px 12px;
-  font-size: 13px;
+  padding: 32px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  color: var(--gray);
+  transition: all 0.15s;
 }
-.caption { font-size: 11px; color: var(--gray-light); }
+.upload_area:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+  background: var(--primary-light);
+}
+.upload_icon { font-size: 28px; }
+.upload_text { font-size: 14px; font-weight: 600; }
+
+.photo_preview_wrap {
+  position: relative;
+  width: 100%;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+.photo_preview {
+  width: 100%;
+  max-height: 240px;
+  object-fit: cover;
+  display: block;
+}
+.remove_photo_btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  border: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  font-size: 14px;
+  cursor: pointer;
+}
+.remove_photo_btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.uploading_overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 
 .modal_btns { display: flex; gap: 8px; margin-top: 4px; }
 .modal_btns > button { flex: 1; padding: 11px 0; font-size: 14px; border-radius: var(--radius-md); cursor: pointer; }

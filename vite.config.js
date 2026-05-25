@@ -32,6 +32,12 @@ export default defineConfig(({ mode }) => {
             target: 'http://localhost:8000',
             changeOrigin: true,
           },
+        // 2026-05-25 9건 트랙 #7 — /uploads/** 정적 이미지 (배달 완료 사진/메뉴/가게 등)
+        // Gateway → main WebConfig 정적 핸들러로 라우팅. proxy 없으면 vite dev server가 404.
+        '/uploads': {
+            target: 'http://localhost:8000',
+            changeOrigin: true,
+          },
         '/pic': {
         target: 'http://localhost:8080',
         }

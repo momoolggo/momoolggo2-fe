@@ -71,6 +71,51 @@ class DeliveryService {
   async cancel(deliveryNo, payload) {
     await axios.put(`${this.#url}/${deliveryNo}/cancel`, payload)
   }
+
+  /**
+   * 배달 완료 사진 업로드 — 자잘 에러 트랙 #9 (2026-05-23).
+   * 라이더 FE → Gateway → main /api/delivery-photo (RIDER role 가드). CLAUDE.md §5 main 단독 책임 일관.
+   * 반환값 = 저장된 URL (예: "/uploads/delivery/abc.jpg") — complete 호출 시 deliveredPhotoUrl로 전달.
+   */
+  async uploadDeliveryPhoto(file) {
+    const formData = new FormData()
+    formData.append('file', file)
+    const res = await axios.post('/delivery-photo/upload', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+    return res.data.resultData
+  }
+
+  /**
+   * SSE 배차 알림 구독 — 자잘 에러 트랙(2026-05-23). settlementService.subscribeStream 패턴 일관.
+   * @param {(row: object) => void} onAssigned  새 배차 도착 콜백 (DeliveryWaitingRowRes 1건)
+   * @param {(deliveryNo: string) => void} onClaimed  다른 라이더가 잡은 deliveryNo 콜백
+   * @returns {EventSource} close() 호출용
+   */
+  subscribeStream(onAssigned, onClaimed) {
+    const baseURL = axios.defaults.baseURL || ''
+    const url = `${baseURL}${this.#url}/stream`
+    const es = new EventSource(url, { withCredentials: true })
+    es.addEventListener('order-assigned', (e) => {
+      try {
+        onAssigned(JSON.parse(e.data))
+      } catch (err) {
+        console.error('SSE order-assigned 파싱 실패', err)
+      }
+    })
+    es.addEventListener('order-claimed', (e) => {
+      try {
+        // payload는 String deliveryNo (Jackson 따옴표 포함 직렬화) → JSON.parse 시 그대로 string
+        onClaimed(JSON.parse(e.data))
+      } catch (err) {
+        console.error('SSE order-claimed 파싱 실패', err)
+      }
+    })
+    es.onerror = (e) => {
+      console.warn('SSE 연결 일시 오류 (자동 재연결)', e)
+    }
+    return es
+  }
 }
 
 export default new DeliveryService()

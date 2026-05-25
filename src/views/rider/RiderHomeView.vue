@@ -1,7 +1,8 @@
 <script setup>
 import { onMounted, computed } from 'vue'
 import { useDeliveryStore } from '@/stores/deliveryStore'
-import { useLocationTracker } from '@/composables/useLocationTracker'
+// 자잘 에러 트랙 #6 (2026-05-23) — useLocationTracker는 RiderLayout으로 이동.
+// 라이더가 mypage/history/notice 등 다른 페이지로 이동해도 위치 송신 유지.
 import WaitingTab from '@/components/rider/WaitingTab.vue'
 import InProgressTab from '@/components/rider/InProgressTab.vue'
 import CompletedTab from '@/components/rider/CompletedTab.vue'
@@ -9,7 +10,6 @@ import RiderHeader from '@/components/rider/RiderHeader.vue'
 import RiderLayout from '@/views/rider/RiderLayout.vue'
 
 const deliveryStore = useDeliveryStore()
-const tracker = useLocationTracker()
 
 const tabs = [
   { key: 'waiting',    label: '대기' },
@@ -23,7 +23,7 @@ const inProgressCount = computed(() => deliveryStore.state.inProgress.length)
 onMounted(() => {
   deliveryStore.loadWaiting()
   deliveryStore.loadInProgress()
-  tracker.start() // 5s tick 위치 송신 (decision-#38 (가) 학원 발표용)
+  // 위치 송신은 RiderLayout에서 일관 처리 (자잘 에러 트랙 #6, 2026-05-23)
 })
 
 const switchTab = (key) => {

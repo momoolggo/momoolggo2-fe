@@ -3,6 +3,7 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/userStore'
 import riderService from '@/services/riderService'
+import { useLocationTracker } from '@/composables/useLocationTracker'
 
 const props = defineProps({
   requireActive: { type: Boolean, default: false }
@@ -16,6 +17,11 @@ const blockReason = ref(null)
 
 const HOTLINE = '0507-1414-1018'
 
+// 자잘 에러 트랙 #6 (2026-05-23) — RiderLayout 진입 시점에 위치 송신 시작.
+// 이전: RiderHomeView.onMounted 단독 start → 라이더가 mypage/history 등 이동 시 중단 → Redis TTL 만료 → admin 지도 빈 상태.
+// 이후: requireActive=true + ACTIVE/EATING 라이더는 모든 페이지에서 위치 송신 유지.
+const tracker = useLocationTracker()
+
 onMounted(async () => {
   if (!props.requireActive) return
   state.value = 'loading'
@@ -27,6 +33,10 @@ onMounted(async () => {
       state.value = 'blocked'
     } else {
       state.value = 'ok'
+      // ACTIVE/EATING 라이더만 위치 송신 (BE LocationService.PUBLISHABLE_STATUSES 일관)
+      if (status === 'ACTIVE' || status === 'EATING') {
+        tracker.start()
+      }
     }
   } catch (err) {
     console.error('[RiderLayout] getMe failed:', err?.response?.status, err?.response?.data, err)

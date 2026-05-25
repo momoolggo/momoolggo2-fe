@@ -173,6 +173,12 @@ const deleteNotice = async (noticeNo) => {
   }
 }
 
+// 2026-05-25 9건 트랙 정정 — BE DeliveryStatus 7 enum 전체 매핑 (영어 노출 차단).
+// 위 4가지 요약 카드 색 기준 그룹화 (회색/파랑/주황/초록):
+//   접수 대기(회색)  = WAITING_ASSIGN
+//   배차 대기(파랑)  = ASSIGNED / ARRIVED_AT_STORE / AWAITING_PICKUP
+//   배달 중(주황)    = PICKED_UP / DELIVERING
+//   배달 완료(초록)  = DELIVERED
 const statusBadge = (status) => {
   const map = {
     WAITING_ASSIGN:   { text: '접수대기', class: 'badge_waiting' },
@@ -184,6 +190,15 @@ const statusBadge = (status) => {
     DELIVERED:        { text: '배달완료', class: 'badge_completed' },
   }
   return map[status] ?? { text: status, class: '' }
+}
+
+// 2026-05-25 9건 트랙 정정 — 콜 버튼 클릭 시 라이더 전화번호 모달 alert
+const showRiderPhone = (phone, riderNo) => {
+  if (!phone) {
+    alert(`라이더 번호 ${riderNo ?? '-'}: 등록된 전화번호가 없습니다.`)
+    return
+  }
+  alert(`라이더 번호 ${riderNo ?? '-'}\n전화번호: ${phone}`)
 }
 
 const fetchList = async () => {
@@ -321,9 +336,11 @@ onUnmounted(() => {
                   <td>{{ item.elapsedMinutes != null ? item.elapsedMinutes + '분' : '-' }}</td>
                   <td>{{ item.distanceKm != null ? item.distanceKm + 'km' : '-' }}</td>
                   <td>
-                    <a :href="item.riderPhone ? `tel:${item.riderPhone}` : '#'" class="tel_link">
+                    <!-- 2026-05-25 9건 트랙 정정 — 클릭 시 라이더 전화번호 alert (PC tel: 링크는 무효) -->
+                    <button class="tel_link tel_btn"
+                            @click="showRiderPhone(item.riderPhone, item.riderNo)">
                       <img src="@/assets/phone.png" alt="phone" class="phone_img" />
-                    </a>
+                    </button>
                   </td>
                 </tr>
               </template>
@@ -475,7 +492,7 @@ onUnmounted(() => {
 
 <style scoped>
 .admin_layout { display: flex; min-height: 100vh; background: #ffffff; font-family: 'Noto Sans KR', sans-serif; }
-.main_content { margin-left: 190px; flex: 1; display: flex; flex-direction: column; }
+.main_content { margin-left: 240px; flex: 1; display: flex; flex-direction: column; }
 .content { padding: 36px 60px; display: flex; flex-direction: column; gap: 20px; }
 
 .page_title_row { display: flex; align-items: center; justify-content: space-between; }
@@ -532,6 +549,7 @@ onUnmounted(() => {
 /* 전화 링크 */
 .tel_link { text-decoration: none; cursor: pointer; display: inline-block; }
 .tel_link:hover { opacity: 0.7; }
+.tel_btn { background: none; border: none; padding: 0; }
 
 /* 페이지네이션 */
 .pagination { display: flex; justify-content: center; align-items: center; gap: 6px; padding: 8px 0; }

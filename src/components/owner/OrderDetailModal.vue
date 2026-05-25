@@ -8,16 +8,14 @@ const emit = defineEmits(['close']);
 
 const currentState = computed(() => Number(props.order?.state ?? 0));
 
-// 상태 변경 (다음 단계로)
+// 상태 변경 (사장은 1→3, 3→4 두 단계만 처리. 4→5/5→6은 라이더가 처리)
 const changeState = async (newState) => {
   try {
     await ownerService.updateOrderState(props.order.orderId, newState);
 
     const stateNames = {
       3: '주문을 수락했습니다.',
-      4: '라이더 배차를 진행합니다.',
-      5: '배달이 시작되었습니다.',
-      6: '배달이 완료되었습니다.',
+      4: '라이더 배차 신청이 완료되었습니다. 라이더가 수락하면 자동으로 진행됩니다.',
     };
     await showAlert(stateNames[newState] || '상태가 변경되었습니다.', { title: '상태 변경', type: 'success' });
     emit('close');
@@ -114,11 +112,12 @@ const steps = [
           주문 취소
         </button>
 
-        <!-- 상태 0: 수락 대기 → 주문 수락 -->
+        <!-- 사장 액션 — 가설 B (2026-05-25 9건 트랙 #4): 1→3(주문 수락), 3→4(라이더 배차 신청)만 사장이 처리 -->
         <button v-if="currentState === 1" class="btn accept" @click="changeState(3)">주문 수락</button>
-        <button v-if="currentState === 3" class="btn rider" @click="changeState(4)">라이더 배차</button>
-        <button v-if="currentState === 4" class="btn shipping" @click="changeState(5)">배달 시작</button>
-        <button v-if="currentState === 5" class="btn complete" @click="changeState(6)">배달 완료</button>
+        <button v-if="currentState === 3" class="btn rider" @click="changeState(4)">라이더 배차 신청</button>
+        <!-- state 4 이후: 라이더가 처리. 사장은 진행 상태만 확인 -->
+        <span v-if="currentState === 4" class="status-msg rider-wait-msg">라이더 배차 대기 / 진행 중</span>
+        <span v-if="currentState === 5" class="status-msg shipping-msg">배달 중</span>
         <span v-if="currentState === 6" class="status-msg complete-msg">배달 완료</span>
       </div>
     </div>

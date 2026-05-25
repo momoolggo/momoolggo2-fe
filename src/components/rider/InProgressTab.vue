@@ -12,17 +12,16 @@ const deliveryStore = useDeliveryStore()
 const current = computed(() => deliveryStore.currentDelivery())
 
 // 단계별 다음 액션 매핑.
-// (D) 작업 + ARRIVED_AT_STORE 단계 제거 정정 (2026-05-19):
-//   - claim이 WAITING_ASSIGN→ASSIGNED 변경 (라이더 풀 잡기)
-//   - accept가 ASSIGNED→AWAITING_PICKUP 직행 (가게 도착 = 픽업 대기, ARRIVED_AT_STORE 건너뜀)
-//   - ARRIVED_AT_STORE는 BE enum 유지 (외부 경로 보존), FE 라이더 흐름에서 제외
+// 자잘 에러 트랙 #8 (2026-05-23): 라이더 UX 4단계 — 배차 수락(WaitingTab claim) / 가게 도착 / 픽업 완료 / 배달 완료.
+// PICKED_UP은 race fallback 매핑 유지 (pickup 후 depart 자동 호출이 실패하면 다시 시도 가능).
+// 색: 가게 도착=파랑 / 픽업 완료=주황 / 배달 완료=초록. (배차 수락은 WaitingTab의 빨강 그대로)
 const nextAction = computed(() => {
   if (!current.value) return null
   const map = {
-    ASSIGNED:        { label: '가게 도착',  fn: 'accept',  promptText: '가게에 도착하셨습니까?'     },
-    AWAITING_PICKUP: { label: '픽업 완료',  fn: 'pickup',  promptText: '음식을 픽업 완료하셨습니까?' },
-    PICKED_UP:       { label: '배달 시작',  fn: 'depart',  promptText: '배달지로 출발하시겠습니까?' },
-    DELIVERING:      { label: '전달 완료',  fn: 'complete', promptText: null },
+    ASSIGNED:        { label: '가게 도착',  fn: 'accept',   promptText: '가게에 도착하셨습니까?',     colorClass: 'btn_arrive' },
+    AWAITING_PICKUP: { label: '픽업 완료',  fn: 'pickup',   promptText: '음식을 픽업 완료하셨습니까?', colorClass: 'btn_pickup' },
+    PICKED_UP:       { label: '배달 시작',  fn: 'depart',   promptText: '배달지로 출발하시겠습니까?', colorClass: 'btn_pickup' },
+    DELIVERING:      { label: '배달 완료',  fn: 'complete', promptText: null,                          colorClass: 'btn_complete' },
   }
   return map[current.value.status] ?? null
 })
@@ -47,7 +46,16 @@ const confirmAction = async () => {
   try {
     const fn = nextAction.value.fn
     if (fn === 'accept') await deliveryService.accept(current.value.deliveryNo)
-    else if (fn === 'pickup') await deliveryService.pickup(current.value.deliveryNo)
+    else if (fn === 'pickup') {
+      // 자잘 에러 트랙 #8 — 4단계 UX: pickup 직후 depart 자동 호출하여 PICKED_UP 화면을 건너뛰고
+      // DELIVERING 상태에서 "배달 완료" 버튼을 노출. depart 실패 시 PICKED_UP fallback 매핑이 다음 화면을 책임짐.
+      await deliveryService.pickup(current.value.deliveryNo)
+      try {
+        await deliveryService.depart(current.value.deliveryNo)
+      } catch (e) {
+        // depart만 실패한 경우 — 화면 reload 후 PICKED_UP 상태에서 "배달 시작" 버튼 fallback
+      }
+    }
     else if (fn === 'depart') await deliveryService.depart(current.value.deliveryNo)
     promptOpen.value = false
     await deliveryStore.loadInProgress()
@@ -80,6 +88,32 @@ const statusLabel = (s) => ({
   PICKED_UP: '픽업 완료',
   DELIVERING: '배달 중',
 }[s] ?? s)
+
+// 2026-05-25 9건 트랙 #9 — 라이더 네비게이션 (네이버 지도 길찾기).
+// 단계별 목적지 분기: ASSIGNED/ARRIVED/AWAITING = 가게(픽업), PICKED_UP/DELIVERING = 배달지.
+// 모바일: nmap:// URI (네이버 지도 앱 자동 실행). 데스크탑: 네이버 신지도 웹.
+const navigateToTarget = () => {
+  if (!current.value) return
+  const status = current.value.status
+  const goingToStore = ['ASSIGNED', 'ARRIVED_AT_STORE', 'AWAITING_PICKUP'].includes(status)
+  const lat = goingToStore ? current.value.pickupLat : current.value.deliveryLat
+  const lng = goingToStore ? current.value.pickupLng : current.value.deliveryLng
+  const name = goingToStore ? '가게(픽업지)' : '배달지'
+  if (!lat || !lng) {
+    alert('목적지 좌표가 없습니다.')
+    return
+  }
+  // 2026-05-25 정정 — 네이버 지도 앱 "네비게이션 즉시 시작" URI (nmap://navigation).
+  // 모바일: 앱이 네비 모드로 진입. PC fallback: 네이버 모바일 지도 길찾기 (PC는 네비 앱 없음).
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+  if (isMobile) {
+    // nmap://navigation = 네비게이션 즉시 시작 (nmap://route는 길찾기 페이지만)
+    window.location.href = `nmap://navigation?dlat=${lat}&dlng=${lng}&dname=${encodeURIComponent(name)}&appname=com.momoolggo.rider`
+  } else {
+    const url = `https://m.map.naver.com/route.naver?menu=route&pathType=1&fromName=현재위치&toName=${encodeURIComponent(name)}&toX=${lng}&toY=${lat}`
+    window.open(url, '_blank', 'noopener')
+  }
+}
 </script>
 
 <template>
@@ -118,10 +152,28 @@ const statusLabel = (s) => ({
         </a>
       </div>
 
+      <!-- 2026-05-25 9건 트랙 #3 — 가게/배달 요청사항 표시 -->
+      <div v-if="current.orderRequest" class="request_block">
+        <p class="request_label">📝 가게 요청사항</p>
+        <p class="request_text">{{ current.orderRequest }}</p>
+      </div>
+      <div v-if="current.riderRequest" class="request_block">
+        <p class="request_label">🛵 배달 요청사항</p>
+        <p class="request_text">{{ current.riderRequest }}</p>
+      </div>
+
       <p class="order_no">주문번호 {{ current.orderId }}</p>
 
+      <!-- 2026-05-25 9건 트랙 #9 — 라이더 네이버 지도 길찾기 -->
+      <button class="nav_btn" @click="navigateToTarget">
+        🗺️
+        네이버 지도로
+        {{ ['ASSIGNED', 'ARRIVED_AT_STORE', 'AWAITING_PICKUP'].includes(current.status)
+           ? '가게 길찾기' : '배달지 길찾기' }}
+      </button>
+
       <div class="action_btns">
-        <button v-if="nextAction" class="btn_primary action_btn" @click="onActionClick">
+        <button v-if="nextAction" class="action_btn" :class="nextAction.colorClass" @click="onActionClick">
           {{ nextAction.label }}
         </button>
         <button class="btn_cancel" @click="cancelOpen = true">반려</button>
@@ -190,6 +242,17 @@ const statusLabel = (s) => ({
   flex-direction: column;
   gap: 4px;
 }
+.request_block {
+  background: #fff8e6;
+  border: 1px solid #ffe6b3;
+  border-radius: 8px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.request_label { font-size: 12px; color: #b45309; font-weight: 700; }
+.request_text { font-size: 14px; color: #333; line-height: 1.4; }
 .addr_label { font-size: 12px; color: var(--gray); font-weight: 600; }
 .addr { font-size: 14px; color: var(--black); }
 .phone_btn {
@@ -203,8 +266,41 @@ const statusLabel = (s) => ({
 
 .order_no { font-size: 12px; color: var(--gray); text-align: right; }
 
+/* 2026-05-25 9건 트랙 #9 — 네비게이션 버튼 */
+.nav_btn {
+  width: 100%;
+  padding: 11px 0;
+  background: #00C73C;
+  color: #fff;
+  border: 0;
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 4px;
+}
+.nav_btn:hover { filter: brightness(0.92); }
 .action_btns { display: flex; gap: 8px; margin-top: 4px; }
-.action_btn { flex: 2; padding: 12px 0; }
+.action_btn {
+  flex: 2;
+  padding: 12px 0;
+  color: #fff;
+  border: 0;
+  border-radius: var(--radius-md);
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: filter 0.15s;
+}
+.action_btn:hover { filter: brightness(0.92); }
+/* 자잘 에러 트랙 #8 — 단계별 색 분리 UX */
+.btn_arrive   { background: #1976d2; }  /* 가게 도착 = 파랑 */
+.btn_pickup   { background: #f57c00; }  /* 픽업 완료 / 배달 시작 = 주황 */
+.btn_complete { background: #2e7d32; }  /* 배달 완료 = 초록 */
 .btn_cancel {
   flex: 1;
   background: var(--white);

@@ -99,6 +99,7 @@ const goToAddStore = () => {
       <button class="menu-item" :class="{ active: activeMenu === 'store' }"  @click="emit('menu-change', 'store')">가게 관리</button>
       <button class="menu-item" :class="{ active: activeMenu === 'review' }" @click="emit('menu-change', 'review')">리뷰 관리</button>
       <button class="menu-item" :class="{ active: activeMenu === 'settlement' }" @click="emit('menu-change', 'settlement')">정산 관리</button>
+      <button class="menu-item" @click="router.push('/chatbot/cs')">고객센터</button>
       <button class="menu-item add-store" @click="goToAddStore">+ 가게 추가</button>
     </nav>
 

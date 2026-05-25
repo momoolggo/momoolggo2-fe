@@ -375,6 +375,12 @@ const closeCancelModal = () => {
         <div class="status-footer-text" :class="{ 'done-text': currentOrderState === 6 }">
           {{ statusMessage }}
         </div>
+
+        <!-- 자잘 에러 트랙 #9-B (2026-05-23) — 배달 완료 사진 (orderState=6 + deliveredPhotoUrl 있을 때만) -->
+        <div v-if="currentOrderState === 6 && order.deliveredPhotoUrl" class="delivered-photo-section">
+          <h3 class="delivered-photo-title">배달 완료 사진</h3>
+          <img :src="getImageUrl(order.deliveredPhotoUrl)" alt="배달 완료 사진" class="delivered-photo" />
+        </div>
       </div>
 
       <button
@@ -668,6 +674,33 @@ const closeCancelModal = () => {
 .status-footer-text.done-text {
   color: #584949;
   font-size: 21px;
+}
+
+/* 자잘 에러 트랙 #9-B (2026-05-23) — 배달 완료 사진 섹션 */
+.delivered-photo-section {
+  margin-top: 20px;
+  padding: 16px;
+  background: #fff;
+  border-radius: 12px;
+  border: 1px solid #eee;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+}
+.delivered-photo-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #333;
+  margin: 0;
+}
+.delivered-photo {
+  width: 100%;
+  max-width: 360px;
+  max-height: 320px;
+  object-fit: cover;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
 }
 
 .delivery-live-text {

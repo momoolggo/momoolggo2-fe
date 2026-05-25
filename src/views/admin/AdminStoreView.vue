@@ -155,7 +155,7 @@ onMounted(() => {
               <div class="date_picker_wrap" @click="dateRef.showPicker()">
                 <img src="@/assets/calender.png" alt="calendar" class="blind_search_img" />
                 <span class="date_text" :class="{ placeholder: !searchForm.date }">
-                  {{ searchForm.date || formatDate(today) }}
+                  {{ searchForm.date || '날짜 선택' }}
                 </span>
                 <input ref="dateRef" type="date" class="hidden_date" @change="onDateChange" />
               </div>

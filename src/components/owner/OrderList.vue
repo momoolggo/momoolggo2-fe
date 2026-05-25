@@ -20,6 +20,16 @@ let highlightTimer = null
 const selectedDate = inject('selectedDate', ref(null));
 const refreshStats = inject('refreshStats', () => {});
 
+const getPayState = order => order.payState ?? order.pay_state ?? order.paymentState ?? order.payment_state
+
+// 결제 완료/환불(payState 2/3) 주문만 사장 주문관리 목록에 노출한다.
+const isVisibleOrder = order => {
+  const payState = getPayState(order)
+  if (payState === undefined || payState === null || payState === '') return false
+
+  return [2, 3].includes(Number(payState))
+}
+
 const fetchOrders = async () => {
   if (!storeInfo.myStoreId) return;
   try {
@@ -28,7 +38,7 @@ const fetchOrders = async () => {
       null,
       selectedDate.value || undefined
     );
-    orders.value = response.resultData ?? [];
+    orders.value = (response.resultData ?? []).filter(isVisibleOrder);
   } catch (error) {
     console.error("주문 조회 실패:", error);
   }
@@ -118,7 +128,8 @@ const connectOrderSse = () => {
   console.log('new order', data)
 
   newOrderId.value = data.orderId
-  showToast('새 주문이 들어왔습니다.')
+  const ecoText = data.ecoSelected ? '\n🌿 친환경 선택 (수저 미제공)' : ''
+  showToast(`새 주문이 들어왔습니다.${ecoText}`)
 
   await fetchOrders()
   await refreshStats()
@@ -177,20 +188,24 @@ const connectOrderSse = () => {
       <span class="col-duration">소요시간</span>
       <span class="col-addr">주소</span>
       <span class="col-menu">메뉴</span>
+      <span class="col-eco">친환경</span>
       <span class="col-price">결제금액</span>
       <span class="col-status">상태</span>
     </div>
 
-    <div v-for="(order, index) in orders" 
-    :key="order.orderId" 
+    <div v-for="(order, index) in orders"
+    :key="order.orderId"
     class="order-item"
-    :class="{ 'new-order-highlight': order.orderId === newOrderId }" 
+    :class="{ 'new-order-highlight': order.orderId === newOrderId }"
     @click="openModal(order)">
       <span class="col-no">{{ index + 1 }}</span>
       <span class="col-time">{{ order.orderDate }}</span>
       <span class="col-duration">-</span>
       <span class="col-addr">{{ order.address }}</span>
       <span class="col-menu">{{ order.menuList }}</span>
+      <span class="col-eco">
+        <span v-if="order.ecoSelected" class="eco-badge">🌿 친환경</span>
+      </span>
       <span class="col-price">{{ Number(order.totalPrice).toLocaleString() }}원</span>
       <span class="col-status">
         <button class="status-btn" :class="getStatusInfo(order.state, order.deliveryState).class">
@@ -252,6 +267,19 @@ const connectOrderSse = () => {
 .col-menu { flex: 2.2; }
 .col-price { flex: 1.2; }
 .col-status { flex: 1.5; display: flex; justify-content: center; }
+.col-eco { flex: 0.8; display: flex; justify-content: center; align-items: center; }
+
+.eco-badge {
+  display: inline-flex;
+  align-items: center;
+  background: #e8f5e9;
+  color: #2e7d32;
+  font-size: 11px;
+  font-weight: bold;
+  padding: 3px 8px;
+  border-radius: 12px;
+  border: 1px solid #a5d6a7;
+}
 
 .status-btn {
   width: 130px;
@@ -303,6 +331,7 @@ const connectOrderSse = () => {
   font-size: 14px;
   font-weight: 700;
   box-shadow: 0 8px 24px rgba(164, 12, 11, 0.24);
+  white-space: pre-line;
 }
 
 .toast-enter-active,

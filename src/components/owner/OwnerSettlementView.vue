@@ -29,6 +29,24 @@ const showInquiryForm = ref(false)
 const inquiryContent = ref('')
 const inquirySubmitting = ref(false)
 
+const editBankAccount = ref('')
+const bankAccountSaving = ref(false)
+
+const saveBankAccount = async () => {
+  if (!editBankAccount.value.trim()) { alert('계좌 정보를 입력해주세요.'); return }
+  bankAccountSaving.value = true
+  try {
+    await ownerService.updateBankAccount(selectedSettlement.value.settlementId, editBankAccount.value.trim())
+    selectedSettlement.value = { ...selectedSettlement.value, bankAccount: editBankAccount.value.trim() }
+    const idx = settlementList.value.findIndex(s => s.settlementId === selectedSettlement.value.settlementId)
+    if (idx !== -1) settlementList.value[idx] = { ...settlementList.value[idx], bankAccount: editBankAccount.value.trim() }
+  } catch (e) {
+    alert('계좌 변경 실패')
+  } finally {
+    bankAccountSaving.value = false
+  }
+}
+
 const today = new Date()
 const currentYear = ref(today.getFullYear())
 const currentMonth = ref(today.getMonth() + 1)
@@ -89,6 +107,7 @@ const fetchSettlements = async () => {
 
 const openDetail = async (item) => {
   selectedSettlement.value = item
+  editBankAccount.value = item.bankAccount ?? ''
   showInquiryForm.value = false
   inquiryContent.value = ''
   settlementOrders.value = []
@@ -238,9 +257,22 @@ onMounted(fetchSettlements)
       <div class="payout-section">
         <p class="section-title">지급 정보</p>
         <div class="payout-grid">
-          <div class="payout-row">
+          <div class="payout-row bank-account-row">
             <span class="payout-label">입금 계좌</span>
-            <span class="payout-value">{{ selectedSettlement.bankAccount ?? '-' }}</span>
+            <template v-if="['PENDING', 'HELD'].includes(selectedSettlement.status)">
+              <div class="bank-input-wrap">
+                <input
+                  v-model="editBankAccount"
+                  type="text"
+                  class="bank-input"
+                  placeholder="예: 국민은행 111-2222-3333"
+                />
+                <button class="bank-save-btn" :disabled="bankAccountSaving" @click="saveBankAccount">
+                  {{ bankAccountSaving ? '저장 중...' : '저장' }}
+                </button>
+              </div>
+            </template>
+            <span v-else class="payout-value">{{ selectedSettlement.bankAccount ?? '-' }}</span>
           </div>
           <div class="payout-row">
             <span class="payout-label">입금 예정일</span>
@@ -257,7 +289,7 @@ onMounted(fetchSettlements)
             <span class="payout-value">토스페이먼츠 지급대행</span>
           </div>
         </div>
-</div>
+      </div>
 
       <!-- 정산 문의 -->
       <div class="inquiry-section">
@@ -349,5 +381,14 @@ onMounted(fetchSettlements)
 .payout-row { display: flex; justify-content: space-between; align-items: center; font-size: 14px; }
 .payout-label { color: #777; }
 .payout-value { font-weight: 600; color: #222; }
+.bank-account-row { align-items: flex-start; flex-wrap: wrap; gap: 8px; }
+.bank-input-wrap { display: flex; gap: 8px; flex: 1; }
+.bank-input { flex: 1; border: 1.5px solid #ddd; border-radius: 8px; padding: 7px 12px; font-size: 13px; outline: none; min-width: 0; }
+.bank-input:focus { border-color: #9b1b1b; }
+.bank-save-btn { padding: 7px 16px; background: #9b1b1b; color: #fff; border: none; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+.bank-save-btn:disabled { background: #ccc; cursor: default; }
+.bank-display-wrap { display: flex; align-items: center; gap: 10px; }
+.bank-edit-btn { padding: 4px 12px; background: #fff; border: 1.5px solid #9b1b1b; color: #9b1b1b; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; }
+.bank-edit-btn:hover { background: #fff4f4; }
 
 </style>

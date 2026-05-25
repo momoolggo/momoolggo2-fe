@@ -9,6 +9,12 @@ class OrderService {
         return res.data;
     }
 
+    //보유쿠폰 목록 조회
+    async getUserCoupons(){
+        const res = await axios.get('/user/coupon')
+        return res.data;
+    }
+
     // 주문 확정
     async placeOrder(orderData) {
         const res = await axios.post(this.#url, orderData);

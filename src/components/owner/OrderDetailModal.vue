@@ -89,6 +89,7 @@ const steps = [
             <p><strong>전화:</strong> {{ order.tel || '-' }}</p>
             <p><strong>주소:</strong> {{ order.address || '-' }}</p>
             <p><strong>요청사항:</strong> {{ order.request || '-' }}</p>
+            <p v-if="order.ecoSelected" class="eco-info">🌿<strong>친환경 선택:</strong> 일회용 수저 미제공</p>
           </div>
         </section>
 
@@ -244,6 +245,20 @@ const steps = [
   margin: 6px 0;
   font-size: 14px;
   color: #555;
+}
+
+.eco-info {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #e8f5e9;
+  color: #2e7d32;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid #a5d6a7;
+  margin-top: 6px;
 }
 
 .menu-list-text {

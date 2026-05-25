@@ -18,11 +18,11 @@ const totalPages = ref(1)
 
 const statusFilterOpen = ref(false)
 const statusFilterOptions = [
-  { label: '전체', value: null },
-  { label: '대기', value: 'WAITING' },
-  { label: '배정됨', value: 'ASSIGNED' },
-  { label: '배달중', value: 'DELIVERING' },
-  { label: '완료', value: 'COMPLETED' },
+  { label: '전체',   value: null },
+  { label: '접수대기', value: 'waiting' },
+  { label: '배차완료', value: 'assigned' },
+  { label: '배달중',  value: 'delivering' },
+  { label: '배달완료', value: 'completed' },
 ]
 const selectedStatusLabel = ref('전체')
 
@@ -37,7 +37,7 @@ const filteredList = computed(() => {
   if (!searchKeyword.value.trim()) return deliveryList.value
   const kw = searchKeyword.value.trim().toLowerCase()
   return deliveryList.value.filter(item =>
-    item.orderId?.toLowerCase().includes(kw) ||
+    String(item.orderId ?? '').includes(kw) ||
     item.storeName?.toLowerCase().includes(kw) ||
     String(item.riderNo ?? '').includes(kw)
   )
@@ -181,16 +181,13 @@ const deleteNotice = async (noticeNo) => {
 //   배달 완료(초록)  = DELIVERED
 const statusBadge = (status) => {
   const map = {
-    WAITING_ASSIGN:   { text: '접수대기',  class: 'badge_waiting' },
-    ASSIGNED:         { text: '배차완료',  class: 'badge_assigned' },
-    ARRIVED_AT_STORE: { text: '가게도착',  class: 'badge_assigned' },
-    AWAITING_PICKUP:  { text: '픽업대기',  class: 'badge_assigned' },
-    PICKED_UP:        { text: '픽업완료',  class: 'badge_delivering' },
-    DELIVERING:       { text: '배달중',    class: 'badge_delivering' },
-    DELIVERED:        { text: '배달완료',  class: 'badge_completed' },
-    // 레거시 단축형도 보존 (admin BE가 그룹 키로 보낼 가능성)
-    WAITING:          { text: '접수대기',  class: 'badge_waiting' },
-    COMPLETED:        { text: '배달완료',  class: 'badge_completed' },
+    WAITING_ASSIGN:   { text: '접수대기', class: 'badge_waiting' },
+    ASSIGNED:         { text: '배차완료', class: 'badge_assigned' },
+    ARRIVED_AT_STORE: { text: '가게도착', class: 'badge_assigned' },
+    AWAITING_PICKUP:  { text: '픽업대기', class: 'badge_assigned' },
+    PICKED_UP:        { text: '픽업완료', class: 'badge_delivering' },
+    DELIVERING:       { text: '배달중',   class: 'badge_delivering' },
+    DELIVERED:        { text: '배달완료', class: 'badge_completed' },
   }
   return map[status] ?? { text: status, class: '' }
 }

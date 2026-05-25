@@ -22,7 +22,7 @@ const state = reactive({
 })
 
 // 내 정보 불러오기
-onMounted(async () => {
+const loadUser = async () => {
   try {
     const d = await userService.getUser()
     state.form.userId = d.userId ?? ''
@@ -33,7 +33,9 @@ onMounted(async () => {
   } catch {
     state.errorMsg = '정보를 불러오는 데 실패했습니다.'
   }
-})
+}
+
+onMounted(loadUser)
 
 const update = async () => {
   if (!state.form.name) {
@@ -54,6 +56,8 @@ const update = async () => {
       gender: state.form.gender,
       birth:  state.form.birth || null,
     })
+    await loadUser()
+    userStore.state.name = state.form.name
     state.successMsg = '수정이 완료되었습니다.'
     state.form.userPw = ''
     state.form.userPwConfirm = ''

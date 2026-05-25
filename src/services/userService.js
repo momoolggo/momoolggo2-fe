@@ -9,10 +9,25 @@ class UserService {
     return res.data // ResultResponse<Void>
   }
 
+  async checkEmail(email) {
+    const res = await axios.get(`${this.#url}/check-email`, { params: { email } })
+    return res.data // ResultResponse<Void>
+  }
+
   // ── 회원가입 POST /api/user/join
   async signup(signupData) {
     const res = await axios.post(`${this.#url}/join`, signupData)
     return res.data // ResultResponse<Void>
+  }
+
+  async findId(findIdData) {
+    const res = await axios.post(`${this.#url}/find-id`, findIdData)
+    return res.data.resultData
+  }
+
+  async resetPw(resetPwData) {
+    const res = await axios.post(`${this.#url}/reset-pw`, resetPwData)
+    return res.data
   }
 
   // ── 로그인 POST /api/user/login
@@ -39,6 +54,13 @@ class UserService {
   // 응답: ResultResponse<UserGetRes> → resultData: { userId, name, tel, gender, birth }
   async getUser() {
     const res = await axios.get(this.#url)
+    return res.data.resultData
+  }
+
+  // ── 마이페이지 요약 조회 GET /api/mypage/summary
+  // 응답: ResultResponse<MyPageSummaryRes> → resultData: { userNo, userId, name, tel, green, greenGrade, usableCouponCount }
+  async getMyPageSummary() {
+    const res = await axios.get('/mypage/summary')
     return res.data.resultData
   }
 

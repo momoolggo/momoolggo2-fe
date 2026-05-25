@@ -101,6 +101,9 @@ onBeforeUnmount(() => {
           <div><dt>배달 주소</dt><dd>{{ selected.deliveryAddress }}</dd></div>
           <div><dt>손님 전화</dt><dd>{{ selected.customerPhone }}</dd></div>
           <div><dt>배달료</dt><dd>{{ formatFee((selected.baseFee ?? 0) + (selected.extraFee ?? 0)) }}</dd></div>
+          <!-- 2026-05-25 9건 트랙 #3 — 요청사항 표시 (있을 때만) -->
+          <div v-if="selected.orderRequest"><dt>가게 요청</dt><dd>{{ selected.orderRequest }}</dd></div>
+          <div v-if="selected.riderRequest"><dt>배달 요청</dt><dd>{{ selected.riderRequest }}</dd></div>
         </dl>
         <button class="btn_primary accept_btn" @click="accept(selected.deliveryNo)">
           배차 수락

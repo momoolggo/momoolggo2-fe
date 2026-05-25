@@ -66,7 +66,7 @@ const getStatusInfo = (status) => {
     '1': { text: '주문 수락 대기', class: 'waiting' },
     '2': { text: '주문 취소', class: 'cancel' },
     '3': { text: '조리 중', class: 'progress' },
-    '4': { text: '라이더배차 진행중', class: 'rider' },
+    '4': { text: '배차 신청됨', class: 'rider' },
     '5': { text: '배달 중', class: 'shipping' },
     '6': { text: '배달 완료', class: 'completed' },
   };
@@ -117,11 +117,34 @@ const connectOrderSse = () => {
   await fetchOrders()
   await refreshStats()
 
+  // 2026-05-25 9건 트랙 정정 — 새 주문 들어오면 OrderDetailModal 자동 popup
+  const newOrder = orders.value.find(o => o.orderId === data.orderId)
+  if (newOrder) {
+    selectedOrder.value = newOrder
+    modalOpen.value = true
+  }
+
   clearTimeout(highlightTimer)
   highlightTimer = setTimeout(() => {
     newOrderId.value = null
   }, 3000)
 })
+
+  // 2026-05-25 9건 트랙 정정 — 라이더 배차 수락/픽업/배달 완료 시 자동 갱신 + toast 알림
+  eventSource.value.addEventListener('order-state-changed', async (event) => {
+    const data = JSON.parse(event.data)
+    console.log('order state changed', data)
+    // 라이더 상태 변경 toast (사장 화면에 라이더 진행 알림)
+    const orderStateMsg = {
+      4: '라이더가 배차되었습니다.',
+      5: '라이더가 픽업했습니다. 배달 중!',
+      6: '배달이 완료되었습니다.',
+    }
+    const msg = orderStateMsg[data.orderState]
+    if (msg) showToast(msg)
+    await fetchOrders()
+    await refreshStats()
+  })
 
   eventSource.value.onerror = (error) => {
     console.error('SSE error:', error)

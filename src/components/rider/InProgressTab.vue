@@ -88,6 +88,32 @@ const statusLabel = (s) => ({
   PICKED_UP: '픽업 완료',
   DELIVERING: '배달 중',
 }[s] ?? s)
+
+// 2026-05-25 9건 트랙 #9 — 라이더 네비게이션 (네이버 지도 길찾기).
+// 단계별 목적지 분기: ASSIGNED/ARRIVED/AWAITING = 가게(픽업), PICKED_UP/DELIVERING = 배달지.
+// 모바일: nmap:// URI (네이버 지도 앱 자동 실행). 데스크탑: 네이버 신지도 웹.
+const navigateToTarget = () => {
+  if (!current.value) return
+  const status = current.value.status
+  const goingToStore = ['ASSIGNED', 'ARRIVED_AT_STORE', 'AWAITING_PICKUP'].includes(status)
+  const lat = goingToStore ? current.value.pickupLat : current.value.deliveryLat
+  const lng = goingToStore ? current.value.pickupLng : current.value.deliveryLng
+  const name = goingToStore ? '가게(픽업지)' : '배달지'
+  if (!lat || !lng) {
+    alert('목적지 좌표가 없습니다.')
+    return
+  }
+  // 2026-05-25 정정 — 네이버 지도 앱 "네비게이션 즉시 시작" URI (nmap://navigation).
+  // 모바일: 앱이 네비 모드로 진입. PC fallback: 네이버 모바일 지도 길찾기 (PC는 네비 앱 없음).
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+  if (isMobile) {
+    // nmap://navigation = 네비게이션 즉시 시작 (nmap://route는 길찾기 페이지만)
+    window.location.href = `nmap://navigation?dlat=${lat}&dlng=${lng}&dname=${encodeURIComponent(name)}&appname=com.momoolggo.rider`
+  } else {
+    const url = `https://m.map.naver.com/route.naver?menu=route&pathType=1&fromName=현재위치&toName=${encodeURIComponent(name)}&toX=${lng}&toY=${lat}`
+    window.open(url, '_blank', 'noopener')
+  }
+}
 </script>
 
 <template>
@@ -126,7 +152,25 @@ const statusLabel = (s) => ({
         </a>
       </div>
 
+      <!-- 2026-05-25 9건 트랙 #3 — 가게/배달 요청사항 표시 -->
+      <div v-if="current.orderRequest" class="request_block">
+        <p class="request_label">📝 가게 요청사항</p>
+        <p class="request_text">{{ current.orderRequest }}</p>
+      </div>
+      <div v-if="current.riderRequest" class="request_block">
+        <p class="request_label">🛵 배달 요청사항</p>
+        <p class="request_text">{{ current.riderRequest }}</p>
+      </div>
+
       <p class="order_no">주문번호 {{ current.orderId }}</p>
+
+      <!-- 2026-05-25 9건 트랙 #9 — 라이더 네이버 지도 길찾기 -->
+      <button class="nav_btn" @click="navigateToTarget">
+        🗺️
+        네이버 지도로
+        {{ ['ASSIGNED', 'ARRIVED_AT_STORE', 'AWAITING_PICKUP'].includes(current.status)
+           ? '가게 길찾기' : '배달지 길찾기' }}
+      </button>
 
       <div class="action_btns">
         <button v-if="nextAction" class="action_btn" :class="nextAction.colorClass" @click="onActionClick">
@@ -198,6 +242,17 @@ const statusLabel = (s) => ({
   flex-direction: column;
   gap: 4px;
 }
+.request_block {
+  background: #fff8e6;
+  border: 1px solid #ffe6b3;
+  border-radius: 8px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.request_label { font-size: 12px; color: #b45309; font-weight: 700; }
+.request_text { font-size: 14px; color: #333; line-height: 1.4; }
 .addr_label { font-size: 12px; color: var(--gray); font-weight: 600; }
 .addr { font-size: 14px; color: var(--black); }
 .phone_btn {
@@ -211,6 +266,24 @@ const statusLabel = (s) => ({
 
 .order_no { font-size: 12px; color: var(--gray); text-align: right; }
 
+/* 2026-05-25 9건 트랙 #9 — 네비게이션 버튼 */
+.nav_btn {
+  width: 100%;
+  padding: 11px 0;
+  background: #00C73C;
+  color: #fff;
+  border: 0;
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 4px;
+}
+.nav_btn:hover { filter: brightness(0.92); }
 .action_btns { display: flex; gap: 8px; margin-top: 4px; }
 .action_btn {
   flex: 2;

@@ -39,6 +39,7 @@ const state = reactive({
   form: {
     name: '',
     userId: '',
+    email: '',
     userPw: '',
     userPwConfirm: '',
     gender: null,
@@ -54,6 +55,8 @@ const state = reactive({
   showPwConfirm: false,
   idMsg: '',
   idAvailable: false,
+  emailMsg: '',
+  emailAvailable: false,
   errorMsg: '',
 
   terms: {
@@ -105,10 +108,28 @@ const checkId = async () => {
   }
 }
 
+const checkEmail = async () => {
+  if (!state.form.email) {
+    state.emailMsg = '이메일을 입력해 주세요.'
+    state.emailAvailable = false
+    return
+  }
+  try {
+    await userService.checkEmail(state.form.email)
+    state.emailAvailable = true
+    state.emailMsg = '사용 가능한 이메일입니다.'
+  } catch {
+    state.emailAvailable = false
+    state.emailMsg = '이미 사용 중인 이메일입니다.'
+  }
+}
+
 const signup = async () => {
   if (!state.form.name)        { state.errorMsg = '이름을 입력해 주세요.';         return }
   if (!state.form.userId)      { state.errorMsg = '아이디를 입력해 주세요.';       return }
   if (!state.idAvailable)      { state.errorMsg = '아이디 중복확인을 해 주세요.';  return }
+  if (!state.form.email)       { state.errorMsg = '이메일을 입력해 주세요.';       return }
+  if (!state.emailAvailable)   { state.errorMsg = '이메일 중복확인을 해 주세요.';  return }
   if (!state.form.userPw)      { state.errorMsg = '비밀번호를 입력해 주세요.';     return }
   if (state.form.userPw !== state.form.userPwConfirm) {
     state.errorMsg = '비밀번호가 일치하지 않습니다.'; return
@@ -170,6 +191,15 @@ const signup = async () => {
           <button class="btn_dark" @click="checkId">중복확인</button>
         </div>
         <p v-if="state.idMsg" :class="['field_msg', state.idAvailable ? 'ok' : 'err']">{{ state.idMsg }}</p>
+      </div>
+
+      <div class="field">
+        <label class="label">이메일 <span class="required">*</span></label>
+        <div class="inp_row">
+          <input v-model="state.form.email" type="email" class="inp" placeholder="test@example.com" @input="state.emailAvailable = false; state.emailMsg = ''" />
+          <button class="btn_dark" @click="checkEmail">중복확인</button>
+        </div>
+        <p v-if="state.emailMsg" :class="['field_msg', state.emailAvailable ? 'ok' : 'err']">{{ state.emailMsg }}</p>
       </div>
 
       <div class="field">

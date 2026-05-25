@@ -61,12 +61,18 @@ const onModalClose = () => {
   refreshStats();
 };
 
-const getStatusInfo = (status) => {
+const getStatusInfo = (status, deliveryState) => {
+  // state=4는 두 단계(라이더 모집 중 vs 라이더 배정 완료)를 deliveryState로 구분.
+  // delivery_state >= 1 (ASSIGNED/AWAITING_PICKUP/...) → 라이더 배정 완료
+  if (Number(status) === 4) {
+    return Number(deliveryState) >= 1
+      ? { text: '배차 완료', class: 'rider' }
+      : { text: '배차 신청됨', class: 'rider' };
+  }
   const statusInfo = {
     '1': { text: '주문 수락 대기', class: 'waiting' },
     '2': { text: '주문 취소', class: 'cancel' },
     '3': { text: '조리 중', class: 'progress' },
-    '4': { text: '배차 신청됨', class: 'rider' },
     '5': { text: '배달 중', class: 'shipping' },
     '6': { text: '배달 완료', class: 'completed' },
   };
@@ -187,8 +193,8 @@ const connectOrderSse = () => {
       <span class="col-menu">{{ order.menuList }}</span>
       <span class="col-price">{{ Number(order.totalPrice).toLocaleString() }}원</span>
       <span class="col-status">
-        <button class="status-btn" :class="getStatusInfo(order.state).class">
-          {{ getStatusInfo(order.state).text }}
+        <button class="status-btn" :class="getStatusInfo(order.state, order.deliveryState).class">
+          {{ getStatusInfo(order.state, order.deliveryState).text }}
         </button>
       </span>
     </div>

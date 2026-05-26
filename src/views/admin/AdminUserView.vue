@@ -42,11 +42,11 @@ const currentPage = ref(1)
 const totalPages = ref(3)
 
 const statusLabel = (status) => {
-  const map = { ACTIVE: '정상', SUSPENDED: '계정정지', PERMANENT: '영구정지', PENDING: '승인대기' }
+  const map = { ACTIVE: '정상', SUSPENDED: '계정정지', PERMANENT: '영구정지', PENDING: '승인대기', REJECTED: '반려' }
   return map[status] ?? status
 }
 const statusBadgeClass = (status) => {
-  const map = { ACTIVE: 'badge_active', SUSPENDED: 'badge_suspended', PERMANENT: 'badge_permanent', PENDING: 'badge_pending' }
+  const map = { ACTIVE: 'badge_active', SUSPENDED: 'badge_suspended', PERMANENT: 'badge_permanent', PENDING: 'badge_pending', REJECTED: 'badge_rejected' }
   return map[status] ?? ''
 }
 
@@ -563,6 +563,7 @@ onMounted(fetchUserList)
 .badge_suspended { background: #ffdddd; color: #ff0606; }
 .badge_permanent { background: #222; color: #fff; }
 .badge_pending { background: #fff3d6; color: #b07800; }
+.badge_rejected { background: #e0e0e0; color: #555; }
 .role_badge { border-radius: 4px; padding: 3px 10px; font-size: 11px; font-weight: 600; color: #fff; white-space: nowrap; }
 .badge_customer { background: #4a90d9; }
 .badge_owner { background: #7150db; }

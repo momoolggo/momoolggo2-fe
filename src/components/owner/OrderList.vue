@@ -20,6 +20,16 @@ let highlightTimer = null
 const selectedDate = inject('selectedDate', ref(null));
 const refreshStats = inject('refreshStats', () => {});
 
+const getPayState = order => order.payState ?? order.pay_state ?? order.paymentState ?? order.payment_state
+
+// 결제 완료/환불(payState 2/3) 주문만 사장 주문관리 목록에 노출한다.
+const isVisibleOrder = order => {
+  const payState = getPayState(order)
+  if (payState === undefined || payState === null || payState === '') return false
+
+  return [2, 3].includes(Number(payState))
+}
+
 const fetchOrders = async () => {
   if (!storeInfo.myStoreId) return;
   try {
@@ -28,7 +38,7 @@ const fetchOrders = async () => {
       null,
       selectedDate.value || undefined
     );
-    orders.value = response.resultData ?? [];
+    orders.value = (response.resultData ?? []).filter(isVisibleOrder);
   } catch (error) {
     console.error("주문 조회 실패:", error);
   }
@@ -61,12 +71,18 @@ const onModalClose = () => {
   refreshStats();
 };
 
-const getStatusInfo = (status) => {
+const getStatusInfo = (status, deliveryState) => {
+  // state=4는 두 단계(라이더 모집 중 vs 라이더 배정 완료)를 deliveryState로 구분.
+  // delivery_state >= 1 (ASSIGNED/AWAITING_PICKUP/...) → 라이더 배정 완료
+  if (Number(status) === 4) {
+    return Number(deliveryState) >= 1
+      ? { text: '배차 완료', class: 'rider' }
+      : { text: '배차 신청됨', class: 'rider' };
+  }
   const statusInfo = {
     '1': { text: '주문 수락 대기', class: 'waiting' },
     '2': { text: '주문 취소', class: 'cancel' },
     '3': { text: '조리 중', class: 'progress' },
-    '4': { text: '라이더배차 진행중', class: 'rider' },
     '5': { text: '배달 중', class: 'shipping' },
     '6': { text: '배달 완료', class: 'completed' },
   };
@@ -112,16 +128,40 @@ const connectOrderSse = () => {
   console.log('new order', data)
 
   newOrderId.value = data.orderId
-  showToast('새 주문이 들어왔습니다.')
+  const ecoText = data.ecoSelected ? '\n🌿 친환경 선택 (수저 미제공)' : ''
+  showToast(`새 주문이 들어왔습니다.${ecoText}`)
 
   await fetchOrders()
   await refreshStats()
+
+  // 2026-05-25 9건 트랙 정정 — 새 주문 들어오면 OrderDetailModal 자동 popup
+  const newOrder = orders.value.find(o => o.orderId === data.orderId)
+  if (newOrder) {
+    selectedOrder.value = newOrder
+    modalOpen.value = true
+  }
 
   clearTimeout(highlightTimer)
   highlightTimer = setTimeout(() => {
     newOrderId.value = null
   }, 3000)
 })
+
+  // 2026-05-25 9건 트랙 정정 — 라이더 배차 수락/픽업/배달 완료 시 자동 갱신 + toast 알림
+  eventSource.value.addEventListener('order-state-changed', async (event) => {
+    const data = JSON.parse(event.data)
+    console.log('order state changed', data)
+    // 라이더 상태 변경 toast (사장 화면에 라이더 진행 알림)
+    const orderStateMsg = {
+      4: '라이더가 배차되었습니다.',
+      5: '라이더가 픽업했습니다. 배달 중!',
+      6: '배달이 완료되었습니다.',
+    }
+    const msg = orderStateMsg[data.orderState]
+    if (msg) showToast(msg)
+    await fetchOrders()
+    await refreshStats()
+  })
 
   eventSource.value.onerror = (error) => {
     console.error('SSE error:', error)
@@ -148,24 +188,28 @@ const connectOrderSse = () => {
       <span class="col-duration">소요시간</span>
       <span class="col-addr">주소</span>
       <span class="col-menu">메뉴</span>
+      <span class="col-eco">친환경</span>
       <span class="col-price">결제금액</span>
       <span class="col-status">상태</span>
     </div>
 
-    <div v-for="(order, index) in orders" 
-    :key="order.orderId" 
+    <div v-for="(order, index) in orders"
+    :key="order.orderId"
     class="order-item"
-    :class="{ 'new-order-highlight': order.orderId === newOrderId }" 
+    :class="{ 'new-order-highlight': order.orderId === newOrderId }"
     @click="openModal(order)">
       <span class="col-no">{{ index + 1 }}</span>
       <span class="col-time">{{ order.orderDate }}</span>
       <span class="col-duration">-</span>
       <span class="col-addr">{{ order.address }}</span>
       <span class="col-menu">{{ order.menuList }}</span>
+      <span class="col-eco">
+        <span v-if="order.ecoSelected" class="eco-badge">🌿 친환경</span>
+      </span>
       <span class="col-price">{{ Number(order.totalPrice).toLocaleString() }}원</span>
       <span class="col-status">
-        <button class="status-btn" :class="getStatusInfo(order.state).class">
-          {{ getStatusInfo(order.state).text }}
+        <button class="status-btn" :class="getStatusInfo(order.state, order.deliveryState).class">
+          {{ getStatusInfo(order.state, order.deliveryState).text }}
         </button>
       </span>
     </div>
@@ -223,6 +267,19 @@ const connectOrderSse = () => {
 .col-menu { flex: 2.2; }
 .col-price { flex: 1.2; }
 .col-status { flex: 1.5; display: flex; justify-content: center; }
+.col-eco { flex: 0.8; display: flex; justify-content: center; align-items: center; }
+
+.eco-badge {
+  display: inline-flex;
+  align-items: center;
+  background: #e8f5e9;
+  color: #2e7d32;
+  font-size: 11px;
+  font-weight: bold;
+  padding: 3px 8px;
+  border-radius: 12px;
+  border: 1px solid #a5d6a7;
+}
 
 .status-btn {
   width: 130px;
@@ -274,6 +331,7 @@ const connectOrderSse = () => {
   font-size: 14px;
   font-weight: 700;
   box-shadow: 0 8px 24px rgba(164, 12, 11, 0.24);
+  white-space: pre-line;
 }
 
 .toast-enter-active,

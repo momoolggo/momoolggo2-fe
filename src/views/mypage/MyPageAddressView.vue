@@ -12,8 +12,8 @@ const state = reactive({
     addressId: null,
     address: '',
     addressDetail: '',
-    lat: null,
-    lng: null,
+    latitude: null,
+    longitude: null,
     defaultAd: 0,
   },
 })
@@ -33,13 +33,13 @@ onMounted(loadList)
 // ── NaverMap에서 주소 선택 시
 const onAddressSelect = ({ address, lat, lng }) => {
   state.modalForm.address = address
-  state.modalForm.lat = lat
-  state.modalForm.lng = lng
+  state.modalForm.latitude = lat
+  state.modalForm.longitude = lng
 }
 
 // ── 추가 모달 열기
 const openAdd = () => {
-  state.modalForm = { addressId: null, address: '', addressDetail: '', lat: null, lng: null, defaultAd: 0 }
+  state.modalForm = { addressId: null, address: '', addressDetail: '', latitude: null, longitude: null, defaultAd: 0 }
   state.editMode = false
   state.showModal = true
 }
@@ -131,8 +131,8 @@ const setDefault = async (addressId) => {
         <div class="field">
           <label class="label">주소</label>
           <NaverMap
-            :init-lat="state.modalForm.lat"
-            :init-lng="state.modalForm.lng"
+            :init-lat="state.modalForm.latitude"
+            :init-lng="state.modalForm.longitude"
             :init-address="state.modalForm.address"
             @select="onAddressSelect"
           />

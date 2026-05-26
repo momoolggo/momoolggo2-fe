@@ -5,6 +5,7 @@ import TheHeader from '@/components/common/TheHeader.vue'
 import { useUserStore } from '@/stores/userStore'
 import TokenExpiryModal from '@/components/common/TokenExpiryModal.vue'
 import MobileNavi from './components/common/MobileNavi.vue'
+import CartFloatingBar from '@/components/common/CartFloatingBar.vue'
 import AlertModal from '@/components/common/AlertModal.vue'
 import { setAlertRef } from '@/composables/useAlert'
 
@@ -15,7 +16,7 @@ const globalAlert = ref(null)
 
 // 헤더를 숨길 페이지
 
-const noHeaderPages = ['/','/ownerlanding' ,'/owner/signin', '/owner/signup', '/customer/signin', '/customer/signup'
+const noHeaderPages = ['/','/find-account','/ownerlanding' ,'/owner/signin', '/owner/signup', '/customer/signin', '/customer/signup'
                           ,'/admin','/admin/notice','/admin/faq','/admin/settlement','/admin/blind','/admin/cs',
                           '/admin/delivery','/admin/user','/admin/store','/admin/signin',
                           ,'/riderlanding','/rider/signin','/rider/signup','/riderservice','/rider/work-session','/rider/notice','/rider/history','/rider/settlement','/rider/mypage']
@@ -47,11 +48,16 @@ const signout = async () => {
       <TokenExpiryModal />
       <MobileNavi
       v-if="userStore.state.isSignedIn
+            && route.path !== '/'
+            && route.path !== '/ownerlanding'
             && route.path !== '/mypage/pet'
+            && !route.path.startsWith('/chatbot')
             && !route.path.startsWith('/admin')
             && !route.path.startsWith('/rider')
             && route.path !== '/riderlanding'
             && route.path !== '/riderservice'"/>
+      <!-- 2026-05-25 9건 트랙 #1 — customer 전역 floating 주문 바 (자체 visible 조건) -->
+      <CartFloatingBar />
     </div>
   </div>
   <AlertModal ref="globalAlert" />

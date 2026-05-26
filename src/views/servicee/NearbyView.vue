@@ -15,11 +15,12 @@ const loadNearbyStores = async () => {
   loading.value = true
   errorMsg.value = ''
   try {
-    // 기본 주소 가져오기
-    const addresses = await addressService.findAll()
+    // 기본 주소 가져오기 — 2026-05-25 9건 트랙 정정: BE UserAddressRes 필드명은 latitude/longitude (lat/lng 아님)
+    const res1 = await addressService.findAll()
+    const addresses = res1?.resultData ?? res1 ?? []
     const def = addresses?.find(a => a.defaultAd === 1) || addresses?.[0]
 
-    if (!def || !def.lat || !def.lng) {
+    if (!def || !def.latitude || !def.longitude) {
       errorMsg.value = '기본 주소가 설정되어 있지 않습니다.'
       return
     }
@@ -27,7 +28,7 @@ const loadNearbyStores = async () => {
     defaultAddress.value = def
 
     // 주변 가게 조회
-    const res = await storeService.getNearbyStores(def.lat, def.lng)
+    const res = await storeService.getNearbyStores(def.latitude, def.longitude)
     storeList.value = res.resultData || []
 
     if (storeList.value.length === 0) {

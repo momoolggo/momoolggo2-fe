@@ -551,7 +551,7 @@ const deleteFaq = async (faqId) => {
 
 <style scoped>
 .admin_layout { display: flex; min-height: 100vh; background: #ffffff; font-family: 'Noto Sans KR', sans-serif; }
-.main_content { margin-left: 190px; flex: 1; display: flex; flex-direction: column; }
+.main_content { margin-left: 240px; flex: 1; display: flex; flex-direction: column; }
 .content { padding: 36px 60px; display: flex; flex-direction: column; gap: 20px; }
 .page_title { font-size: 20px; font-weight: 700; color: #222; margin: 0; }
 

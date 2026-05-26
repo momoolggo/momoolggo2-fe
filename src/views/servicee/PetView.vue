@@ -1,20 +1,47 @@
 <script setup>
 import { ref, computed, reactive, onMounted, onUnmounted } from 'vue'
+// 2026-05-25 9건 트랙 #8 — 펫 BE 연결 + 챗봇 진입 (하드코딩 제거)
+import { useRouter } from 'vue-router'
+import petService from '@/services/petService'
+import attendanceService from '@/services/attendanceService'
+import { useUserStore } from '@/stores/userStore'
+
+const router = useRouter()
+const userStore = useUserStore()
+const ownerName = computed(() => userStore.state.name || '나')
+
+// 종족 → 이모지 매핑 (BE PetSpecies enum: DOG / CAT / RABBIT / HAMSTER 등)
+const speciesEmojiMap = {
+  DOG: '🐶',
+  CAT: '🐱',
+  RABBIT: '🐰',
+  HAMSTER: '🐹',
+  BEAR: '🐻',
+  FOX: '🦊',
+  PANDA: '🐼',
+  KOALA: '🐨',
+}
+
+const goPetChat = () => {
+  router.push({ path: '/chatbot/cs', query: { entry: 'MYPET', tone: 'PLAYFUL' } })
+}
 
 // ── STATE ──────────────────────────────────────────────────────────────
-const intimacy     = ref(720)
-const maxIntimacy  = ref(1000)
-const level        = ref(5)
-const meals        = ref(28)
-const points       = ref(4280)
-const streak       = ref(12)
-const monthCount   = ref(12)
-const checkedInToday = ref(true) // demo: already checked in
+// 2026-05-25 9건 트랙 #8 — 모든 값 0/빈 시작. onMounted에서 BE getMyPet으로 채움.
+// BE 미구현 필드(meals/points/streak/monthCount): 0 유지 (별 BE 작업 필요 — tech-debt)
+const intimacy     = ref(0)
+const maxIntimacy  = ref(100)
+const level        = ref(1)
+const meals        = ref(0)
+const points       = ref(0)
+const streak       = ref(0)
+const monthCount   = ref(0)
+const checkedInToday = ref(false)
 
-const selectedPetEmoji = ref('🐱')
-const selectedPetName  = ref('모찌')
-const tempEmoji        = ref('🐱')
-const tempName         = ref('모찌')
+const selectedPetEmoji = ref('🐣')
+const selectedPetName  = ref('')
+const tempEmoji        = ref('🐣')
+const tempName         = ref('')
 
 // equip state
 const equippedAcc     = ref('🎩')
@@ -39,11 +66,11 @@ const patCooldownUntil = ref(0)
 const patRemainLabel   = ref('')
 let patInterval = null
 
-// calendar
-const today    = new Date(2025, 5, 12)
+// calendar — 2026-05-25 9건 트랙 #8 부채 Step B (하드코딩 제거, BE 캘린더 호출)
+const today    = new Date()
 const calYear  = ref(today.getFullYear())
 const calMonth = ref(today.getMonth())
-const attendedDays = reactive(new Set([1,2,3,4,5,6,7,8,9,10,11,12]))
+const attendedDays = reactive(new Set())
 
 // modals
 const showAttendance  = ref(false)
@@ -267,18 +294,35 @@ function spawnEffectParticle() {
 }
 
 // ── INTIMACY / LEVELUP ────────────────────────────────────────────────────
-function giveSnack() {
-  intimacy.value = Math.min(maxIntimacy.value, intimacy.value + 20)
-  meals.value++
-  showToast('🍔 간식을 줬어요! +20 친밀도')
-  if (intimacy.value >= maxIntimacy.value) setTimeout(levelUp, 600)
-}
-function levelUp() {
-  level.value++
-  intimacy.value = 0
-  maxIntimacy.value = Math.round(maxIntimacy.value * 1.3)
-  showToast('🎉 레벨업! Lv.' + level.value + ' 달성!')
-  setTimeout(() => addPoints(level.value * 100, 'Lv.' + level.value + ' 달성 보상'), 600)
+// 2026-05-25 9건 트랙 #8 부채 — 간식주기 BE 연결 + 60초 쿨다운 (무한 클릭 차단)
+const snackCooldownUntil = ref(0)
+const snackOnCooldown = computed(() => snackCooldownUntil.value > Date.now())
+const SNACK_COOLDOWN_MS = 60 * 1000  // 시연용 60초 (운영 시 30분 검토)
+
+async function giveSnack() {
+  if (snackOnCooldown.value) {
+    const remain = Math.ceil((snackCooldownUntil.value - Date.now()) / 1000)
+    showToast(`⏱️ 간식 쿨타임 ${remain}초 남음`)
+    return
+  }
+  try {
+    const res = await petService.giveSnack()
+    // BE 응답으로 정확한 값 반영 (intimacy/exp/level + 레벨업 여부)
+    if (res) {
+      level.value = res.level
+      intimacy.value = res.intimacy
+      maxIntimacy.value = 100 + (level.value - 1) * 30
+      if (res.leveledUp) {
+        showToast(`🎉 레벨업! Lv.${res.level} 달성!`)
+      } else {
+        showToast('🍔 간식을 줬어요! +20 친밀도')
+      }
+    }
+    meals.value++
+    snackCooldownUntil.value = Date.now() + SNACK_COOLDOWN_MS
+  } catch (e) {
+    showToast('간식 지급 실패: ' + (e.response?.data?.resultMessage || e.message))
+  }
 }
 
 // ── ATTENDANCE ────────────────────────────────────────────────────────────
@@ -314,10 +358,12 @@ function doCheckIn() {
   showToast('출석 완료! +' + pts + 'P 획득 🎉')
 }
 
-function changeCalMonth(d) {
+async function changeCalMonth(d) {
   calMonth.value += d
   if (calMonth.value < 0) { calMonth.value = 11; calYear.value-- }
   if (calMonth.value > 11) { calMonth.value = 0; calYear.value++ }
+  // 2026-05-25 9건 트랙 #8 부채 Step B — 월 변경 시 BE 캘린더 재로딩
+  await loadAttendanceCalendar()
 }
 
 // ── SHOP ─────────────────────────────────────────────────────────────────
@@ -383,11 +429,23 @@ function equipEffect(item) {
 
 // ── PET SELECT ────────────────────────────────────────────────────────────
 function selectPet(emoji, name) { tempEmoji.value = emoji; tempName.value = name }
-function confirmPetSelect() {
-  selectedPetEmoji.value = tempEmoji.value
-  selectedPetName.value  = tempName.value
-  showPetSelect.value = false
-  showToast(selectedPetEmoji.value + ' ' + selectedPetName.value + '(이)가 내 펫이 됐어요!')
+async function confirmPetSelect() {
+  // 2026-05-25 9건 트랙 #8 부채 — 펫 이름/종족 변경 BE PUT 연결
+  const name = tempName.value?.trim()
+  if (!name) {
+    showToast('펫 이름을 입력해주세요')
+    return
+  }
+  try {
+    const species = emojiToSpecies(tempEmoji.value)
+    await petService.updatePet({ name, species })
+    selectedPetEmoji.value = tempEmoji.value
+    selectedPetName.value  = tempName.value
+    showPetSelect.value = false
+    showToast('펫 정보가 저장되었습니다 ✨')
+  } catch (e) {
+    showToast('저장 실패: ' + (e.response?.data?.resultMessage || e.message))
+  }
 }
 
 // ── REWARD ────────────────────────────────────────────────────────────────
@@ -406,6 +464,77 @@ function showToast(msg) {
 }
 
 // ── LIFECYCLE ────────────────────────────────────────────────────────────
+// 2026-05-25 9건 트랙 #8 — BE 펫 정보 로딩 (level/intimacy/name/species/exp + totalPoints/totalMeals).
+// 부채 진행 Step A: 누적 포인트 + 주문 완료 횟수 BE 반영.
+onMounted(async () => {
+  try {
+    const pet = await petService.getMyPet()
+    if (pet) {
+      selectedPetName.value = pet.name || '내 펫'
+      tempName.value = pet.name || ''
+      level.value = pet.level ?? 1
+      intimacy.value = pet.intimacy ?? 0
+      // 레벨별 maxIntimacy: 100 + (level-1)*30 (level 5 = 220, level 10 = 370)
+      maxIntimacy.value = 100 + (level.value - 1) * 30
+      if (pet.species && speciesEmojiMap[pet.species]) {
+        selectedPetEmoji.value = speciesEmojiMap[pet.species]
+        tempEmoji.value = speciesEmojiMap[pet.species]
+      }
+      // Step A 부채 — 누적 통계 반영
+      points.value = pet.totalPoints ?? 0
+      meals.value = pet.totalMeals ?? 0
+      // Step B 부채 — 출석 streak/monthCount 반영
+      streak.value = pet.streak ?? 0
+      monthCount.value = pet.monthCount ?? 0
+    }
+  } catch (e) {
+    console.warn('펫 BE 정보 로딩 실패:', e)
+    selectedPetName.value = '내 펫'
+  }
+  // Step B 부채 — 이번달 출석 캘린더 로딩
+  await loadAttendanceCalendar()
+})
+
+// 2026-05-25 9건 트랙 #8 부채 Step B — 출석 캘린더 + 출석 체크
+async function loadAttendanceCalendar() {
+  try {
+    const cal = await attendanceService.getCalendar(calYear.value, calMonth.value + 1)
+    if (cal) {
+      attendedDays.clear()
+      ;(cal.attendedDays || []).forEach(d => attendedDays.add(d))
+      monthCount.value = cal.monthCount ?? monthCount.value
+      streak.value = cal.streak ?? streak.value
+      checkedInToday.value = attendedDays.has(today.getDate())
+    }
+  } catch (e) {
+    console.warn('출석 캘린더 로딩 실패:', e)
+  }
+}
+
+async function checkAttendance() {
+  try {
+    const res = await attendanceService.check()
+    if (res?.alreadyChecked) {
+      showToast('오늘은 이미 출석 완료했어요 ✨')
+    } else {
+      showToast('🎉 출석 완료! +30P 적립')
+    }
+    streak.value = res?.streak ?? streak.value
+    monthCount.value = res?.monthCount ?? monthCount.value
+    checkedInToday.value = true
+    // 캘린더에 오늘 추가
+    attendedDays.add(today.getDate())
+  } catch (e) {
+    showToast('출석 체크 실패: ' + (e.response?.data?.resultMessage || e.message))
+  }
+}
+
+// 2026-05-25 9건 트랙 #8 부채 — 이모지 → species 역매핑 (펫 변경 시 BE PUT에 species 전달용)
+const emojiToSpecies = (emoji) => {
+  const found = Object.entries(speciesEmojiMap).find(([_, e]) => e === emoji)
+  return found ? found[0] : 'DOG'
+}
+
 onUnmounted(() => {
   clearInterval(patInterval)
   clearTimeout(toastTimer)
@@ -426,6 +555,12 @@ onUnmounted(() => {
     </div>
   </div>
 
+  <!-- 2026-05-25 9건 트랙 #8 — 펫 챗봇 floating 진입 버튼 (펫 페이지 어디서든 노출) -->
+  <button class="pet-chat-fab" @click="goPetChat" aria-label="펫과 대화하기">
+    <span class="fab-icon">💬</span>
+    <span class="fab-text">펫과 대화</span>
+  </button>
+
   <!-- SCROLL AREA -->
   <div class="scroll-area">
 
@@ -438,7 +573,7 @@ onUnmounted(() => {
           <span class="pet-name">{{ selectedPetName }}</span>
           <span class="level-badge">Lv.{{ level }}</span>
         </div>
-        <div class="owner-name">김민준님의 펫 친구 🍀</div>
+        <div class="owner-name">{{ ownerName }}님의 펫 친구 🍀</div>
 
         <div class="pet-scene" :style="{ background: currentBg }">
           <!-- effect particles -->
@@ -837,6 +972,13 @@ onUnmounted(() => {
           </div>
         </div>
 
+        <!-- 2026-05-25 9건 트랙 #8 부채 Step B — 출석 체크 버튼 -->
+        <button class="att-check-btn"
+                :disabled="checkedInToday"
+                @click="checkAttendance">
+          {{ checkedInToday ? '✅ 오늘 출석 완료' : '📅 오늘 출석 체크' }}
+        </button>
+
         <div class="att-rewards-label">🎁 누적 출석 보상</div>
         <div class="att-rewards-scroll">
           <div v-for="r in attRewardSchedule" :key="r.day" class="att-reward-item">
@@ -1047,6 +1189,40 @@ onUnmounted(() => {
 /* ── ACTIONS ── */
 .action-section { padding:0 16px 14px; }
 .action-title   { font-size:12px; font-weight:700; margin-bottom:9px; }
+/* 2026-05-25 9건 트랙 #8 — 펫 챗봇 floating FAB (모바일 480px 컨테이너 안 우측 하단) */
+.pet-chat-fab {
+  position: fixed;
+  bottom: calc(90px + env(safe-area-inset-bottom));
+  left: 50%;
+  transform: translateX(-50%) translateX(176px); /* 480px 컨테이너 우측(240 - 64 = 176) */
+  z-index: 999;
+  background: #A40C0B;
+  color: #fff;
+  border: 0;
+  border-radius: 28px;
+  padding: 12px 18px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(164, 12, 11, 0.4);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: transform 0.15s;
+  white-space: nowrap;
+}
+.pet-chat-fab:active { transform: translateX(-50%) translateX(176px) scale(0.95); }
+.fab-icon { font-size: 18px; }
+/* 480px 미만 화면(실 모바일): 컨테이너 우측 끝에 맞춤 */
+@media (max-width: 480px) {
+  .pet-chat-fab {
+    left: auto;
+    right: 16px;
+    transform: none;
+  }
+  .pet-chat-fab:active { transform: scale(0.95); }
+}
+
 .action-grid    { display:grid; grid-template-columns:1fr 1fr; gap:9px; }
 .action-btn {
   border:none; border-radius:16px; padding:13px 8px;
@@ -1335,6 +1511,28 @@ onUnmounted(() => {
 .cal-month-nav  { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
 .cal-month-label { font-size:14px; font-weight:800; }
 .cal-nav-btn    { border:none; background:var(--border); border-radius:8px; width:28px; height:28px; cursor:pointer; font-size:14px; display:flex; align-items:center; justify-content:center; }
+/* 2026-05-25 9건 트랙 #8 부채 Step B — 출석 체크 버튼 */
+.att-check-btn {
+  width: 100%;
+  padding: 14px 0;
+  margin: 12px 0 16px;
+  background: linear-gradient(135deg, #FF6B35, #FF4E8A);
+  color: #fff;
+  border: 0;
+  border-radius: 14px;
+  font-size: 15px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(255, 107, 53, 0.35);
+  transition: transform 0.15s, opacity 0.15s;
+}
+.att-check-btn:active:not(:disabled) { transform: scale(0.98); }
+.att-check-btn:disabled {
+  background: #ddd;
+  color: #888;
+  cursor: not-allowed;
+  box-shadow: none;
+}
 .cal-grid       { display:grid; grid-template-columns:repeat(7,1fr); gap:4px; margin-bottom:14px; }
 .cal-dow        { font-size:9px; font-weight:700; color:var(--muted); text-align:center; padding:3px 0; }
 .cal-day        { aspect-ratio:1; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; }

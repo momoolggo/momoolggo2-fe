@@ -3,6 +3,7 @@ import { useUserStore } from '@/stores/userStore'
 
 // ── 공통
 import LandingView from '@/views/LandingView.vue'
+import AccountFindView from '@/views/AccountFindView.vue'
 import StoreListView from '@/views/store/StoreListView.vue'
 import StoreDetailView from '@/views/store/StoreDetailView.vue'
 import OwnerLandingView from '@/views/store/OwnerLandingView.vue'
@@ -55,6 +56,7 @@ import AdminStoreView from '@/views/admin/AdminStoreView.vue'
 
 const routes = [
   { path: '/', name: 'Landing', component: LandingView },
+  { path: '/find-account', name: 'AccountFind', component: AccountFindView, meta: { guestOnly: true } },
   { path: '/ownerlanding', name: 'OwnerLanding', component: OwnerLandingView},
   { path: '/storelist', name: 'StoreList', component: StoreListView, meta: { requiresAuth: true, role: 'CUSTOMER' } },
   { path: '/store/:id', name: 'StoreDetail', component: StoreDetailView, meta: { requiresAuth: true, role: 'CUSTOMER' } },
@@ -96,6 +98,8 @@ const routes = [
 
 //고객 서비스
   {path: '/mypage/pet' , name: 'MyPagePet', component: () => import('@/views/servicee/PetView.vue') },
+  // 공용 CS 챗봇 — 자잘 에러 트랙(2026-05-23). 사장/라이더/고객 모두 진입 가능 (role 무관).
+  {path: '/chatbot/cs' , name: 'CsChatbot', component: () => import('@/views/servicee/CsChatbotView.vue'), meta: { requiresAuth: true } },
   {path: '/mypage/review/:id', name: 'ReviewDetail', component: () => import('@/views/mypage/ReviewPostView.vue'), meta: { requiresAuth: true} },
   {path: '/mypage/orders/:id', name: 'OrderDetail', component: () => import('@/views/mypage/OrderDetailView.vue'), meta: { requiresAuth: true, role: 'CUSTOMER' } },
   { path: '/cart',     name: 'Cart',     component: CartView,     meta: { requiresAuth: true, role: 'CUSTOMER' } },

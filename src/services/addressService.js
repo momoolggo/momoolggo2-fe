@@ -1,7 +1,7 @@
 import axios from '@/services/httpRequester'
 
 class AddressService {
-    #url = '/user/address';
+    #url = '/address';
 
     // 주소 추가
     async save(addressData) {

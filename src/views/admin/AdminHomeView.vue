@@ -229,7 +229,7 @@ const fetchCategoryStats = async () => {
 
 <style scoped>
 .admin_layout { display: flex; min-height: 100vh; background: #ffffff; font-family: 'Noto Sans KR', sans-serif; }
-.main_content { margin-left: 190px; flex: 1; display: flex; flex-direction: column; }
+.main_content { margin-left: 240px; flex: 1; display: flex; flex-direction: column; }
 .content { padding: 36px 60px; display: flex; flex-direction: column; gap: 20px; }
 .today_section { background: transparent; border-radius: 12px; padding: 24px 28px; }
 .today_header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }

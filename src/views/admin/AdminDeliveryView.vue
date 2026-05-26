@@ -192,13 +192,23 @@ const statusBadge = (status) => {
   return map[status] ?? { text: status, class: '' }
 }
 
-// 2026-05-25 9건 트랙 정정 — 콜 버튼 클릭 시 라이더 전화번호 모달 alert
-const showRiderPhone = (phone, riderNo) => {
-  if (!phone) {
-    alert(`라이더 번호 ${riderNo ?? '-'}: 등록된 전화번호가 없습니다.`)
-    return
-  }
-  alert(`라이더 번호 ${riderNo ?? '-'}\n전화번호: ${phone}`)
+const showPhoneModal = ref(false)
+const phoneModalData = ref({ riderNo: null, phone: null })
+const copyDone = ref(false)
+
+const openPhoneModal = (phone, riderNo) => {
+  phoneModalData.value = { riderNo, phone }
+  copyDone.value = false
+  showPhoneModal.value = true
+}
+
+const closePhoneModal = () => { showPhoneModal.value = false }
+
+const copyPhone = async () => {
+  if (!phoneModalData.value.phone) return
+  await navigator.clipboard.writeText(phoneModalData.value.phone)
+  copyDone.value = true
+  setTimeout(() => { copyDone.value = false }, 1500)
 }
 
 const fetchList = async () => {
@@ -336,9 +346,8 @@ onUnmounted(() => {
                   <td>{{ item.elapsedMinutes != null ? item.elapsedMinutes + '분' : '-' }}</td>
                   <td>{{ item.distanceKm != null ? item.distanceKm + 'km' : '-' }}</td>
                   <td>
-                    <!-- 2026-05-25 9건 트랙 정정 — 클릭 시 라이더 전화번호 alert (PC tel: 링크는 무효) -->
                     <button class="tel_link tel_btn"
-                            @click="showRiderPhone(item.riderPhone, item.riderNo)">
+                            @click="openPhoneModal(item.riderPhone, item.riderNo)">
                       <img src="@/assets/phone.png" alt="phone" class="phone_img" />
                     </button>
                   </td>
@@ -440,6 +449,31 @@ onUnmounted(() => {
             <span class="notice_list_title">{{ notice.title }}</span>
             <span class="notice_list_arrow">›</span>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 전화 모달 -->
+    <div v-if="showPhoneModal" class="modal_overlay" @click.self="closePhoneModal">
+      <div class="phone_modal">
+        <div class="phone_modal_header">
+          <span class="phone_modal_title">라이더 연락처</span>
+          <button class="modal_close" @click="closePhoneModal">✕</button>
+        </div>
+        <div class="phone_modal_body">
+          <p class="phone_rider_no">라이더 번호 {{ phoneModalData.riderNo ?? '-' }}</p>
+          <template v-if="phoneModalData.phone">
+            <p class="phone_number">{{ phoneModalData.phone }}</p>
+            <div class="phone_actions">
+              <a :href="`tel:${phoneModalData.phone}`" class="phone_action_btn phone_call_btn">
+                <img src="@/assets/telephone.png" alt="telephone" class="telephone" /> 전화 연결
+              </a>
+              <button class="phone_action_btn phone_copy_btn" @click="copyPhone">
+                {{ copyDone ? '✓ 복사됨' : '복사' }}
+              </button>
+            </div>
+          </template>
+          <p v-else class="phone_none">등록된 전화번호가 없습니다.</p>
         </div>
       </div>
     </div>
@@ -593,6 +627,22 @@ onUnmounted(() => {
 .modal_confirm:disabled { background: #ccc; cursor: not-allowed; }
 .action_delete { padding: 9px 20px; border: 1px solid #cc1f1f; background: #fff; border-radius: 8px; font-size: 13px; color: #cc1f1f; cursor: pointer; font-weight: 500; }
 .action_delete:hover { background: #fff0f0; }
+
+/* 전화 모달 */
+.phone_modal { background: #fff; border-radius: 14px; width: 340px; box-shadow: 0 8px 32px rgba(0,0,0,0.18); overflow: hidden; }
+.phone_modal_header { display: flex; align-items: center; justify-content: space-between; padding: 18px 20px 14px; border-bottom: 1px solid #eee; }
+.phone_modal_title { font-size: 15px; font-weight: 700; color: #222; }
+.phone_modal_body { padding: 24px 20px; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.phone_rider_no { font-size: 12px; color: #999; margin: 0; }
+.phone_number { font-size: 26px; font-weight: 800; color: #222; letter-spacing: 2px; margin: 0; }
+.phone_none { font-size: 13px; color: #aaa; margin: 0; }
+.phone_actions { display: flex; gap: 10px; margin-top: 4px; }
+.phone_action_btn { padding: 7px 20px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; text-decoration: none; border: none; display: inline-flex; align-items: center; gap: 6px; }
+.phone_call_btn { background: #9b1b1b; color: #fff; }
+.phone_call_btn:hover { background: #7f1515; }
+.phone_copy_btn { background: #f5f5f5; color: #444; border: 1px solid #ddd; }
+.phone_copy_btn:hover { background: #eee; }
+.telephone {width: 20px; height: auto; }
 
 /* 공지 목록 */
 .notice_list_body { padding: 12px 0; max-height: 400px; overflow-y: auto; }

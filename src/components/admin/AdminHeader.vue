@@ -34,7 +34,7 @@ const logout = async () => {
     position: sticky;
     top: 0;
     z-index: 10;
-    margin-left: 30px;
+    
   }
   
   .header_left {

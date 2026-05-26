@@ -1,18 +1,18 @@
 <script setup>
 import { useRouter, useRoute } from 'vue-router'
+import { LayoutDashboard, Users, Store, Star, Wallet, Bike, LifeBuoy } from 'lucide-vue-next'
 
 const router = useRouter()
 const route = useRoute()
 
 const menuItems = [
-  { name: '대시 보드', path: '/admin' },
-  { name: '회원 관리', path: '/admin/user' },
-  { name: '가게 관리', path: '/admin/store' },
-  { name: '리뷰 관리', path: '/admin/blind' },
-  { name: '정산 관리', path: '/admin/settlement' },
-  { name: '배달 관리', path: '/admin/delivery' },
-  { name: '고객 지원', path: '/admin/cs' },
-  
+  { name: '대시 보드', path: '/admin', icon: LayoutDashboard },
+  { name: '회원 관리', path: '/admin/user', icon: Users },
+  { name: '가게 관리', path: '/admin/store', icon: Store },
+  { name: '리뷰 관리', path: '/admin/blind', icon: Star },
+  { name: '정산 관리', path: '/admin/settlement', icon: Wallet },
+  { name: '배달 관리', path: '/admin/delivery', icon: Bike },
+  { name: '고객 지원', path: '/admin/cs', icon: LifeBuoy },
 ]
 
 const isActive = (path) => {
@@ -39,6 +39,7 @@ const goTo = (path) => {
         :class="{ active: isActive(item.path) }"
         @click="goTo(item.path)"
       >
+        <component :is="item.icon" class="menu_icon" :size="18" />
         {{ item.name }}
       </button>
     </nav>
@@ -46,9 +47,7 @@ const goTo = (path) => {
 </template>
 
 <style scoped>
-/* 2026-05-25 9건 트랙 정정 — 사이드바 잘림 fix.
-   이전: width 220px + logo 230px → 로고가 사이드바보다 큼 + main_content margin-left 190px라 우측 30px 가림.
-   이후: width 240px + logo 200px + 모든 admin View main_content margin-left 240px. */
+
 .sidebar {
   width: 240px;
   height: 100vh;
@@ -64,48 +63,51 @@ const goTo = (path) => {
 
 .logo_section {
   text-align: center;
-  margin-bottom: 60px;
+  margin-bottom: 50px;
   margin-top: 20px;
 }
 
 .logo {
-  width: 200px;
+  width: 220px;
   max-width: 100%;
 }
 
 .menu_list {
   display: flex;
   flex-direction: column;
-  padding: 16px 12px;
-  gap: 25px;
+  padding: 8px 16px;
+  gap: 20px;
 }
 
 .menu_item {
-  padding: 13px 16px;
-  border: 1px solid #e0e0e0;
-  background: #ffffff;
+  padding: 11px 16px;
+  border: none;
+  background: none;
   border-radius: 10px;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 500;
-  color: #444;
-  text-align: center;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.07);
-  transition: all 0.15s;
+  color: #888;
+  text-align: left;
+  transition: color 0.15s, background 0.15s;
   width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.menu_icon {
+  flex-shrink: 0;
 }
 
 .menu_item:hover {
-  background: #f5f5f5;
-  color: #222;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  color: #9b1b1b;
+  background: rgba(155, 27, 27, 0.07);
 }
 
 .menu_item.active {
-  background: #9b1b1b;
-  border-color:#9b1b1b;
-  color: #fff;
+  color: #9b1b1b;
   font-weight: 700;
-  box-shadow: 0 4px 10px rgba(185, 28, 28, 0.3);
+  background: rgba(155, 27, 27, 0.1);
 }
 </style>

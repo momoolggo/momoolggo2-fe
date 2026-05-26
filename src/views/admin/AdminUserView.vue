@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import AdminSidebar from '@/components/admin/AdminSidebar.vue'
 import AdminHeader from '@/components/admin/AdminHeader.vue'
 import adminService from '@/services/adminService'
@@ -155,7 +155,17 @@ const handleTabChange = (tab) => {
   else fetchPendingList()
 }
 
-const handleSearch = () => { currentPage.value = 1; fetchUserList() }
+const appliedCategory = ref('전체')
+
+const handleSearch = () => {
+  appliedCategory.value = searchForm.value.category
+  currentPage.value = 1
+  fetchUserList()
+}
+
+const showEcoColumn = computed(() =>
+  appliedCategory.value === '전체' || appliedCategory.value === '고객'
+)
 
 // ── 고객 상세 모달
 const showDetailModal = ref(false)
@@ -290,7 +300,7 @@ onMounted(fetchUserList)
             <thead>
               <tr>
                 <th>이름</th><th>아이디</th>
-                <th>전화번호</th><th>상태</th><th>분류</th><th>가입일</th><th>친환경 점수</th>
+                <th>전화번호</th><th>상태</th><th>분류</th><th>가입일</th><th v-if="showEcoColumn" class="eco_th">친환경 점수 <span class="customer">(고객)</span></th>
               </tr>
             </thead>
             <tbody>
@@ -302,7 +312,7 @@ onMounted(fetchUserList)
                   <td><span :class="['status_badge', statusBadgeClass(user.status)]">{{ statusLabel(user.status) }}</span></td>
                   <td><span :class="['role_badge', roleBadgeClass(user.role)]">{{ roleLabel(user.role) }}</span></td>
                   <td>{{ formatCreatedAt(user.createdAt) }}</td>
-                  <td>
+                  <td v-if="showEcoColumn" class="eco_td">
                     <span v-if="user.role === 'CUSTOMER' && greenLabel(user.green)" class="green_text">
                       {{ greenLabel(user.green).text }}
                       <img :src="greenLabel(user.green).img" class="green_icon" />
@@ -311,9 +321,9 @@ onMounted(fetchUserList)
                   </td>
                 </tr>
               </template>
-              <tr v-if="userList.length === 0"><td colspan="7" class="empty_td">조회된 회원이 없습니다.</td></tr>
+              <tr v-if="userList.length === 0"><td :colspan="showEcoColumn ? 7 : 6" class="empty_td">조회된 회원이 없습니다.</td></tr>
               <tr v-for="i in Math.max(0, 15 - userList.length)" :key="'e'+i" class="empty_row">
-                <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                <td></td><td></td><td></td><td></td><td></td><td></td><td v-if="showEcoColumn"></td>
               </tr>
             </tbody>
           </table>
@@ -336,7 +346,7 @@ onMounted(fetchUserList)
                   <td>{{ user.tel }}</td>
                   <td><span :class="['status_badge', statusBadgeClass(user.status)]">{{ statusLabel(user.status) }}</span></td>
                   <td><span :class="['role_badge', roleBadgeClass(user.role)]">{{ roleLabel(user.role) }}</span></td>
-                  <td>{{ user.appliedAt }}</td>
+                  <td>{{ formatCreatedAt(user.createdAt) }}</td>
                   <td>
                     <button class="approve_btn" @click="openPendingDetail(user)">승인하기</button>
                   </td>
@@ -478,7 +488,6 @@ onMounted(fetchUserList)
               <span class="info_label">안전 교육 이수증</span>
               <span class="file_link" @click="openFile(selectedPendingUser.safetyEdu)">{{ selectedPendingUser.safetyEdu }}</span>
             </div>
-            <div class="info_row"><span class="info_label">정산 계좌 정보</span><span class="info_value">{{ selectedPendingUser.accountInfo }}</span></div>
           </template>
         </div>
 
@@ -608,4 +617,9 @@ onMounted(fetchUserList)
 .reject_reason_option input[type="radio"] { accent-color: #cc1f1f; }
 .reject_confirm_btn { margin-top: 4px; background: #9b1b1b; border: none; color: #fff; border-radius: 6px; padding: 8px 0; font-size: 13px; font-weight: 700; cursor: pointer; width: 100%; }
 .reject_confirm_btn:hover { background: #a01818; }
+.customer { color: #fff; font-weight: 700; }
+.eco_th { background: #388e3c !important; color: #fff !important; border-color: #2e7d32 !important; }
+.eco_td { background: #f0faf0; border-color: #c8e6c9 !important; }
+.eco_td .green_text { color: #1b5e20; }
+.eco_td .green_dash { color: #aaa; }
 </style>

@@ -36,7 +36,7 @@ const ADMIN_NO = 1
 
 const fetchRiderSettlements = async () => {
   try {
-    const res = await adminService.getRiderSettlementPending()
+    const res = await adminService.getRiderSettlementAll()
     riderSettlementList.value = res?.resultData ?? res ?? []
   } catch (e) {
     console.error('라이더 정산 조회 실패', e)
@@ -44,14 +44,16 @@ const fetchRiderSettlements = async () => {
   }
 }
 
-// riderSettlementList는 /pending 엔드포인트 → PENDING 건만 반환
-const riderPendingCount = computed(() => riderSettlementList.value.length)
+const riderPendingCount = computed(() =>
+  riderSettlementList.value.filter(s => s.status === 'PENDING').length
+)
 const totalPendingCount = computed(() => (summary.value.pendingStoreCount ?? 0) + riderPendingCount.value)
 
 const confirmRiderSettlement = async (settlementNo) => {
   try {
     await adminService.confirmRiderSettlement(settlementNo, ADMIN_NO)
-    await fetchRiderSettlements()
+    const target = riderSettlementList.value.find(s => s.settlementNo === settlementNo)
+    if (target) target.status = 'CONFIRMED'
     closeRiderDetail()
   } catch (e) {
     alert('정산 확정 실패: ' + (e.response?.data?.resultMessage || e.message))
@@ -106,7 +108,7 @@ const statusBadge = (status) => {
     PENDING: { text: '대기', class: 'badge_pending' },
     HOLD: { text: '보류', class: 'badge_hold' },
     HELD: { text: '보류', class: 'badge_hold' },
-    CONFIRMED: { text: '확정', class: 'badge_complete' },
+    CONFIRMED: { text: '완료', class: 'badge_complete' },
   }
   return map[status] ?? { text: status, class: '' }
 }
@@ -467,7 +469,6 @@ const expectedPayoutDate = (periodEnd) => {
                   <th>보험료</th>
                   <th>실수령액</th>
                   <th>상태</th>
-                  <th>처리</th>
                 </tr>
               </thead>
               <tbody>
@@ -486,17 +487,13 @@ const expectedPayoutDate = (periodEnd) => {
                         {{ statusBadge(item.status).text }}
                       </span>
                     </td>
-                    <td @click.stop>
-                      <button v-if="item.status === 'PENDING'" class="confirm_btn" @click="confirmRiderSettlement(item.settlementNo)">확정</button>
-                      <span v-else style="color:#aaa; font-size:12px;">완료</span>
-                    </td>
                   </tr>
                 </template>
                 <tr v-if="riderSettlementList.length === 0">
-                  <td colspan="10" class="empty_td">라이더 정산 내역이 없습니다.</td>
+                  <td colspan="9" class="empty_td">라이더 정산 내역이 없습니다.</td>
                 </tr>
                 <tr v-for="i in Math.max(0, 10 - riderSettlementList.length)" :key="'r'+i" class="empty_row">
-                  <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                  <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
                 </tr>
               </tbody>
             </table>

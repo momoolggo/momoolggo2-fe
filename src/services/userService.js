@@ -25,6 +25,11 @@ class UserService {
     return res.data.resultData
   }
 
+  async resetPwCode(resetPwCodeData){
+    const res = await axios.post(`${this.#url}/reset-pw/code`, resetPwCodeData)
+    return res.data
+  }
+
   async resetPw(resetPwData) {
     const res = await axios.post(`${this.#url}/reset-pw`, resetPwData)
     return res.data

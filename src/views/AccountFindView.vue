@@ -17,6 +17,7 @@ const resetPwForm = reactive({
   name: '',
   tel: '',
   email: '',
+  verificationCode: '',
   newPassword: '',
 })
 
@@ -26,6 +27,7 @@ const state = reactive({
   findIdError: '',
   resetPwMsg: '',
   resetPwError: '',
+  resetPwStep: 1,
   loading: false,
 })
 
@@ -51,12 +53,47 @@ const findId = async () => {
   }
 }
 
+const requestResetPwCode = async () => {
+  state.resetPwMsg = ''
+  state.resetPwError = ''
+
+  if (!resetPwForm.userId || !resetPwForm.name || !resetPwForm.tel || !resetPwForm.email) {
+    state.resetPwError = '아이디, 이름, 연락처, 이메일을 모두 입력해 주세요.'
+    return
+  }
+
+  try {
+    state.loading = true
+    const res = await userService.resetPwCode({
+      userId: resetPwForm.userId,
+      name: resetPwForm.name,
+      tel: resetPwForm.tel,
+      email: resetPwForm.email,
+    })
+    state.resetPwStep = 2
+    state.resetPwMsg = res?.resultMessage ?? '인증코드를 이메일로 발송했습니다.'
+  } catch (err) {
+    state.resetPwError = err.response?.data?.resultMessage ?? '인증코드 요청에 실패했습니다.'
+  } finally {
+    state.loading = false
+  }
+}
+
+const onVerificationCodeInput = () => {
+  resetPwForm.verificationCode = resetPwForm.verificationCode.replace(/\D/g, '').slice(0, 6)
+}
+
 const resetPw = async () => {
   state.resetPwMsg = ''
   state.resetPwError = ''
 
-  if (!resetPwForm.userId || !resetPwForm.name || !resetPwForm.tel || !resetPwForm.email || !resetPwForm.newPassword) {
-    state.resetPwError = '아이디, 이름, 연락처, 이메일, 새 비밀번호를 모두 입력해 주세요.'
+  if (!resetPwForm.verificationCode || resetPwForm.verificationCode.length !== 6) {
+    state.resetPwError = '인증코드 6자리를 입력해 주세요.'
+    return
+  }
+
+  if (!resetPwForm.newPassword) {
+    state.resetPwError = '새 비밀번호를 입력해 주세요.'
     return
   }
 
@@ -64,6 +101,7 @@ const resetPw = async () => {
     state.loading = true
     const res = await userService.resetPw({ ...resetPwForm })
     state.resetPwMsg = res?.resultMessage ?? '비밀번호가 재설정되었습니다.'
+    setTimeout(() => router.push('/customer/signin'), 800)
   } catch (err) {
     state.resetPwError = err.response?.data?.resultMessage ?? '비밀번호 재설정에 실패했습니다.'
   } finally {
@@ -101,18 +139,38 @@ const resetPw = async () => {
         <button class="btn_primary" :disabled="state.loading">아이디 찾기</button>
       </form>
 
-      <form v-else class="account_form" @submit.prevent="resetPw">
-        <input v-model="resetPwForm.userId" type="text" class="inp" placeholder="아이디" />
-        <input v-model="resetPwForm.name" type="text" class="inp" placeholder="이름" />
-        <input v-model="resetPwForm.tel" type="tel" class="inp" placeholder="010-1234-5678" />
-        <input v-model="resetPwForm.email" type="email" class="inp" placeholder="test@example.com" />
-        <input v-model="resetPwForm.newPassword" type="password" class="inp" placeholder="새 비밀번호" />
+      <form v-else class="account_form" @submit.prevent="state.resetPwStep === 1 ? requestResetPwCode() : resetPw()">
+  <template v-if="state.resetPwStep === 1">
+    <input v-model="resetPwForm.userId" type="text" class="inp" placeholder="아이디" />
+    <input v-model="resetPwForm.name" type="text" class="inp" placeholder="이름" />
+    <input v-model="resetPwForm.tel" type="tel" class="inp" placeholder="010-1234-5678" />
+    <input v-model="resetPwForm.email" type="email" class="inp" placeholder="test@example.com" />
+  </template>
 
-        <p v-if="state.resetPwError" class="error_msg">{{ state.resetPwError }}</p>
-        <p v-if="state.resetPwMsg" class="success_msg">{{ state.resetPwMsg }}</p>
+  <template v-else>
+    <input
+      v-model="resetPwForm.verificationCode"
+      type="text"
+      inputmode="numeric"
+      maxlength="6"
+      class="inp"
+      placeholder="인증코드 6자리"
+      @input="onVerificationCodeInput"
+    />
+    <input v-model="resetPwForm.newPassword" type="password" class="inp" placeholder="새 비밀번호" />
 
-        <button class="btn_primary" :disabled="state.loading">비밀번호 재설정</button>
-      </form>
+    <button type="button" class="text_btn" @click="state.resetPwStep = 1">
+      인증 정보 다시 입력
+    </button>
+  </template>
+
+  <p v-if="state.resetPwError" class="error_msg">{{ state.resetPwError }}</p>
+  <p v-if="state.resetPwMsg" class="success_msg">{{ state.resetPwMsg }}</p>
+
+  <button class="btn_primary" :disabled="state.loading">
+    {{ state.resetPwStep === 1 ? '인증코드 받기' : '비밀번호 재설정' }}
+  </button>
+</form>
 
       <div class="auth_link">
         <button type="button" class="text_btn" @click="router.back()">로그인으로 돌아가기</button>

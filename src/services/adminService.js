@@ -321,6 +321,11 @@ class AdminService {
         return res.data
     }
 
+    async getOwnerProfile(userNo) {
+        const res = await axios.get(`${this.#url}/user/${userNo}/owner-profile`)
+        return res.data
+    }
+
 
 
  }

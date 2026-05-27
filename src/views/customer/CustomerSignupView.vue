@@ -69,9 +69,6 @@ const closeTerms = () => {
   showTermsModal.value = false
 }
 
-
-
-
 const onAddressSelect = ({ address, lat, lng }) => {
   state.form.address = address
   state.form.lat = lat
@@ -104,10 +101,25 @@ const checkEmail = async () => {
     await userService.checkEmail(state.form.email)
     state.emailAvailable = true
     state.emailMsg = '사용 가능한 이메일입니다.'
-  } catch {
+  } catch (err) {
     state.emailAvailable = false
-    state.emailMsg = '이미 사용 중인 이메일입니다.'
+    state.emailMsg = err.response?.status === 409
+      ? '이미 사용 중인 이메일입니다.' : err.response?.data?.resultMessage ?? '이메일 중복확인에 실패했습니다.'
   }
+}
+
+const onlyDigits = (value) => String(value ?? '').replace(/\D/g, '')
+
+const formatTel = (value) => {
+  const digits = onlyDigits(value).slice(0, 11)
+
+  if (digits.length <= 3) return digits
+  if (digits.length <= 7) return `${digits.slice(0, 3)}-${digits.slice(3)}`
+  return `${digits.slice(0, 3)}-${digits.slice(3, 7)}-${digits.slice(7)}`
+}
+
+const onTelInput = () => {
+  state.form.tel = formatTel(state.form.tel)
 }
 
 const signup = async () => {
@@ -194,7 +206,8 @@ const signup = async () => {
 
       <div class="field">
         <label class="label">연락처 <span class="required">*</span></label>
-        <input v-model="state.form.tel" type="tel" class="inp" placeholder="010-0000-0000" />
+        <input v-model="state.form.tel" type="tel" inputmode="numeric" maxlength="13"
+        class="inp" placeholder="010-0000-0000"   @input="onTelInput" />
       </div>
 
       <div class="field">

@@ -13,7 +13,7 @@ const today = new Date()
 const formatDate = (d) =>
   `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`
 
-  const searchForm = ref({
+const searchForm = ref({
   userId: '',
   name: '',
   startDate: '',
@@ -129,22 +129,29 @@ const applySuspend = async () => {
 }
 
 const approvePendingUser = async () => {
+  if (!selectedPendingUser.value) return
   if (!confirm('승인하시겠습니까?')) return
   try {
     await adminService.updateApproval(selectedPendingUser.value.userNo, 'ACTIVE')
     pendingList.value = pendingList.value.filter(u => u.userNo !== selectedPendingUser.value.userNo)
     closePendingDetail()
-    handleTabChange('all')
+    await fetchPendingList()
+    await fetchUserList()
   } catch { alert('처리 실패') }
 }
 
 const rejectPendingUser = async () => {
+  if (!selectedPendingUser.value) return
   if (!selectedRejectReason.value) { alert('반려 사유를 선택해주세요.'); return }
   if (!confirm('반려하시겠습니까?')) return
   try {
     await adminService.updateApproval(selectedPendingUser.value.userNo, 'REJECTED', selectedRejectReason.value)
     pendingList.value = pendingList.value.filter(u => u.userNo !== selectedPendingUser.value.userNo)
+    rejectOpen.value = false
+    selectedRejectReason.value = ''
     closePendingDetail()
+    await fetchPendingList()
+    await fetchUserList()
   } catch { alert('처리 실패') }
 }
 
@@ -181,6 +188,8 @@ const addressLoading = ref(false)
 const openDetail = async (user) => {
   selectedUser.value = { ...user, address: null }
   suspendOpen.value = false
+  rejectOpen.value = false
+  selectedRejectReason.value = ''
   selectedSuspend.value = user.status === 'SUSPENDED' ? '계정 정지(30일)'
                         : user.status === 'PERMANENT' ? '계정 영구 정지'
                         : '정상'
@@ -194,6 +203,8 @@ const openDetail = async (user) => {
     } else if (user.role === 'OWNER') {
       const res = await adminService.getStoreLocation(user.userNo)
       selectedUser.value = { ...selectedUser.value, address: res ?? '-' }
+    } else {
+      selectedUser.value = { ...selectedUser.value, address: '-' }
     }
   } catch {
     selectedUser.value = { ...selectedUser.value, address: '-' }
@@ -220,18 +231,35 @@ const ownerRejectReasons = ['서류 정보가 불일치 합니다.', '서류 판
 const riderRejectReasons = ['서류 정보가 불일치 합니다.', '서류 판독이 불가 합니다.', '미제출 서류를 확인해 주세요.', '이미 만료된 보험입니다.']
 const rejectReasons = (role) => role === 'OWNER' ? ownerRejectReasons : riderRejectReasons
 
-const openPendingDetail = (user) => {
+const openPendingDetail = async (user) => {
   selectedPendingUser.value = user
   rejectOpen.value = false
   selectedRejectReason.value = ''
   showPendingDetailModal.value = true
+
+  if (user.role === 'OWNER') {
+    try {
+      const res = await adminService.getOwnerProfile(user.userNo)
+      selectedPendingUser.value = {
+        ...selectedPendingUser.value,
+        ...(res.resultData ?? {}),
+      }
+    } catch {
+      // 상세 추가정보 조회 실패 시 기존 정보만 표시
+    }
+  }
 }
 const closePendingDetail = () => { showPendingDetailModal.value = false; selectedPendingUser.value = null }
 
-const openFile = (filename) => {
-  window.open(`/files/${filename}`, '_blank')
-}
+const openFile = (url) => {
+  if (!url) return
 
+  const target = url.startsWith('http')
+    ? url
+    : `${window.location.origin}${url.startsWith('/') ? url : `/files/${url}`}`
+
+  window.open(target, '_blank')
+}
 
 onMounted(fetchUserList)
 </script>
@@ -391,6 +419,7 @@ onMounted(fetchUserList)
             <span class="info_value" v-else style="color:#aaa;">불러오는 중...</span>
           </div>
           <div class="info_row"><span class="info_label">전화 번호</span><span class="info_value">{{ selectedUser.tel }}</span></div>
+
           <div class="info_row"><span class="info_label">가입일</span><span class="info_value">{{ formatCreatedAt(selectedUser.createdAt) }}</span></div>
           <div class="info_row" v-if="selectedUser.role === 'CUSTOMER'">
             <span class="info_label">친환경 점수</span>
@@ -417,10 +446,15 @@ onMounted(fetchUserList)
             </div>
           </div>
         </div>
-        <div class="modal_btns">
-          
-          <button v-if="selectedUser.role === 'CUSTOMER'" class="modal_confirm" @click="openConfirmModal">적용</button>
-        </div>
+              <div class="modal_btns">
+        <button
+          v-if="selectedUser.role === 'CUSTOMER'"
+          class="modal_confirm"
+          @click="openConfirmModal"
+        >
+          적용
+        </button>
+            </div>
       </div>
     </div>
 
@@ -457,17 +491,34 @@ onMounted(fetchUserList)
 
           <!-- 사장 전용 -->
           <template v-if="selectedPendingUser.role === 'OWNER'">
-            <div class="info_row"><span class="info_label">가게 주소</span><span class="info_value">{{ selectedPendingUser.storeAddress }}</span></div>
-            <div class="info_row"><span class="info_label">사업자 등록 번호</span><span class="info_value">{{ selectedPendingUser.businessNo }}</span></div>
+            <div class="info_row">
+              <span class="info_label">가게 주소</span>
+              <span class="info_value">{{ selectedPendingUser.storeAddress ?? '-' }}</span>
+            </div>
+            <div class="info_row">
+              <span class="info_label">사업자 등록 번호</span>
+              <span class="info_value">{{ selectedPendingUser.businessNumber ?? '-' }}</span>
+            </div>
             <div class="info_row">
               <span class="info_label">영업 신고증</span>
-              <span class="file_link" @click="openFile(selectedPendingUser.businessLicense)">{{ selectedPendingUser.businessLicense }}</span>
+              <span v-if="selectedPendingUser.businessLicenseUrl" class="file_link" @click="openFile(selectedPendingUser.businessLicenseUrl)">
+                {{ selectedPendingUser.businessLicenseUrl }}
+              </span>
+              <span v-else class="info_value">-</span>
             </div>
             <div class="info_row">
               <span class="info_label">통신판매업 신고증</span>
-              <span class="file_link" @click="openFile(selectedPendingUser.onlineLicense)">{{ selectedPendingUser.onlineLicense }}</span>
+              <span v-if="selectedPendingUser.mailOrderLicenseUrl" class="file_link" @click="openFile(selectedPendingUser.mailOrderLicenseUrl)">
+                {{ selectedPendingUser.mailOrderLicenseUrl }}
+              </span>
+              <span v-else class="info_value">-</span>
             </div>
-            <div class="info_row"><span class="info_label">정산 계좌 정보</span><span class="info_value">{{ selectedPendingUser.accountInfo }}</span></div>
+            <div class="info_row">
+              <span class="info_label">정산 계좌 정보</span>
+              <span class="info_value">
+                {{ `${selectedPendingUser.bankName ?? ''} ${selectedPendingUser.accountNumber ?? ''} ${selectedPendingUser.accountHolder ?? ''}`.trim() || '-' }}
+              </span>
+            </div>
           </template>
 
           <!-- 라이더 전용 -->

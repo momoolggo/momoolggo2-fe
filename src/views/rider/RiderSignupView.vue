@@ -118,10 +118,11 @@ const checkEmail = async () => {
     await userService.checkEmail(state.form.email)
     state.emailAvailable = true
     state.emailMsg = '사용 가능한 이메일입니다.'
-  } catch {
+  } catch (err) {
     state.emailAvailable = false
-    state.emailMsg = '이미 사용 중인 이메일입니다.'
-  }
+    state.emailMsg = err.response?.status === 409
+    ? '이미 사용 중인 이메일입니다.' : err.response?.data?.resultMessage ?? '이메일 중복확인에 실패했습니다.'
+    }
 }
 
 const signup = async () => {

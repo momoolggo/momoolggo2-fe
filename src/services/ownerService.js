@@ -159,6 +159,15 @@ class OwnerService {
         return res.data;
     }
 
+    // 회원가입 서류 이미지 업로드
+    async uploadSignupDoc(formData, docType) {
+        const res = await axios.post(`${this.#url}/signup-doc/upload`, formData, {
+            params: { docType },
+            headers: { 'Content-Type': 'multipart/form-data' },
+            })
+            return res.data
+        }
+
     // 가게 이미지 업로드
     async uploadStoreImage(formData) {
         const res = await axios.post(`${this.#url}/store/image`, formData, {

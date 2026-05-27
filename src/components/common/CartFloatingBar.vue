@@ -12,7 +12,7 @@ const userStore = useUserStore()
 const cartStore = useCartStore()
 
 // 표시 제외 경로 — 장바구니/주문/결제 자체 페이지에서는 floating 불필요
-const hiddenPaths = ['/cart', '/order', '/payment/success', '/payment/fail']
+const hiddenPaths = ['/cart', '/order', '/payment/success', '/payment/fail', '/mypage/pet']
 
 const visible = computed(() =>
   userStore.state.isSignedIn
@@ -26,10 +26,10 @@ const goCart = () => router.push('/cart')
 
 <template>
   <transition name="slide-up">
-    <button v-if="visible" class="floating-cart-bar" @click="goCart">
-      <span class="cart-icon">🛒</span>
-      <span class="text">장바구니 {{ cartStore.cartCount }}건 · 주문하러 가기</span>
-      <span class="arrow">›</span>
+    <button v-if="visible" class="floating-cart-bar" @click="goCart"
+    :aria-label="`장바구니 ${cartStore.cartCount}건`">
+      <i class="bi bi-cart4"></i>
+      <span class="cart-count">{{ cartStore.cartCount }}</span>
     </button>
   </transition>
 </template>
@@ -40,29 +40,45 @@ const goCart = () => router.push('/cart')
   position: fixed;
   bottom: calc(80px + env(safe-area-inset-bottom));
   left: 50%;
-  transform: translateX(-50%);
+  transform: translateX(-50%) translateX(-190px);
   z-index: 998;
-  width: calc(100% - 32px);
-  max-width: 448px;
-  padding: 18px;
-  background: #4A90E2;
+  width:70px;
+  height: 48px;
+  padding: 0;
+  background: #A40C0B;
   color: #fff;
   border: none;
-  border-radius: 12px;
-  font-size: 1.1rem;
-  font-weight: 700;
+  border-radius: 28px;
+  font-size: 1rem;
+  font-weight: 800;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
+  gap: 4px;
   box-shadow: 0 6px 20px rgba(74, 144, 226, 0.35);
   transition: transform 0.15s;
 }
-.floating-cart-bar:active { transform: translateX(-50%) scale(0.98); }
+
+.floating-cart-bar:active {
+  transform: translateX(-50%) translateX(-190px) scale(0.95);
+}
+
+.cart-icon {
+  font-size: 18px;
+}
+
+.cart-count {
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: #fff;
+  color: #A40C0B;
+  font-size: 10px;
+  line-height: 16px;
+}
 .cart-icon { font-size: 18px; }
-.text { text-align: center; }
-.arrow { font-size: 22px; opacity: 0.85; font-weight: 400; }
 
 .slide-up-enter-active,
 .slide-up-leave-active {
@@ -75,5 +91,22 @@ const goCart = () => router.push('/cart')
 .slide-up-leave-to {
   opacity: 0;
   transform: translateX(-50%) translateY(20px);
+}
+
+@media (max-width: 480px) {
+  .floating-cart-bar {
+    left: 12px;
+    right: auto;
+    transform: none;
+  }
+
+  .floating-cart-bar:active {
+    transform: scale(0.95);
+  }
+
+  .slide-up-enter-from,
+  .slide-up-leave-to {
+    transform: translateY(20px);
+  }
 }
 </style>

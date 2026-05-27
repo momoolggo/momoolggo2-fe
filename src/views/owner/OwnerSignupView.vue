@@ -2,6 +2,7 @@
 import { computed, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import userService from '@/services/userService'
+import ownerService from '@/services/ownerService'
 import NaverMap from '@/components/common/NaverMap.vue'
 import TermsModal from '@/components/common/TermsModal.vue'
 import { showAlert } from '@/composables/useAlert'
@@ -23,6 +24,12 @@ const state = reactive({
     birth: '',
     tel: '',
     role: 'OWNER',
+    businessNumber: '',
+    businessLicenseUrl: '',
+    mailOrderLicenseUrl: '',
+    bankName: '',
+    accountNumber: '',
+    accountHolder: '',
   },
   showPw: false,
   showPwConfirm: false,
@@ -55,6 +62,15 @@ const syncAll = () => {
   state.terms.all = state.terms.service && state.terms.privacy && state.terms.marketing
 }
 
+// 은행명
+const bankOptions = [
+  '국민은행',
+  '신한은행',
+  '하나은행',
+  '우리은행',
+  '농협은행',
+]
+
 // 필수약관동의했는지
 const requiredAgreed = computed(() => state.terms.service && state.terms.privacy)
 
@@ -68,8 +84,6 @@ const openTerms = (type) => {
 const closeTerms = () => {
   showTermsModal.value = false
 }
-
-
 
 const onAddressSelect = ({ address, lat, lng }) => {
   state.form.address = address
@@ -103,10 +117,65 @@ const checkEmail = async () => {
     await userService.checkEmail(state.form.email)
     state.emailAvailable = true
     state.emailMsg = '사용 가능한 이메일입니다.'
-  } catch {
+  } catch (err) {
     state.emailAvailable = false
-    state.emailMsg = '이미 사용 중인 이메일입니다.'
+    state.emailMsg = err.response?.status === 409
+    ? '이미 사용 중인 이메일입니다.' : err.response?.data?.resultMessage ?? '이메일 중복확인에 실패했습니다.'
+    }
+}
+
+const uploadOwnerDocument = async (e, targetKey, docType) => {
+  const file = e.target.files?.[0]
+  if (!file) return
+
+  try {
+    const formData = new FormData()
+    formData.append('file', file)
+    const res = await ownerService.uploadSignupDoc(formData, docType)
+    state.form[targetKey] = res.resultData
+  } catch {
+    state.form[targetKey] = ''
+    state.errorMsg = '서류 업로드에 실패했습니다.'
   }
+}
+
+const onlyDigits = (value) => String(value ?? '').replace(/\D/g, '')
+
+const formatTel = (value) => {
+  const digits = onlyDigits(value).slice(0, 11)
+
+  if (digits.length <= 3) return digits
+  if (digits.length <= 7) return `${digits.slice(0, 3)}-${digits.slice(3)}`
+  return `${digits.slice(0, 3)}-${digits.slice(3, 7)}-${digits.slice(7)}`
+}
+
+const formatBusinessNumber = (value) => {
+  const digits = onlyDigits(value).slice(0, 10)
+
+  if (digits.length <= 3) return digits
+  if (digits.length <= 5) return `${digits.slice(0, 3)}-${digits.slice(3)}`
+  return `${digits.slice(0, 3)}-${digits.slice(3, 5)}-${digits.slice(5)}`
+}
+
+const formatAccountNumber = (value) => {
+  const digits = onlyDigits(value).slice(0, 14)
+
+  if (digits.length <= 3) return digits
+  if (digits.length <= 7) return `${digits.slice(0, 3)}-${digits.slice(3)}`
+  if (digits.length <= 11) return `${digits.slice(0, 3)}-${digits.slice(3, 7)}-${digits.slice(7)}`
+  return `${digits.slice(0, 3)}-${digits.slice(3, 7)}-${digits.slice(7, 11)}-${digits.slice(11)}`
+}
+
+const onTelInput = () => {
+  state.form.tel = formatTel(state.form.tel)
+}
+
+const onBusinessNumberInput = () => {
+  state.form.businessNumber = formatBusinessNumber(state.form.businessNumber)
+}
+
+const onAccountNumberInput = () => {
+  state.form.accountNumber = formatAccountNumber(state.form.accountNumber)
 }
 
 const signup = async () => {
@@ -121,11 +190,37 @@ const signup = async () => {
   }
   if (!state.form.address)     { state.errorMsg = '주소를 입력해 주세요.';         return }
   if (!state.form.tel)         { state.errorMsg = '연락처를 입력해 주세요.';       return }
+  if (!state.form.businessNumber)      { state.errorMsg = '사업자 등록 번호를 입력해 주세요.'; return }
+  if (!state.form.businessLicenseUrl)  { state.errorMsg = '영업 신고증을 업로드해 주세요.'; return }
+  if (!state.form.mailOrderLicenseUrl) { state.errorMsg = '통신판매업 신고증을 업로드해 주세요.'; return }
+  if (!state.form.bankName)            { state.errorMsg = '정산 은행을 선택해 주세요.'; return }
+  if (!state.form.accountNumber)       { state.errorMsg = '정산 계좌번호를 입력해 주세요.'; return }
+  if (!state.form.accountHolder)       { state.errorMsg = '예금주를 입력해 주세요.'; return }
   if (!requiredAgreed.value)   { state.errorMsg = '필수 약관에 동의해 주세요.';    return }
 
   try {
     state.errorMsg = ''
-    await userService.signup({ ...state.form, agreedToTerms: requiredAgreed.value })
+    await userService.signup({
+    name: state.form.name,
+    userId: state.form.userId,
+    userPw: state.form.userPw,
+    gender: state.form.gender,
+    birth: state.form.birth,
+    tel: state.form.tel,
+    email: state.form.email,
+    role: 'OWNER',
+    address: state.form.address,
+    addressDetail: state.form.addressDetail,
+    lat: state.form.lat,
+    lng: state.form.lng,
+    agreedToTerms: requiredAgreed.value,
+    businessNumber: state.form.businessNumber,
+    businessLicenseUrl: state.form.businessLicenseUrl,
+    mailOrderLicenseUrl: state.form.mailOrderLicenseUrl,
+    bankName: state.form.bankName,
+    accountNumber: state.form.accountNumber,
+    accountHolder: state.form.accountHolder,
+  })
     await showAlert('회원가입이 완료되었습니다!\n관리자 승인 후 로그인이 가능합니다.', { title: '가입 완료', type: 'success' })
     router.push('/owner/signin')
   } catch (err) {
@@ -194,7 +289,47 @@ const signup = async () => {
 
       <div class="field">
         <label class="label">연락처 <span class="required">*</span></label>
-        <input v-model="state.form.tel" type="tel" class="inp" placeholder="010-0000-0000" />
+        <input v-model="state.form.tel" type="tel" inputmode="numeric" maxlength="13"
+        class="inp" placeholder="010-0000-0000" @input="onTelInput"/>
+      </div>
+
+      <div class="field">
+        <label class="label">사업자 등록 번호 <span class="required">*</span></label>
+        <input v-model="state.form.businessNumber" type="text" inputmode="numeric" maxlength="12"
+        class="inp" placeholder="사업자 등록 번호를 입력하세요" @input="onBusinessNumberInput"/>
+      </div>
+
+      <div class="field">
+        <label class="label">영업 신고증 <span class="required">*</span></label>
+        <input type="file" class="inp" accept="image/*,.pdf"@change="(e) => uploadOwnerDocument(e, 'businessLicenseUrl', 'BUSINESS_LICENSE')" />
+        <p v-if="state.form.businessLicenseUrl" class="field_msg ok">{{ state.form.businessLicenseUrl }}</p>
+      </div>
+
+      <div class="field">
+        <label class="label">통신판매업 신고증 <span class="required">*</span></label>
+        <input type="file" class="inp" accept="image/*,.pdf"  @change="(e) => uploadOwnerDocument(e, 'mailOrderLicenseUrl', 'MAIL_ORDER_LICENSE')" />
+        <p v-if="state.form.mailOrderLicenseUrl" class="field_msg ok">{{ state.form.mailOrderLicenseUrl }}</p>
+      </div>
+
+      <div class="field">
+        <label class="label">정산 은행 <span class="required">*</span></label>
+        <select v-model="state.form.bankName" class="inp">
+          <option value="" disabled>정산 은행을 선택하세요</option>
+          <option v-for="bank in bankOptions" :key="bank" :value="bank">
+            {{ bank }}
+          </option>
+        </select> 
+      </div>
+
+      <div class="field">
+        <label class="label">정산 계좌번호 <span class="required">*</span></label>
+        <input v-model="state.form.accountNumber" type="text" inputmode="numeric" maxlength="17"
+        class="inp" placeholder="계좌번호를 입력하세요" @input="onAccountNumberInput" />
+      </div>
+
+      <div class="field">
+        <label class="label">예금주 <span class="required">*</span></label>
+        <input v-model="state.form.accountHolder" type="text" class="inp" placeholder="예: 홍길동" />
       </div>
 
       <div class="field">

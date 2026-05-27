@@ -217,7 +217,6 @@ const isOwner = computed(() => userStore.state.role === 'OWNER')
             </button>
           </template>
           <template v-else>
-            <span class="nav_username">{{ userInfo?.name ?? '' }}님</span>
             <button class="nav_text_btn" @click="emit('signout')">로그아웃</button>
           </template>
 
@@ -360,7 +359,7 @@ const isOwner = computed(() => userStore.state.role === 'OWNER')
 .header {
   position: relative;
   top: 0;
-  z-index: 100;
+  z-index: 10000;
   width: 100%;
   max-width: 480px;
   height: 180px;
@@ -369,8 +368,8 @@ const isOwner = computed(() => userStore.state.role === 'OWNER')
   display: flex;
   justify-content: center;
   margin: 0 auto;
+  overflow: visible;
 }
-
 .header_inner {
   width: 100%;
   max-width: 480px;
@@ -379,6 +378,7 @@ const isOwner = computed(() => userStore.state.role === 'OWNER')
   display: flex;
   flex-direction: column;
   gap: 6px;
+  overflow: visible;
 }
 
 .row-top {
@@ -403,23 +403,28 @@ const isOwner = computed(() => userStore.state.role === 'OWNER')
 
 .top-actions {
   position: absolute;
-  right: -6px;
+  right: 8px;
+  top: 20px;
   display: flex;
   align-items: center;
-  gap: 0;
+  gap: 2px;
 }
 
 .nav_icon_btn {
+  position: relative;
+  width: 32px;
+  height: 32px;
   background: none;
   border: none;
-  font-size: 20px;
+  font-size: 21px;
   color: #333;
-  padding: 4px 3px;
+  padding: 0;
   cursor: pointer;
   display: flex;
   align-items: center;
-  margin-top: 11px;
-  margin-right: 3px;
+  justify-content: center;
+  margin-top: 0;
+  margin-right: 0;
 }
 
 .nav_icon_btn:active { color: #d63031; }
@@ -430,11 +435,12 @@ const isOwner = computed(() => userStore.state.role === 'OWNER')
   font-size: 12px;
   font-weight: 700;
   color: #4a4646;
-  padding: 4px 3px;
+  padding: 4px 5px;
   cursor: pointer;
   display: flex;
   align-items: center;
-  margin-top: 15px;
+  margin-top: 0;
+  white-space: nowrap;
 }
 .nav_text_btn:active { color: #d63031; }
 
@@ -527,45 +533,29 @@ input[type="search"]::-webkit-search-results-decoration { display: none; }
   position: relative;
 }
 
-.cart_badge {
-  position: absolute;
-  top: 0;
-  right: 0;
-  min-width: 18px;
-  height: 18px;
-  padding: 0 5px;
-  background: #d63031;
-  color: #fff;
-  border-radius: 9px;
-  font-size: 11px;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-sizing: border-box;
-  line-height: 1;
-}
 
 .notification_wrap {
   position: relative;
+  z-index: 10001;
 }
 
 .notification_btn {
   position: relative;
 }
 
+.cart_badge,
 .notification_badge {
   position: absolute;
-  top: 0;
-  right: 0;
-  min-width: 18px;
-  height: 18px;
-  padding: 0 5px;
+  top: -3px;
+  right: -2px;
+  min-width: 17px;
+  height: 17px;
+  padding: 0 4px;
   background: #d63031;
   color: #fff;
-  border-radius: 9px;
-  font-size: 11px;
-  font-weight: 700;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 800;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -584,7 +574,7 @@ input[type="search"]::-webkit-search-results-decoration { display: none; }
   border: 1px solid #eee1d3;
   border-radius: 8px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.14);
-  z-index: 300;
+  z-index: 10002;
 }
 
 .notification_header {

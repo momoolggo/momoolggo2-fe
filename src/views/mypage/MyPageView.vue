@@ -2,9 +2,12 @@
 import { useRouter, useRoute } from 'vue-router'
 import { computed, onMounted, reactive } from 'vue'
 import userService from '@/services/userService'
+import { useUserStore } from '@/stores/userStore'
 
 const router = useRouter()
 const route = useRoute()
+const userStore = useUserStore()
+const userName = computed(() => userStore.state.name || '고객')
 
 const isMainPage = computed(() => route.name === 'MyPage')
 
@@ -80,9 +83,10 @@ onMounted(loadSummary)
       <section class="summary_card">
         <div class="summary_top">
           <div>
-            <p class="summary_label">내 친환경 등급</p>
+            <p class="summary_label">
+              <strong>{{ userName }}</strong>님의 친환경 등급</p>
             <h3 class="summary_name">
-              <strong>{{ greenGrade.gradeName || '씨앗' }}</strong> 등급
+              <strong>{{ greenGrade.gradeName || '씨앗' }}</strong>
             </h3>
           </div>
           <div class="green_score">
@@ -156,6 +160,13 @@ onMounted(loadSummary)
   font-weight: 700;
   color: #2e7d32;
 }
+
+.summary_label strong {
+  font-size: 23px;
+  font-weight: 900;
+  color: #000000;
+}
+
 .summary_name {
   margin: 0;
   font-size: 18px;
@@ -163,6 +174,15 @@ onMounted(loadSummary)
   color: var(--black);
   line-height: 1.35;
 }
+
+.summary_name .user-name {
+  display: block;
+  margin-bottom: 2px;
+  font-size: 22px;
+  font-weight: 900;
+  color: #1b5e20;
+}
+
 .summary_name strong {
   color: #2e7d32;
 }

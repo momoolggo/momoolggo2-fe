@@ -556,7 +556,9 @@ onUnmounted(() => {
   </div>
 
   <!-- 2026-05-25 9건 트랙 #8 — 펫 챗봇 floating 진입 버튼 (펫 페이지 어디서든 노출) -->
-  <button class="pet-chat-fab" @click="goPetChat" aria-label="펫과 대화하기">
+  <button 
+    v-if="!showPetSelect"
+    class="pet-chat-fab" @click="goPetChat" aria-label="펫과 대화하기">
     <span class="fab-icon">💬</span>
     <span class="fab-text">펫과 대화</span>
   </button>

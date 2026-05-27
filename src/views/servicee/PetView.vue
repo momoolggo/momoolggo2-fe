@@ -19,7 +19,11 @@ const speciesEmojiMap = {
   BEAR: '🐻',
   FOX: '🦊',
   PANDA: '🐼',
-  KOALA: '🐨',
+  FROG: '🐸',
+}
+
+const goWhatKind = () => {
+  router.push('/whatkind')
 }
 
 const goPetChat = () => {
@@ -924,7 +928,7 @@ onUnmounted(() => {
   <div class="bottom-nav">
     <button v-for="nav in [
         { id:'pet',    icon:'🐾', label:'내 펫'  },
-        { id:'order',  icon:'🍱', label:'주문'   },
+        { id:'whatkind',  icon:'🍱', label:'뭐먹지'   },
         { id:'rank',   icon:'🏆', label:'랭킹'   },
         { id:'shop',   icon:'🛍️', label:'상점'  },
         { id:'reward', icon:'🎁', label:'보상'   },
@@ -932,7 +936,7 @@ onUnmounted(() => {
       :key="nav.id"
       class="bnav-item"
       :class="{ active: activeView === nav.id }"
-      @click="nav.id==='order' ? showToast('주문 화면으로 이동!') : activeView = nav.id"
+      @click="nav.id==='whatkind' ? goWhatKind() : activeView = nav.id"
     >
       <span class="bnav-icon">{{ nav.icon }}</span>
       <span class="bnav-label">{{ nav.label }}</span>

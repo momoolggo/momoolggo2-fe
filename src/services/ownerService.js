@@ -221,8 +221,8 @@ class OwnerService {
     
 
     //정산 상세 내역
-    async getSettlementOrders(settlementId) {
-        const res = await axios.get(`http://localhost:8083/api/admin/settlement/${settlementId}/orders`)
+    async getSettlementOrders(settlementId, storeId) {
+        const res = await axios.get(`${this.#url}/settlement/${settlementId}/orders`, { params: { storeId } })
         return res.data
     }
 

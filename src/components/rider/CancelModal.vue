@@ -1,6 +1,7 @@
 <script setup>
 import { ref } from 'vue'
 import deliveryService from '@/services/deliveryService'
+import { showAlert } from '@/composables/useAlert'
 
 const props = defineProps({
   deliveryNo: { type: String, required: true },
@@ -24,7 +25,7 @@ const submit = async () => {
     await deliveryService.cancel(props.deliveryNo, { reason: reason.value })
     emit('cancelled')
   } catch (err) {
-    alert(err.response?.data?.resultMessage ?? '반려 처리에 실패했습니다.')
+    await showAlert(err.response?.data?.resultMessage ?? '반려 처리에 실패했습니다.', { title: '반려 실패', type: 'error' })
   } finally {
     submitting.value = false
   }

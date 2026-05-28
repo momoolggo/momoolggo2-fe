@@ -5,6 +5,7 @@ import deliveryService from '@/services/deliveryService'
 import CompleteModal from '@/components/rider/CompleteModal.vue'
 import CancelModal from '@/components/rider/CancelModal.vue'
 import RiderDeliveryMap from '@/components/rider/RiderDeliveryMap.vue'
+import { showAlert } from '@/composables/useAlert'
 
 const deliveryStore = useDeliveryStore()
 
@@ -60,7 +61,7 @@ const confirmAction = async () => {
     promptOpen.value = false
     await deliveryStore.loadInProgress()
   } catch (err) {
-    alert(err.response?.data?.resultMessage ?? '처리에 실패했습니다.')
+    await showAlert(err.response?.data?.resultMessage ?? '처리에 실패했습니다.', { title: '처리 실패', type: 'error' })
   } finally {
     submitting.value = false
   }
@@ -92,7 +93,7 @@ const statusLabel = (s) => ({
 // 2026-05-25 9건 트랙 #9 — 라이더 네비게이션 (네이버 지도 길찾기).
 // 단계별 목적지 분기: ASSIGNED/ARRIVED/AWAITING = 가게(픽업), PICKED_UP/DELIVERING = 배달지.
 // 모바일: nmap:// URI (네이버 지도 앱 자동 실행). 데스크탑: 네이버 신지도 웹.
-const navigateToTarget = () => {
+const navigateToTarget = async () => {
   if (!current.value) return
   const status = current.value.status
   const goingToStore = ['ASSIGNED', 'ARRIVED_AT_STORE', 'AWAITING_PICKUP'].includes(status)
@@ -100,7 +101,7 @@ const navigateToTarget = () => {
   const lng = goingToStore ? current.value.pickupLng : current.value.deliveryLng
   const name = goingToStore ? '가게(픽업지)' : '배달지'
   if (!lat || !lng) {
-    alert('목적지 좌표가 없습니다.')
+    await showAlert('목적지 좌표가 없습니다.', { title: '좌표 없음', type: 'warning' })
     return
   }
   // 2026-05-25 정정 — 네이버 지도 앱 "네비게이션 즉시 시작" URI (nmap://navigation).

@@ -114,7 +114,7 @@ const openDetail = async (item) => {
   settlementTotalSales.value = 0
   showDetailModal.value = true
   try {
-    const res = await ownerService.getSettlementOrders(item.settlementId)
+    const res = await ownerService.getSettlementOrders(item.settlementId, storeInfo.myStoreId)
     const data = res?.resultData
     settlementOrders.value = data?.dailySales ?? []
     settlementTotalSales.value = data?.totalSales ?? 0

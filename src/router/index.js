@@ -53,6 +53,7 @@ import AdminCsView from '@/views/admin/AdminCsView.vue'
 import AdminDeliveryView from '@/views/admin/AdminDeliveryView.vue'
 import AdminUserView from '@/views/admin/AdminUserView.vue'
 import AdminStoreView from '@/views/admin/AdminStoreView.vue'
+import AdminRiderView from '@/views/admin/AdminRiderView.vue'
 
 const routes = [
   { path: '/', name: 'Landing', component: LandingView },
@@ -83,6 +84,7 @@ const routes = [
   { path: '/admin/delivery', name: 'AdminDelivery', component: AdminDeliveryView, meta: { requiresAuth: true, role: 'ADMIN' } },
   { path: '/admin/user', name: 'AdminUser', component: AdminUserView, meta: { requiresAuth: true, role: 'ADMIN' } },
   { path: '/admin/store', name: 'AdminStore', component: AdminStoreView, meta: { requiresAuth: true, role: 'ADMIN' } },
+  { path: '/admin/rider', name: 'AdminRider', component: AdminRiderView, meta: { requiresAuth: true, role: 'ADMIN' } },
 
 
     // /mypage는 메뉴 페이지

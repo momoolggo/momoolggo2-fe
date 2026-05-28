@@ -1,6 +1,6 @@
 <script setup>
 import { useRouter, useRoute } from 'vue-router'
-import { LayoutDashboard, Users, Store, Star, Wallet, Bike, LifeBuoy } from 'lucide-vue-next'
+import { LayoutDashboard, Users, Store, Star, Wallet, Bike, LifeBuoy, UserCheck } from 'lucide-vue-next'
 
 const router = useRouter()
 const route = useRoute()
@@ -12,6 +12,7 @@ const menuItems = [
   { name: '리뷰 관리', path: '/admin/blind', icon: Star },
   { name: '정산 관리', path: '/admin/settlement', icon: Wallet },
   { name: '배달 관리', path: '/admin/delivery', icon: Bike },
+  { name: '라이더 승인', path: '/admin/rider', icon: UserCheck },
   { name: '고객 지원', path: '/admin/cs', icon: LifeBuoy },
 ]
 

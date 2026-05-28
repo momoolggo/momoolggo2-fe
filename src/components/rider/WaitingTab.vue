@@ -3,6 +3,7 @@ import { useDeliveryStore } from '@/stores/deliveryStore'
 import deliveryService from '@/services/deliveryService'
 import RiderDeliveryMap from '@/components/rider/RiderDeliveryMap.vue'
 import { ref, onMounted, onBeforeUnmount } from 'vue'
+import { showAlert } from '@/composables/useAlert'
 
 const deliveryStore = useDeliveryStore()
 const selected = ref(null) // 선택된 배달 (상세 모달)
@@ -18,7 +19,7 @@ const accept = async (deliveryNo) => {
     await deliveryStore.loadInProgress()
     deliveryStore.setTab('inprogress')
   } catch (err) {
-    alert(err.response?.data?.resultMessage ?? '배차 수락에 실패했습니다.')
+    await showAlert(err.response?.data?.resultMessage ?? '배차 수락에 실패했습니다.', { title: '배차 실패', type: 'error' })
   }
 }
 

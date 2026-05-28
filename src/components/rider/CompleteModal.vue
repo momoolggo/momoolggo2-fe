@@ -2,6 +2,7 @@
 import { ref, onUnmounted } from 'vue'
 import deliveryService from '@/services/deliveryService'
 import RiderDeliveryMap from '@/components/rider/RiderDeliveryMap.vue'
+import { showAlert } from '@/composables/useAlert'
 
 const props = defineProps({
   deliveryNo: { type: String, required: true },
@@ -36,7 +37,7 @@ const onFileSelect = async (e) => {
   const file = e.target.files?.[0]
   if (!file) return
   if (!file.type.startsWith('image/')) {
-    alert('이미지 파일만 업로드 가능합니다.')
+    await showAlert('이미지 파일만 업로드 가능합니다.', { title: '파일 형식 오류', type: 'warning' })
     return
   }
   // 미리보기 즉시 표시 (업로드 전이라도)
@@ -45,7 +46,7 @@ const onFileSelect = async (e) => {
   try {
     photoUrl.value = await deliveryService.uploadDeliveryPhoto(file)
   } catch (err) {
-    alert(err.response?.data?.resultMessage ?? '사진 업로드에 실패했습니다.')
+    await showAlert(err.response?.data?.resultMessage ?? '사진 업로드에 실패했습니다.', { title: '업로드 실패', type: 'error' })
     photoPreview.value = null
     photoUrl.value = null
   } finally {
@@ -76,7 +77,7 @@ const submit = async () => {
     })
     emit('completed')
   } catch (err) {
-    alert(err.response?.data?.resultMessage ?? '완료 처리에 실패했습니다.')
+    await showAlert(err.response?.data?.resultMessage ?? '완료 처리에 실패했습니다.', { title: '완료 실패', type: 'error' })
   } finally {
     submitting.value = false
   }

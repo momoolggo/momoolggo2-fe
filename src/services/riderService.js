@@ -16,6 +16,21 @@ class RiderService {
     const res = await axios.get(`${this.#url}/me`)
     return res.data.resultData
   }
+
+  /**
+   * 가입 면허증 사진 업로드 — 2026-05-28 트랙.
+   * 가입 *이전* 호출 (토큰 없음) — main /api/rider-license/upload POST permitAll.
+   * owner signup-doc / delivery-photo 박제 일관 (CLAUDE.md §5 main 단독 책임).
+   * 반환값 = 저장된 URL (예: "/uploads/rider-license/abc.jpg") — signup putProfile에 licenseImageUrl로 전달.
+   */
+  async uploadLicense(file) {
+    const formData = new FormData()
+    formData.append('file', file)
+    const res = await axios.post('/rider-license/upload', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+    return res.data.resultData
+  }
 }
 
 export default new RiderService()

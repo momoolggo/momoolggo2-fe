@@ -1,5 +1,5 @@
 <script setup>
-import { computed, reactive, ref } from 'vue'
+import { computed, onUnmounted, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import userService from '@/services/userService'
 import riderService from '@/services/riderService'
@@ -48,6 +48,7 @@ const state = reactive({
     licenseNo: '',
     licenseType: '',
     vehicleType: '',
+    licenseImageUrl: null,   // 2026-05-28 트랙 — 가입 시 면허증 사진 (업로드 성공 시 main 반환 URL)
     role: 'RIDER',
     address: '',
   },
@@ -91,6 +92,44 @@ const openTerms = (type) => {
 const closeTerms = () => {
   showTermsModal.value = false
 }
+
+// 2026-05-28 트랙 — 면허증 사진 업로드 (CompleteModal 박제 패턴: 파일 선택 즉시 업로드 + ObjectURL 미리보기)
+const licensePreview = ref(null)        // 브라우저 ObjectURL (미리보기)
+const licenseUploading = ref(false)
+const licenseFileInputRef = ref(null)
+
+const onLicenseFileSelect = async (e) => {
+  const file = e.target.files?.[0]
+  if (!file) return
+  if (!file.type.startsWith('image/')) {
+    await showAlert('이미지 파일만 업로드 가능합니다.', { title: '파일 형식 오류', type: 'warning' })
+    return
+  }
+  if (licensePreview.value) URL.revokeObjectURL(licensePreview.value)
+  licensePreview.value = URL.createObjectURL(file)
+  licenseUploading.value = true
+  try {
+    state.form.licenseImageUrl = await riderService.uploadLicense(file)
+  } catch (err) {
+    await showAlert(err.response?.data?.resultMessage ?? '면허증 사진 업로드에 실패했습니다.', { title: '업로드 실패', type: 'error' })
+    URL.revokeObjectURL(licensePreview.value)
+    licensePreview.value = null
+    state.form.licenseImageUrl = null
+  } finally {
+    licenseUploading.value = false
+  }
+}
+
+const removeLicenseImage = () => {
+  if (licensePreview.value) URL.revokeObjectURL(licensePreview.value)
+  licensePreview.value = null
+  state.form.licenseImageUrl = null
+  if (licenseFileInputRef.value) licenseFileInputRef.value.value = ''
+}
+
+onUnmounted(() => {
+  if (licensePreview.value) URL.revokeObjectURL(licensePreview.value)
+})
 
 const checkId = async () => {
   if (!state.form.userId) {
@@ -139,6 +178,8 @@ const signup = async () => {
   if (!state.form.licenseNo)   { state.errorMsg = '운전면허 번호를 입력해 주세요.'; return }
   if (!state.form.licenseType) { state.errorMsg = '운전면허증을 선택해 주세요.';   return }
   if (!state.form.vehicleType) { state.errorMsg = '배달 수단을 선택해 주세요.';    return }
+  if (licenseUploading.value)  { state.errorMsg = '면허증 사진 업로드가 완료될 때까지 기다려주세요.'; return }
+  if (!state.form.licenseImageUrl) { state.errorMsg = '면허증 사진을 등록해 주세요.'; return }
   if (!requiredAgreed.value)   { state.errorMsg = '필수 약관에 동의해 주세요.';    return }
 
   try {
@@ -159,6 +200,7 @@ const signup = async () => {
       accountNo: null,
       accountHolder: null,
       phone: state.form.tel,
+      licenseImageUrl: state.form.licenseImageUrl,
     })
     await showAlert('회원가입이 완료되었습니다. 관리자 승인 후 이용 가능합니다. 마이페이지에서 정산 계좌를 등록해주세요.', { title: '회원가입', type: 'success' })
     router.push('/riderservice')
@@ -267,6 +309,28 @@ const signup = async () => {
           <option value="BICYCLE">자전거</option>
           <option value="WALK">도보</option>
         </select>
+      </div>
+
+      <!-- 2026-05-28 트랙 — 면허증 사진 업로드 (가입 *이전* permitAll, owner signup-doc 박제 일관) -->
+      <div class="field">
+        <label class="label">면허증 사진 <span class="required">*</span></label>
+        <div v-if="!licensePreview" class="upload_area" @click="licenseFileInputRef?.click()">
+          <span class="upload_icon">📷</span>
+          <span class="upload_text">면허증 사진 선택</span>
+        </div>
+        <div v-else class="photo_preview_wrap">
+          <img :src="licensePreview" alt="면허증 사진" class="photo_preview" />
+          <button type="button" class="remove_photo_btn" @click="removeLicenseImage" :disabled="licenseUploading">✕</button>
+          <span v-if="licenseUploading" class="uploading_overlay">업로드 중...</span>
+        </div>
+        <input
+          ref="licenseFileInputRef"
+          type="file"
+          accept="image/*"
+          style="display: none"
+          @change="onLicenseFileSelect"
+        />
+        <p class="field_hint">프로필 이미지로도 사용됩니다.</p>
       </div>
 
       <div class="terms_box">
@@ -380,4 +444,28 @@ const signup = async () => {
 .badge { font-size: 11px; font-weight: 700; padding: 2px 7px; border-radius: 20px; }
 .required_badge { background: #fff0f0; color: #e84040;}
 .optional_badge { background: #f0f0f0; color: #888;}
+
+/* 2026-05-28 트랙 — 면허증 사진 업로드 (CompleteModal 박제 일관) */
+.upload_area {
+  border: 2px dashed #e0e0e0;
+  border-radius: 12px;
+  padding: 28px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  color: #888;
+  transition: all 0.15s;
+  background: #fafafa;
+}
+.upload_area:hover { border-color: var(--primary, #e84040); color: var(--primary, #e84040); background: #fff5f5; }
+.upload_icon { font-size: 28px; }
+.upload_text { font-size: 14px; font-weight: 600; }
+.photo_preview_wrap { position: relative; width: 100%; border-radius: 12px; overflow: hidden; }
+.photo_preview { width: 100%; max-height: 240px; object-fit: cover; display: block; }
+.remove_photo_btn { position: absolute; top: 8px; right: 8px; background: rgba(0,0,0,0.6); color: #fff; border: 0; width: 28px; height: 28px; border-radius: 50%; font-size: 14px; cursor: pointer; }
+.remove_photo_btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.uploading_overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.5); color: #fff; font-size: 14px; font-weight: 600; display: flex; align-items: center; justify-content: center; }
+.field_hint { font-size: 12px; color: #888; margin-top: 4px; }
 </style>

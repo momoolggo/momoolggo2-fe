@@ -2,6 +2,7 @@
 import { ref, onMounted, computed } from 'vue'
 import { useStore } from '@/stores/useStore'
 import ownerService from '@/services/ownerService'
+import { showAlert } from '@/composables/useAlert'
 
 
 const settlementOrders = ref([])
@@ -33,7 +34,7 @@ const editBankAccount = ref('')
 const bankAccountSaving = ref(false)
 
 const saveBankAccount = async () => {
-  if (!editBankAccount.value.trim()) { alert('계좌 정보를 입력해주세요.'); return }
+  if (!editBankAccount.value.trim()) { await showAlert('계좌 정보를 입력해주세요.', { title: '입력 필요', type: 'warning' }); return }
   bankAccountSaving.value = true
   try {
     await ownerService.updateBankAccount(selectedSettlement.value.settlementId, editBankAccount.value.trim())
@@ -41,7 +42,7 @@ const saveBankAccount = async () => {
     const idx = settlementList.value.findIndex(s => s.settlementId === selectedSettlement.value.settlementId)
     if (idx !== -1) settlementList.value[idx] = { ...settlementList.value[idx], bankAccount: editBankAccount.value.trim() }
   } catch (e) {
-    alert('계좌 변경 실패')
+    await showAlert('계좌 변경 실패', { title: '오류', type: 'error' })
   } finally {
     bankAccountSaving.value = false
   }
@@ -139,16 +140,16 @@ const toggleInquiryForm = () => {
 
 const submitInquiry = async () => {
   if (!inquiryContent.value.trim()) {
-    alert('문의 내용을 입력해주세요.')
+    await showAlert('문의 내용을 입력해주세요.', { title: '입력 필요', type: 'warning' })
     return
   }
   inquirySubmitting.value = true
   try {
     await ownerService.submitSettlementInquiry(inquiryContent.value)
-    alert('문의가 접수되었습니다.')
+    await showAlert('문의가 접수되었습니다.', { title: '접수 완료', type: 'success' })
     closeDetail()
   } catch (e) {
-    alert('문의 접수에 실패했습니다.')
+    await showAlert('문의 접수에 실패했습니다.', { title: '오류', type: 'error' })
   } finally {
     inquirySubmitting.value = false
   }

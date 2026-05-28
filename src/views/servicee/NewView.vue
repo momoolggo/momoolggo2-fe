@@ -39,6 +39,7 @@ class="cup"
 
 <script setup>
 import {ref} from "vue"
+import { showAlert } from '@/composables/useAlert'
 
 const round = ref(1)
 const shuffling = ref(false)
@@ -112,20 +113,20 @@ fail.value=true
 
 }
 
-function nextRound(){
+async function nextRound(){
 
 if(round.value<5){
 round.value++
 startShuffle()
 }else{
-alert("최종 성공! 보상 획득")
+await showAlert("최종 성공! 보상 획득", { title: '성공', type: 'success' })
 resetGame()
 }
 
 }
 
-function claimReward(){
-alert("현재 단계 보상 지급")
+async function claimReward(){
+await showAlert("현재 단계 보상 지급", { title: '보상', type: 'success' })
 resetGame()
 }
 

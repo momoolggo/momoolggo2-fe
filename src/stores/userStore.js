@@ -71,5 +71,5 @@ export const useUserStore = defineStore('user', () => {
 
     
 
-    return { state, checkAuth, signIn, signOut, refreshExpiry }
+    return { state, checkAuth, signIn, signOut, refreshExpiry, reset }
 })

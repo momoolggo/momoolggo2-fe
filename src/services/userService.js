@@ -75,6 +75,18 @@ class UserService {
     return res.data
   }
 
+  async withdraw(userPw) {
+    const res = await axios.delete(this.#url, { data: { userPw } })
+    return res.data
+  }
+
+  // ── 계정 복구 POST /api/user/recover (인증 불필요)
+  // 응답: ResultResponse<UserSigninRes> → resultData: { userNo, name, role, atExpiresAt, accessToken }
+  async recover(recoverData) {
+    const res = await axios.post(`${this.#url}/recover`, recoverData)
+    return res.data.resultData
+  }
+
   // ── AT 재발급 POST /api/user/reissue
   async reissue() {
     const res = await axios.post(`${this.#url}/reissue`)

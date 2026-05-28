@@ -1,9 +1,11 @@
 <script setup>
-import { reactive, onMounted } from 'vue'
+import { reactive, onMounted, ref } from 'vue'
 import { useUserStore } from '@/stores/userStore'
 import userService from '@/services/userService'
+import WithdrawUserModal from '@/components/common/WithdrawUserModal.vue'
 
 const userStore = useUserStore()
+const showWithdrawModal = ref(false)
 
 const state = reactive({
   form: {
@@ -143,7 +145,17 @@ const update = async () => {
 
       <button class="btn_primary" @click="update">수정하기</button>
 
+      <div class="withdraw_text_wrap">
+        <button class="withdraw_text_btn" type="button" @click="showWithdrawModal = true">회원 탈퇴</button>
+      </div>
+
     </div>
+
+    <WithdrawUserModal
+      v-if="showWithdrawModal"
+      role="CUSTOMER"
+      @close="showWithdrawModal = false"
+    />
   </div>
 </template>
 
@@ -155,5 +167,16 @@ const update = async () => {
 .success_msg { color: #16a34a; font-size: 13px; text-align: center; }
 .radio_group { display: flex; gap: 20px; }
 .radio_label { font-size: 14px; color: var(--gray-dark); cursor: pointer; display: flex; align-items: center; gap: 4px; }
-.btn_primary { margin-bottom: 10px;}
+.btn_primary { margin-bottom: 4px; }
+.withdraw_text_wrap { text-align: center; }
+.withdraw_text_btn {
+  background: none;
+  border: none;
+  font-size: 12px;
+  color: #bbb;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  padding: 0;
+}
 </style>

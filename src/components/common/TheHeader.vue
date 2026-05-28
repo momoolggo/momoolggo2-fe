@@ -324,17 +324,18 @@ const isOwner = computed(() => userStore.state.role === 'OWNER')
   margin: 0 auto;
   display: flex;
   align-items: center;
-  gap: 16px;
-  height: 60px;
+  gap: 22px;
+  height: 64px;
   padding: 0 24px;
   box-sizing: border-box;
 }
 
 .owner_title {
-  font-size: 18px;
-  font-weight: 700;
+  font-size: 21px;
+  font-weight: 800;
   color: var(--primary, #e84040);
   flex: 1;
+  line-height: 1;
 }
 
 .owner_nav {
@@ -348,11 +349,27 @@ const isOwner = computed(() => userStore.state.role === 'OWNER')
   max-width: none;
   overflow: visible;
   text-overflow: initial;
+  margin-top: 0;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  height: 28px;
+  padding: 0 1px;
+}
+
+.owner_nav .nav_text_btn {
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  height: 28px;
+  padding-top: 0;
+  padding-bottom: 0;
 }
 
 .logo_img {
-  width: 80px;
+  width: 92px;
   height: auto;
+  display: block;
 }
 
 /* 고객 헤더 (480px 고정)*/

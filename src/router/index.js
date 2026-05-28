@@ -4,6 +4,7 @@ import { useUserStore } from '@/stores/userStore'
 // ── 공통
 import LandingView from '@/views/LandingView.vue'
 import AccountFindView from '@/views/AccountFindView.vue'
+import RecoverAccountView from '@/views/RecoverAccountView.vue'
 import StoreListView from '@/views/store/StoreListView.vue'
 import StoreDetailView from '@/views/store/StoreDetailView.vue'
 import OwnerLandingView from '@/views/store/OwnerLandingView.vue'
@@ -58,6 +59,7 @@ import AdminRiderView from '@/views/admin/AdminRiderView.vue'
 const routes = [
   { path: '/', name: 'Landing', component: LandingView },
   { path: '/find-account', name: 'AccountFind', component: AccountFindView, meta: { guestOnly: true } },
+  { path: '/recover', name: 'RecoverAccount', component: RecoverAccountView, meta: { guestOnly: true } },
   { path: '/ownerlanding', name: 'OwnerLanding', component: OwnerLandingView},
   { path: '/storelist', name: 'StoreList', component: StoreListView, meta: { requiresAuth: true, role: 'CUSTOMER' } },
   { path: '/store/:id', name: 'StoreDetail', component: StoreDetailView, meta: { requiresAuth: true, role: 'CUSTOMER' } },

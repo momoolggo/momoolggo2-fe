@@ -54,6 +54,12 @@ watch(
 )
 const renderStars = (score) => '★'.repeat(score) + '☆'.repeat(5 - score)
 
+const getReviewerName = (review) => {
+  if (review?.userStatus === 'WITHDRAWN' || review?.status === 'WITHDRAWN') return '탈퇴한 회원'
+  if (review?.userName) return review.userName
+  return '고객'
+}
+
 const openComment = (review) => {
   commentModal.reviewId = review.reviewId
   commentModal.content = review.replyContent ?? ''
@@ -211,7 +217,7 @@ const submitReport = async () => {
 
             <span class="score_num">{{ review.rating }}점</span>
 
-            <span class="reviewer">{{ review.userName ?? '고객' }}</span>
+            <span class="reviewer">{{ getReviewerName(review) }}</span>
 
             <span class="writer_stats">
               고객 평균 {{ Number(review.writerAvgRating || 0).toFixed(1) }}점

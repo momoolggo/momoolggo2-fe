@@ -5,6 +5,7 @@ import RiderLayout from '@/views/rider/RiderLayout.vue'
 import riderService from '@/services/riderService'
 import settlementService from '@/services/settlementService'
 import { useMessageModalStore } from '@/stores/messageModalStore'
+import WithdrawUserModal from '@/components/common/WithdrawUserModal.vue'
 
 const messageModalStore = useMessageModalStore()
 
@@ -15,6 +16,7 @@ const loading = ref(true)
 const accountModalOpen = ref(false)
 const accountForm = ref({ accountBank: '', accountNo: '', accountHolder: '' })
 const saving = ref(false)
+const showWithdrawModal = ref(false)
 
 const hasAccount = computed(() => !!(account.value?.accountBank && account.value?.accountNo))
 const statusLabel = computed(() => {
@@ -111,7 +113,18 @@ onMounted(load)
         <h2 class="card-title">프로필 / 면허 사진</h2>
         <div class="empty">사진 업로드 기능은 준비 중입니다.</div>
       </section>
+
     </template>
+
+    <div class="withdraw-text-wrap">
+      <button class="withdraw-text-btn" type="button" @click="showWithdrawModal = true">회원 탈퇴</button>
+    </div>
+
+    <WithdrawUserModal
+      v-if="showWithdrawModal"
+      role="RIDER"
+      @close="showWithdrawModal = false"
+    />
 
     <transition name="fade">
       <div v-if="accountModalOpen" class="modal-backdrop" @click.self="closeAccountModal">
@@ -186,6 +199,21 @@ onMounted(load)
 .row .value { font-weight: 500; font-size: 14px; color: #333; }
 .account-info { font-size: 14px; line-height: 1.6; }
 .photo-card .empty { padding: 32px 16px; font-size: 13px; }
+.withdraw-text-wrap {
+  display: flex;
+  justify-content: flex-end;
+  padding: 8px 4px 20px;
+}
+.withdraw-text-btn {
+  background: none;
+  border: none;
+  font-size: 12px;
+  color: #bbb;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  padding: 0;
+}
 
 .modal-backdrop {
   position: absolute; inset: 0;

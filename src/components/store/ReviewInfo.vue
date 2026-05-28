@@ -49,6 +49,12 @@ const getImageUrl = (path) => {
   return `${path}`
 }
 
+const getReviewerName = (review) => {
+  if (review?.userStatus === 'WITHDRAWN' || review?.status === 'WITHDRAWN') return '탈퇴한 회원'
+  if (review?.userName) return review.userName
+  return '고객'
+}
+
 // Intersection Observer — 무한스크롤
 onMounted(() => {
   observer = new IntersectionObserver(
@@ -122,7 +128,7 @@ onUnmounted(() => {
               </svg>
             </div>
             <div class="rc-meta">
-              <span class="rc-name">{{ review.userName }}</span>
+              <span class="rc-name">{{ getReviewerName(review) }}</span>
               <span class="rc-date">{{ formatDate(review.date) }}</span>
             </div>
           </div>

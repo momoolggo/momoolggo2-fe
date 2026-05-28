@@ -1,9 +1,11 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/userStore'
 import riderService from '@/services/riderService'
+import noticeService from '@/services/noticeService'
 import { useLocationTracker } from '@/composables/useLocationTracker'
+import { showAlert } from '@/composables/useAlert'
 
 const props = defineProps({
   requireActive: { type: Boolean, default: false }
@@ -14,6 +16,7 @@ const userStore = useUserStore()
 
 const state = ref('ok')
 const blockReason = ref(null)
+const noticeES = ref(null)
 
 const HOTLINE = '0507-1414-1018'
 
@@ -37,11 +40,22 @@ onMounted(async () => {
       if (status === 'ACTIVE' || status === 'EATING') {
         tracker.start()
       }
+      // 2026-05-28 트랙 — 신규 공지 SSE 구독. NOW + ALL/RIDER 가시성만 푸시 (BE 박제 일관).
+      noticeES.value = noticeService.subscribeStream(async (notice) => {
+        await showAlert(notice.content, { title: `[새 공지] ${notice.title}`, type: 'info' })
+      })
     }
   } catch (err) {
     console.error('[RiderLayout] getMe failed:', err?.response?.status, err?.response?.data, err)
     blockReason.value = err?.response?.status === 404 ? 'NOT_REGISTERED' : 'ERROR'
     state.value = 'blocked'
+  }
+})
+
+onBeforeUnmount(() => {
+  if (noticeES.value) {
+    noticeES.value.close()
+    noticeES.value = null
   }
 })
 

@@ -2,7 +2,12 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import AdminSidebar from '@/components/admin/AdminSidebar.vue'
 import AdminHeader from '@/components/admin/AdminHeader.vue'
+import AdminAlertModal from '@/components/admin/AdminAlertModal.vue'
+import AdminConfirmModal from '@/components/admin/AdminConfirmModal.vue'
+import { useAdminModal } from '@/composables/useAdminModal'
 import adminService from '@/services/adminService'
+
+const { alertShow, alertMsg, showAlert, closeAlert, confirmShow, confirmMsg, showConfirm, onConfirmOk, onConfirmCancel } = useAdminModal()
 
 const activeTab = ref('all')
 const blindList = ref([])
@@ -180,22 +185,22 @@ const cancelRelease = () => {
 }
 
 const suspendUser = async (blindId) => {
-  if (!confirm('계정을 15일 정지하시겠습니까?')) return
+  if (!await showConfirm('계정을 15일 정지하시겠습니까?')) return
   try {
     await adminService.suspendUser(blindId)
     await fetchList()
   } catch (e) {
-    alert('계정 정지 실패')
+    showAlert('계정 정지 실패')
   }
 }
 
 const permanentSuspend = async (blindId) => {
-  if (!confirm('영구 정지하시겠습니까?')) return
+  if (!await showConfirm('영구 정지하시겠습니까?')) return
   try {
     await adminService.permanentSuspend(blindId)
     await fetchList()
   } catch (e) {
-    alert('영구 정지 실패')
+    showAlert('영구 정지 실패')
   }
 }
 
@@ -412,6 +417,9 @@ const handleSearch = () => {
         </div>
       </div>
     </div>
+
+    <AdminAlertModal :show="alertShow" :message="alertMsg" @close="closeAlert" />
+    <AdminConfirmModal :show="confirmShow" :message="confirmMsg" @confirm="onConfirmOk" @cancel="onConfirmCancel" />
 
     <!-- 블라인드 해제 모달 -->
     <div v-if="showReleaseModal" class="modal_overlay" @click.self="cancelRelease">

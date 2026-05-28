@@ -2,7 +2,11 @@
 import { ref, onMounted, computed, watch } from 'vue'
 import AdminSidebar from '@/components/admin/AdminSidebar.vue'
 import AdminHeader from '@/components/admin/AdminHeader.vue'
+import AdminAlertModal from '@/components/admin/AdminAlertModal.vue'
+import { useAdminModal } from '@/composables/useAdminModal'
 import adminService from '@/services/adminService'
+
+const { alertShow, alertMsg, showAlert, closeAlert } = useAdminModal()
 
 
 
@@ -56,7 +60,7 @@ const confirmRiderSettlement = async (settlementNo) => {
     if (target) target.status = 'CONFIRMED'
     closeRiderDetail()
   } catch (e) {
-    alert('정산 확정 실패: ' + (e.response?.data?.resultMessage || e.message))
+    showAlert('정산 확정 실패: ' + (e.response?.data?.resultMessage || e.message))
   }
 }
 
@@ -189,20 +193,20 @@ const completeSettlement = async (settlementId) => {
     await adminService.completeSettlement(settlementId)
     await fetchList()
     closeDetail()
-  } catch (e) { alert('처리 실패') }
+  } catch (e) { showAlert('처리 실패') }
 }
 
 const editBankAccount = ref('')
 const bankAccountSaving = ref(false)
 
 const saveBankAccount = async () => {
-  if (!editBankAccount.value.trim()) { alert('계좌 정보를 입력해주세요.'); return }
+  if (!editBankAccount.value.trim()) { showAlert('계좌 정보를 입력해주세요.'); return }
   bankAccountSaving.value = true
   try {
     await adminService.updateBankAccount(selectedSettlement.value.settlementId, editBankAccount.value.trim())
     selectedSettlement.value = { ...selectedSettlement.value, bankAccount: editBankAccount.value.trim() }
   } catch (e) {
-    alert('계좌 변경 실패')
+    showAlert('계좌 변경 실패')
   } finally {
     bankAccountSaving.value = false
   }
@@ -213,7 +217,7 @@ const holdSettlement = async (settlementId) => {
     await adminService.holdSettlement(settlementId)
     await fetchList()
     closeDetail()
-  } catch (e) { alert('처리 실패') }
+  } catch (e) { showAlert('처리 실패') }
 }
 
 const releaseHold = async (settlementId) => {
@@ -221,7 +225,7 @@ const releaseHold = async (settlementId) => {
     await adminService.releaseHold(settlementId)
     await fetchList()
     closeDetail()
-  } catch (e) { alert('처리 실패') }
+  } catch (e) { showAlert('처리 실패') }
 }
 
 onMounted(() => {
@@ -501,6 +505,8 @@ const expectedPayoutDate = (periodEnd) => {
         </template>
       </div>
     </div>
+
+    <AdminAlertModal :show="alertShow" :message="alertMsg" @close="closeAlert" />
 
     <!-- 가게 정산 상세 모달 -->
     <div v-if="showDetailModal && selectedSettlement" class="modal_overlay" @click.self="closeDetail">

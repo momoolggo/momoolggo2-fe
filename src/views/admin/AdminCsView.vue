@@ -2,7 +2,12 @@
 import { ref, onMounted, computed } from 'vue'
 import AdminSidebar from '@/components/admin/AdminSidebar.vue'
 import AdminHeader from '@/components/admin/AdminHeader.vue'
+import AdminAlertModal from '@/components/admin/AdminAlertModal.vue'
+import AdminConfirmModal from '@/components/admin/AdminConfirmModal.vue'
+import { useAdminModal } from '@/composables/useAdminModal'
 import adminService from '@/services/adminService'
+
+const { alertShow, alertMsg, showAlert, closeAlert, confirmShow, confirmMsg, showConfirm, onConfirmOk, onConfirmCancel } = useAdminModal()
 
 // 문의 요약
 const summary = ref({
@@ -128,7 +133,7 @@ const openInquiryModal = async (inquiry) => {
 // 답변 전송 및 처리 완료
 const submitReply = async () => {
   if (!replyText.value.trim()) {
-    alert('답변을 입력해주세요.')
+    showAlert('답변을 입력해주세요.')
     return
   }
   try {
@@ -212,7 +217,7 @@ const openCreateModal = () => {
 
 const submitCreate = async () => {
   if (!createForm.value.type || !createForm.value.question || !createForm.value.answer) {
-    alert('모든 항목을 입력해주세요.')
+    showAlert('모든 항목을 입력해주세요.')
     return
   }
   try {
@@ -232,7 +237,7 @@ const openEditModal = (faq) => {
 
 const submitEdit = async () => {
   if (!editForm.value.question || !editForm.value.answer) {
-    alert('모든 항목을 입력해주세요.')
+    showAlert('모든 항목을 입력해주세요.')
     return
   }
   try {
@@ -247,7 +252,7 @@ const submitEdit = async () => {
 }
 
 const deleteFaq = async (faqId) => {
-  if (!confirm('FAQ를 삭제하시겠습니까?')) return
+  if (!await showConfirm('FAQ를 삭제하시겠습니까?')) return
   try {
     await adminService.deleteFaq(faqId)
     await fetchFaqList()
@@ -373,6 +378,9 @@ const deleteFaq = async (faqId) => {
         </div>
       </div>
     </div>
+
+    <AdminAlertModal :show="alertShow" :message="alertMsg" @close="closeAlert" />
+    <AdminConfirmModal :show="confirmShow" :message="confirmMsg" @confirm="onConfirmOk" @cancel="onConfirmCancel" />
 
     <!-- 미처리 문의 목록 모달 -->
     <div v-if="showInquiryList" class="modal_overlay" @click.self="showInquiryList = false">

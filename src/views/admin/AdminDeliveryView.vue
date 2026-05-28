@@ -3,7 +3,12 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import AdminSidebar from '@/components/admin/AdminSidebar.vue'
 import AdminHeader from '@/components/admin/AdminHeader.vue'
 import AdminDeliveryMap from '@/components/admin/AdminDeliveryMap.vue'
+import AdminAlertModal from '@/components/admin/AdminAlertModal.vue'
+import AdminConfirmModal from '@/components/admin/AdminConfirmModal.vue'
+import { useAdminModal } from '@/composables/useAdminModal'
 import adminService from '@/services/adminService'
+
+const { alertShow, alertMsg, showAlert, closeAlert, confirmShow, confirmMsg, showConfirm, onConfirmOk, onConfirmCancel } = useAdminModal()
 
 const ADMIN_TEL = '053-111-1212'
 
@@ -158,18 +163,18 @@ const updateNotice = async () => {
     await fetchNoticeList()
     closeNoticeDetail()
   } catch {
-    alert('수정 실패')
+    showAlert('수정 실패')
   }
 }
 
 const deleteNotice = async (noticeNo) => {
-  if (!confirm('공지를 삭제하시겠습니까?')) return
+  if (!await showConfirm('공지를 삭제하시겠습니까?')) return
   try {
     await adminService.deleteNotice(noticeNo)
     await fetchNoticeList()
     closeNoticeDetail()
   } catch {
-    alert('삭제 실패')
+    showAlert('삭제 실패')
   }
 }
 
@@ -380,6 +385,9 @@ onUnmounted(() => {
         </div>
       </div>
     </div>
+
+    <AdminAlertModal :show="alertShow" :message="alertMsg" @close="closeAlert" />
+    <AdminConfirmModal :show="confirmShow" :message="confirmMsg" @confirm="onConfirmOk" @cancel="onConfirmCancel" />
 
     <!-- 공지 발송 모달 -->
     <div v-if="showNoticeModal" class="modal_overlay" @click.self="closeNoticeModal">

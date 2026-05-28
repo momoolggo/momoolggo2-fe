@@ -2,7 +2,12 @@
 import { ref, onMounted, computed } from 'vue'
 import AdminSidebar from '@/components/admin/AdminSidebar.vue'
 import AdminHeader from '@/components/admin/AdminHeader.vue'
+import AdminAlertModal from '@/components/admin/AdminAlertModal.vue'
+import AdminConfirmModal from '@/components/admin/AdminConfirmModal.vue'
+import { useAdminModal } from '@/composables/useAdminModal'
 import adminService from '@/services/adminService'
+
+const { alertShow, alertMsg, showAlert, closeAlert, confirmShow, confirmMsg, showConfirm, onConfirmOk, onConfirmCancel } = useAdminModal()
 
 const activeTab = ref('all')
 const userList = ref([])
@@ -125,25 +130,25 @@ const applySuspend = async () => {
     }
     closeConfirmModal()
     closeDetail()
-  } catch { alert('처리 실패') }
+  } catch { showAlert('처리 실패') }
 }
 
 const approvePendingUser = async () => {
   if (!selectedPendingUser.value) return
-  if (!confirm('승인하시겠습니까?')) return
+  if (!await showConfirm('승인하시겠습니까?')) return
   try {
     await adminService.updateApproval(selectedPendingUser.value.userNo, 'ACTIVE')
     pendingList.value = pendingList.value.filter(u => u.userNo !== selectedPendingUser.value.userNo)
     closePendingDetail()
     await fetchPendingList()
     await fetchUserList()
-  } catch { alert('처리 실패') }
+  } catch { showAlert('처리 실패') }
 }
 
 const rejectPendingUser = async () => {
   if (!selectedPendingUser.value) return
-  if (!selectedRejectReason.value) { alert('반려 사유를 선택해주세요.'); return }
-  if (!confirm('반려하시겠습니까?')) return
+  if (!selectedRejectReason.value) { showAlert('반려 사유를 선택해주세요.'); return }
+  if (!await showConfirm('반려하시겠습니까?')) return
   try {
     await adminService.updateApproval(selectedPendingUser.value.userNo, 'REJECTED', selectedRejectReason.value)
     pendingList.value = pendingList.value.filter(u => u.userNo !== selectedPendingUser.value.userNo)
@@ -152,7 +157,7 @@ const rejectPendingUser = async () => {
     closePendingDetail()
     await fetchPendingList()
     await fetchUserList()
-  } catch { alert('처리 실패') }
+  } catch { showAlert('처리 실패') }
 }
 
 const handleTabChange = (tab) => {
@@ -396,6 +401,9 @@ onMounted(fetchUserList)
         </div>
       </div>
     </div>
+
+    <AdminAlertModal :show="alertShow" :message="alertMsg" @close="closeAlert" />
+    <AdminConfirmModal :show="confirmShow" :message="confirmMsg" @confirm="onConfirmOk" @cancel="onConfirmCancel" />
 
     <!-- 고객 상세 모달 -->
     <div v-if="showDetailModal && selectedUser" class="modal_overlay" @click.self="closeDetail">

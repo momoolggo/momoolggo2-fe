@@ -197,9 +197,22 @@ class AdminService {
     }
 
     // ─── 라이더 관리 (Group 8 신설, Q-A1 (라++)) ──────
-    // SSE 자동화 트랙(2026-05-21) — 라이더 신원 승인/제재 화면 폐기 (AdminRiderView 삭제).
-    // 사용자 결정 — 가입 즉시 ACTIVE (auto-approve true), 회원 정지/해제는 user 도메인으로 단일화.
-    // BE dead code 정리는 별 트랙(학원 발표 후).
+    // 2026-05-28 트랙 — 가입 신원 승인 흐름 복원 (AdminRiderView 신설).
+    // PENDING → ACTIVE 단일 동작만 복원. 회원 정지/해제는 여전히 user 도메인 단일화 유지.
+    // (이전: SSE 자동화 트랙(2026-05-21)에서 영구 폐기 박제 — 2026-05-28 트랙에서 사용자 명시 요청으로 복원.)
+
+    /** 라이더 목록 조회 — status null=전체 / "PENDING"=승인 대기 등. */
+    async getRiderList(status) {
+        const params = status ? { status } : {}
+        const res = await axios.get(`${this.#url}/rider/list`, { params });
+        return res.data;
+    }
+
+    /** 라이더 승인 — PENDING → ACTIVE. */
+    async approveRider(userNo) {
+        const res = await axios.post(`${this.#url}/rider/${userNo}/approve`);
+        return res.data;
+    }
 
     // ─── 라이더 정산 (Group 5/5.5 신설, Q-A10) ──────
     // SSE 자동화 트랙(2026-05-21) — calculateRiderSettlement 폐기.

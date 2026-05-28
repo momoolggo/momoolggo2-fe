@@ -2,6 +2,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import userService from '@/services/userService'
+import { showAlert } from '@/composables/useAlert'
 
 const router = useRouter()
 const route = useRoute()
@@ -30,7 +31,7 @@ onMounted(async () => {
     reviewText.value = review.contents || ''
   } catch (error) {
     console.error('리뷰 불러오기 실패:', error)
-    alert('리뷰를 불러올 수 없습니다.')
+    await showAlert('리뷰를 불러올 수 없습니다.', { title: '오류', type: 'error' })
     router.back()
   } finally {
     loading.value = false
@@ -43,7 +44,7 @@ const cancelEdit = () => {
 
 const submitEdit = async () => {
   if (rating.value === 0 || reviewText.value.trim().length === 0) {
-    alert('별점과 리뷰 내용을 입력해주세요!')
+    await showAlert('별점과 리뷰 내용을 입력해주세요!', { title: '입력 필요', type: 'warning' })
     return
   }
   try {
@@ -51,11 +52,11 @@ const submitEdit = async () => {
       rating: rating.value,
       contents: reviewText.value
     })
-    alert('리뷰가 수정되었습니다!')
+    await showAlert('리뷰가 수정되었습니다!', { title: '수정 완료', type: 'success' })
     router.push('/mypage/review')
   } catch (error) {
     console.error('리뷰 수정 실패:', error)
-    alert('리뷰 수정에 실패했습니다.')
+    await showAlert('리뷰 수정에 실패했습니다.', { title: '오류', type: 'error' })
   }
 }
 </script>

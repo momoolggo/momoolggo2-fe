@@ -2,6 +2,7 @@
 import { reactive, onMounted, watch } from 'vue'
 import { useStore } from '@/stores/useStore'
 import ownerService from '@/services/ownerService'
+import { showAlert, showConfirm } from '@/composables/useAlert'
 
 const state = reactive({
   reviews: [],
@@ -74,7 +75,7 @@ const closeComment = () => {
 
 const saveComment = async () => {
   if (!commentModal.content.trim()) {
-    alert('답글 내용을 입력해 주세요.')
+    await showAlert('답글 내용을 입력해 주세요.', { title: '입력 필요', type: 'warning' })
     return
   }
 
@@ -88,7 +89,7 @@ const saveComment = async () => {
       })
 
       review.replyContent = commentModal.content.trim()
-      alert('답글이 수정되었습니다.')
+      await showAlert('답글이 수정되었습니다.', { title: '수정 완료', type: 'success' })
       closeComment()
       return
     }
@@ -98,7 +99,7 @@ const saveComment = async () => {
     })
 
     await loadReviews()
-    alert('답글이 등록되었습니다.')
+    await showAlert('답글이 등록되었습니다.', { title: '등록 완료', type: 'success' })
     closeComment()
   } catch (error) {
     console.error('답글 저장 실패:', error.response?.status, error.response?.data || error)
@@ -108,14 +109,14 @@ const saveComment = async () => {
       error.response?.data?.message ||
       '답글 저장에 실패했습니다.'
 
-    alert(message)
+    await showAlert(message, { title: '오류', type: 'error' })
   }
 }
 
 const deleteReply = async (review) => {
   if (!review.replyId) return
 
-  const ok = confirm('이 답글을 삭제하시겠습니까?')
+  const ok = await showConfirm('이 답글을 삭제하시겠습니까?')
   if (!ok) return
 
   try {
@@ -125,7 +126,7 @@ const deleteReply = async (review) => {
     review.replyContent = null
     review.replyWrittenAt = null
 
-    alert('답글이 삭제되었습니다.')
+    await showAlert('답글이 삭제되었습니다.', { title: '삭제 완료', type: 'success' })
   } catch (error) {
     console.error('답글 삭제 실패:', error.response?.status, error.response?.data || error)
 
@@ -134,7 +135,7 @@ const deleteReply = async (review) => {
       error.response?.data?.message ||
       '답글 삭제에 실패했습니다.'
 
-    alert(message)
+    await showAlert(message, { title: '오류', type: 'error' })
   }
 }
 
@@ -154,7 +155,7 @@ const closeReport = () => {
 
 const submitReport = async () => {
   if (!reportModal.reason) {
-    alert('신고 사유를 선택해 주세요.')
+    await showAlert('신고 사유를 선택해 주세요.', { title: '입력 필요', type: 'warning' })
     return
   }
 
@@ -164,7 +165,7 @@ const submitReport = async () => {
       : reportModal.reason
 
   if (!reason) {
-    alert('신고 사유를 입력해 주세요.')
+    await showAlert('신고 사유를 입력해 주세요.', { title: '입력 필요', type: 'warning' })
     return
   }
 
@@ -179,7 +180,7 @@ const submitReport = async () => {
       review.reported = true
     }
 
-    alert('신고가 접수되었습니다.')
+    await showAlert('신고가 접수되었습니다.', { title: '신고 완료', type: 'success' })
     closeReport()
   } catch (error) {
     console.error('리뷰 신고 실패:', error.response?.status, error.response?.data || error)
@@ -189,7 +190,7 @@ const submitReport = async () => {
       error.response?.data?.message ||
       '리뷰 신고에 실패했습니다.'
 
-    alert(message)
+    await showAlert(message, { title: '오류', type: 'error' })
   }
 }
 </script>

@@ -3,6 +3,7 @@ import { ref, reactive, nextTick, onMounted, onBeforeUnmount, computed } from 'v
 import { useRouter, useRoute } from 'vue-router'
 import chatbotService from '@/services/chatbotService'
 import petService from '@/services/petService'
+import { showAlert } from '@/composables/useAlert'
 
 const router = useRouter()
 const route = useRoute()
@@ -60,7 +61,7 @@ const startCsSession = async () => {
       },
     ]
   } catch (e) {
-    alert('세션 시작에 실패했습니다: ' + (e.response?.data?.resultMessage || e.message))
+    await showAlert('세션 시작에 실패했습니다: ' + (e.response?.data?.resultMessage || e.message), { title: '오류', type: 'error' })
   } finally {
     starting.value = false
   }
@@ -70,7 +71,7 @@ const send = async () => {
   const content = input.value.trim()
   if (!content || sending.value || !state.sessionId) return
   if (state.status === 'CLOSED') {
-    alert('종료된 세션입니다.')
+    await showAlert('종료된 세션입니다.', { title: '알림', type: 'info' })
     return
   }
   sending.value = true
@@ -91,7 +92,7 @@ const send = async () => {
     state.status = res.sessionStatus
     await scrollToBottom()
   } catch (e) {
-    alert('전송 실패: ' + (e.response?.data?.resultMessage || e.message))
+    await showAlert('전송 실패: ' + (e.response?.data?.resultMessage || e.message), { title: '전송 실패', type: 'error' })
   } finally {
     sending.value = false
   }
@@ -110,7 +111,7 @@ const escalate = async () => {
     })
     await scrollToBottom()
   } catch (e) {
-    alert('상담원 연결 실패: ' + (e.response?.data?.resultMessage || e.message))
+    await showAlert('상담원 연결 실패: ' + (e.response?.data?.resultMessage || e.message), { title: '오류', type: 'error' })
   }
 }
 

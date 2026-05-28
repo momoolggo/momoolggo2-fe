@@ -4,12 +4,14 @@ import { useStore } from '@/stores/useStore'
 import { useUserStore } from '@/stores/userStore'
 import { useRouter } from 'vue-router'
 import ownerService from '@/services/ownerService'
+import WithdrawUserModal from '@/components/common/WithdrawUserModal.vue'
 
 const store = useStore()
 const userStore = useUserStore()
 const router = useRouter()
 
 const showStoreDropdown = ref(false)
+const showWithdrawModal = ref(false)
 
 defineProps({
   activeMenu: String
@@ -106,8 +108,15 @@ const goToAddStore = () => {
     <div class="footer">
       <p>고객센터 000-111-222</p>
       <p>All rights Reserved © Momulggo, 2026</p>
+      <button class="withdraw-footer-btn" type="button" @click="showWithdrawModal = true">회원 탈퇴</button>
     </div>
   </aside>
+
+  <WithdrawUserModal
+    v-if="showWithdrawModal"
+    role="OWNER"
+    @close="showWithdrawModal = false"
+  />
 </template>
 
 <style scoped>
@@ -254,6 +263,17 @@ const goToAddStore = () => {
   color: #bbb;
   text-align: center;
   line-height: 1.6;
+}
+.withdraw-footer-btn {
+  background: none;
+  border: none;
+  font-size: 11px;
+  color: #bbb;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  margin-top: 4px;
+  padding: 0;
 }
 
 

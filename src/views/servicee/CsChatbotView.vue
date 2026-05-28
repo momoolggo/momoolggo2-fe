@@ -6,7 +6,6 @@ import petService from '@/services/petService'
 
 const router = useRouter()
 const route = useRoute()
-
 // 2026-05-25 9건 트랙 #8 — entryPoint/toneMode query 지원 (펫 챗봇 호환).
 // CS (기본): 사장/라이더/고객 모두 진입 가능, 톤 SERIOUS.
 // MYPET: 고객 전용, 펫 캐릭터 + 4 tone (PLAYFUL/GOURMET/EMPATHY/SERIOUS).
@@ -213,6 +212,7 @@ onBeforeUnmount(() => {
         {{ sending ? '...' : '전송' }}
       </button>
     </div>
+
   </div>
 </template>
 

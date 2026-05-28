@@ -11,6 +11,7 @@ import ownerService from '@/services/ownerService';
 import { useStore } from '@/stores/useStore';
 import OwnerReviewView from './OwnerReviewView.vue'
 import OwnerSettlementView from '@/components/owner/OwnerSettlementView.vue'
+import WithdrawUserModal from '@/components/common/WithdrawUserModal.vue'
 
 const storeInfo = useStore();
 

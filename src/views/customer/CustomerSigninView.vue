@@ -14,6 +14,8 @@ const state = reactive({
   },
   showPw: false,
   errorMsg: '',
+  canRecover: false,
+  recoverLoading: false,
 })
 
 const signin = async () => {
@@ -23,6 +25,7 @@ const signin = async () => {
   }
   try {
     state.errorMsg = ''
+    state.canRecover = false
     const data = await userService.signin({
       userId: state.form.userId,
       userPw: state.form.userPw,
@@ -34,7 +37,26 @@ const signin = async () => {
     userStore.signIn(data)
     router.push('/home')
   } catch (err) {
-    state.errorMsg = err.response?.data?.resultMessage ?? '로그인에 실패했습니다.'
+    const msg = err.response?.data?.resultMessage ?? '로그인에 실패했습니다.'
+    state.errorMsg = msg
+    state.canRecover = err.response?.status === 403 && msg.includes('14일 이내 복구 가능')
+  }
+}
+
+const recoverAccount = async () => {
+  if (state.recoverLoading) return
+  state.recoverLoading = true
+  try {
+    const data = await userService.recover({
+      userId: state.form.userId,
+      userPw: state.form.userPw,
+    })
+    userStore.signIn(data)
+    router.push('/home')
+  } catch {
+    state.canRecover = false
+  } finally {
+    state.recoverLoading = false
   }
 }
 </script>
@@ -70,6 +92,13 @@ const signin = async () => {
       </div>
 
       <p v-if="state.errorMsg" class="error_msg">{{ state.errorMsg }}</p>
+      <button
+        v-if="state.canRecover"
+        class="btn_recover"
+        type="button"
+        :disabled="state.recoverLoading"
+        @click="recoverAccount"
+      >{{ state.recoverLoading ? '복구 중...' : '계정 복구하기' }}</button>
 
       <button class="btn_primary" @click="signin">로그인</button>
 
@@ -104,4 +133,16 @@ const signin = async () => {
 .find_link { text-align: center; font-size: 13px; }
 .find_link a { color: var(--gray); text-decoration: none; }
 .find_link a:hover { color: var(--primary); }
+.btn_recover {
+  width: 100%;
+  padding: 12px;
+  background: #fff;
+  color: #9b1b1b;
+  border: 1.5px solid #9b1b1b;
+  border-radius: var(--radius-md, 10px);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.btn_recover:hover { background: #fff4f4; }
 </style>

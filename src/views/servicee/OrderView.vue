@@ -22,7 +22,7 @@ const state = reactive({
 
   // 쿠폰 관련 상태
   coupons: [],
-  selectedCouponId: '',
+  selectedCouponListId: '',
   couponLoading: false,
 })
 
@@ -33,7 +33,7 @@ const createdOrderId = ref('')
 
 // 선택된 쿠폰
 const selectedCoupon = computed(() =>
-  state.coupons.find(coupon => String(coupon.couponId) === String(state.selectedCouponId)) || null
+  state.coupons.find(coupon => String(coupon.couponListId) === String(state.selectedCouponListId)) || null
 )
 
 // 쿠폰 할인 금액
@@ -142,7 +142,7 @@ onMounted(loadOrderInfo)
 
 // 쿠폰을 바꾸면 기존 생성 주문 ID를 버리고 다시 주문 생성
 watch(
-  () => state.selectedCouponId,
+  () => state.selectedCouponListId,
   async () => {
     createdOrderId.value = ''
     await syncTossAmount(displayTotalAmount.value)
@@ -183,8 +183,8 @@ const handleOrder = async () => {
         payState: state.payState,
       }
 
-      if (state.selectedCouponId) {
-        orderPayload.couponId = Number(state.selectedCouponId)
+      if (state.selectedCouponListId) {
+        orderPayload.couponListId = Number(state.selectedCouponListId)
       }
 
       const orderRes = await orderService.placeOrder(orderPayload)
@@ -306,15 +306,15 @@ await widgets.requestPayment({
         <div class="info-group">
           <div class="section-label">쿠폰 선택</div>
           <select
-            v-model="state.selectedCouponId"
+            v-model="state.selectedCouponListId"
             class="input-field full"
             :disabled="state.couponLoading || state.coupons.length === 0 || isOrdering"
           >
             <option value="">쿠폰 사용 안 함</option>
             <option
               v-for="coupon in state.coupons"
-              :key="coupon.couponId"
-              :value="coupon.couponId"
+              :key="coupon.couponListId"
+              :value="coupon.couponListId"
             >
               {{ coupon.name }} - {{ formatPrice(coupon.discount) }} 할인
             </option>

@@ -6,11 +6,31 @@ const state = reactive({
   coupons: [],
   loading: true,
   errorMessage: '',
+  code: 'MMG-',
+  registering: false,
+  registerMessage: '',
 })
 
 const availableCount = computed(() => state.coupons.length)
+const isCouponCodeValid = computed(() => /^MMG-[A-Z0-9]{6}$/.test(state.code.trim()))
 
 const formatPrice = value => `${Number(value || 0).toLocaleString()}원`
+
+const updateCouponCode = event => {
+  const value = event.target.value
+    .toUpperCase()
+    .replace(/^MMG-?/, '')
+    .replace(/[^A-Z0-9]/g, '')
+    .slice(0, 6)
+  state.code = `MMG-${value}`
+}
+
+const loadPendingRewardCode = () => {
+  const code = sessionStorage.getItem('foodCupRewardCode') || ''
+  if (/^MMG-[A-Z0-9]{6}$/.test(code)) {
+    state.code = code
+  }
+}
 
 const loadCoupons = async () => {
   state.loading = true
@@ -28,7 +48,31 @@ const loadCoupons = async () => {
   }
 }
 
-onMounted(loadCoupons)
+const registerCouponCode = async () => {
+  const code = state.code.trim()
+  if (!isCouponCodeValid.value || state.registering) return
+
+  state.registering = true
+  state.registerMessage = ''
+
+  try {
+    await orderService.registerCouponCode(code)
+    state.code = 'MMG-'
+    sessionStorage.removeItem('foodCupRewardCode')
+    state.registerMessage = '쿠폰 등록 완료'
+    await loadCoupons()
+  } catch (e) {
+    console.error('coupon code register failed:', e)
+    state.registerMessage = e.response?.data?.resultMessage || '쿠폰 등록에 실패했습니다.'
+  } finally {
+    state.registering = false
+  }
+}
+
+onMounted(() => {
+  loadPendingRewardCode()
+  loadCoupons()
+})
 </script>
 
 <template>
@@ -37,6 +81,28 @@ onMounted(loadCoupons)
       <h2 class="page-title">쿠폰함</h2>
       <p class="page-subtitle">사용 가능한 쿠폰 {{ availableCount }}장</p>
     </div>
+
+    <form class="coupon-register" @submit.prevent="registerCouponCode">
+      <input
+        v-model="state.code"
+        class="coupon-code-input"
+        type="text"
+        placeholder="MMG-XXXXXX"
+        maxlength="10"
+        @input="updateCouponCode"
+        :disabled="state.registering"
+      />
+      <button
+        class="coupon-register-btn"
+        type="submit"
+        :disabled="state.registering || !isCouponCodeValid"
+      >
+        등록
+      </button>
+    </form>
+    <p v-if="state.registerMessage" class="coupon-register-message">
+      {{ state.registerMessage }}
+    </p>
 
     <div v-if="state.loading" class="message-box">
       쿠폰을 불러오는 중입니다.
@@ -53,7 +119,7 @@ onMounted(loadCoupons)
     <div v-else class="coupon-list">
       <div
         v-for="coupon in state.coupons"
-        :key="coupon.couponId"
+        :key="coupon.couponListId"
         class="coupon-card"
       >
         <div class="coupon-main">
@@ -89,6 +155,39 @@ onMounted(loadCoupons)
   margin: 0;
   color: #777;
   font-size: 14px;
+}
+.coupon-register {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.coupon-code-input {
+  flex: 1;
+  min-width: 0;
+  padding: 12px;
+  border: 1.5px solid #e5e3dc;
+  border-radius: 8px;
+  font-size: 14px;
+  text-transform: uppercase;
+}
+.coupon-register-btn {
+  flex-shrink: 0;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 8px;
+  background: #a40c0b;
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+}
+.coupon-register-btn:disabled {
+  background: #ccc;
+  cursor: default;
+}
+.coupon-register-message {
+  margin: 0 0 18px;
+  color: #a40c0b;
+  font-size: 13px;
 }
 .message-box {
   padding: 80px 0;

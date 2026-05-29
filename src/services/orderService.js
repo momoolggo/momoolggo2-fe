@@ -16,6 +16,16 @@ class OrderService {
     }
 
     // 주문 확정
+    async issueFoodCupRewardCode(stage) {
+        const res = await axios.post('/user/coupon/event/food-cup/code', { stage })
+        return res.data;
+    }
+
+    async registerCouponCode(code) {
+        const res = await axios.post('/user/coupon/code', { code })
+        return res.data;
+    }
+
     async placeOrder(orderData) {
         const res = await axios.post(this.#url, orderData);
         return res.data;

@@ -15,6 +15,10 @@ const availableCount = computed(() => state.coupons.length)
 const isCouponCodeValid = computed(() => /^MMG-[A-Z0-9]{6}$/.test(state.code.trim()))
 
 const formatPrice = value => `${Number(value || 0).toLocaleString()}원`
+const formatCouponDiscount = coupon => {
+  if (coupon.discountType === 'PERCENT') return `${Number(coupon.discount || 0)}% 할인`
+  return `${Number(coupon.discount || 0).toLocaleString()}원 할인`
+}
 
 const updateCouponCode = event => {
   const value = event.target.value
@@ -124,7 +128,7 @@ onMounted(() => {
       >
         <div class="coupon-main">
           <div class="coupon-name">{{ coupon.name }}</div>
-          <div class="coupon-discount">{{ formatPrice(coupon.discount) }} 할인</div>
+          <div class="coupon-discount">{{ formatCouponDiscount(coupon) }}</div>
         </div>
 
         <div class="coupon-footer">

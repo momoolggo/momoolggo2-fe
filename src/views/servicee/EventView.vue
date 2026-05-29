@@ -157,10 +157,14 @@
           <div class="btn-col">
             <template v-if="lastCorrect && currentStage < 5">
               <button class="btn btn-primary" @click="nextStage">⚡ {{ currentStage + 1 }}단계 도전!</button>
-              <button class="btn btn-reward"  @click="claimReward">🎁 보상 받기</button>
+              <button class="btn btn-reward" :disabled="rewardLoading" @click="claimReward">
+                🎁 보상 받기
+              </button>
             </template>
             <template v-else-if="lastCorrect && currentStage === 5">
-              <button class="btn btn-primary" @click="claimReward">🏆 최고 보상 받기!</button>
+              <button class="btn btn-primary" :disabled="rewardLoading" @click="claimReward">
+                🏆 최고 보상 받기!
+              </button>
             </template>
             <template v-else>
               <button class="btn btn-primary"   @click="restartGame">🔄 처음부터 재도전</button>
@@ -185,7 +189,17 @@
           <div class="coupon-divider">
             <span></span><span class="coupon-code-label">쿠폰 코드</span><span></span>
           </div>
-          <div class="coupon-code">{{ reward.code }}</div>
+          <input
+            ref="rewardCodeInput"
+            class="coupon-code"
+            :value="issuedRewardCode"
+            readonly
+            @click="selectRewardCode"
+            @focus="selectRewardCode"
+          />
+          <button class="coupon-copy-btn" type="button" @click="saveRewardCodeForCouponBox">
+            쿠폰함에 입력하기
+          </button>
         </div>
         <div class="btn-col">
           <button class="btn btn-primary"   @click="restartGame">🔄 다시 도전</button>
@@ -199,7 +213,11 @@
 
 <script setup>
 import { ref, computed } from 'vue'
+import { useRouter } from 'vue-router'
+import orderService from '@/services/orderService'
+import { showAlert } from '@/composables/useAlert'
 
+const router = useRouter()
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
 
 const FOODS = [
@@ -230,6 +248,9 @@ const showConfetti  = ref(false)
 const confetti      = ref([])
 const targetFood    = ref(FOODS[1])
 const cups          = ref([])
+const issuedRewardCode = ref('')
+const rewardLoading = ref(false)
+const rewardCodeInput = ref(null)
 
 const stageData   = computed(() => STAGES[currentStage.value - 1])
 const reward      = computed(() => stageData.value.reward)
@@ -335,6 +356,7 @@ function pickCup(idx) {
 
 function startGame() {
   currentStage.value = 1
+  issuedRewardCode.value = ''
   beginStage()
 }
 
@@ -348,20 +370,56 @@ function nextStage() {
   beginStage()
 }
 
-function claimReward() {
-  gameState.value = 'reward'
-  triggerConfetti()
+async function claimReward() {
+  if (rewardLoading.value) return
+  rewardLoading.value = true
+
+  try {
+    const res = await orderService.issueFoodCupRewardCode(currentStage.value)
+    issuedRewardCode.value = res.resultData?.code || ''
+    saveRewardCode()
+    gameState.value = 'reward'
+    triggerConfetti()
+  } catch (e) {
+    console.error('food cup reward code issue failed:', e)
+    await showAlert(
+      e.response?.data?.resultMessage || '오늘은 이미 이벤트 보상을 받았습니다.\n게임은 계속 진행할 수 있지만 보상은 하루 1회만 받을 수 있습니다.',
+      { title: '알림', type: 'info' }
+    )
+  } finally {
+    rewardLoading.value = false
+  }
+}
+
+function saveRewardCodeForCouponBox() {
+  saveRewardCode()
+  router.push({ name: 'MyPageCoupon' }).catch(() => {
+    window.location.href = '/mypage/coupon'
+  })
+}
+
+function saveRewardCode() {
+  if (!issuedRewardCode.value) return
+  sessionStorage.setItem('foodCupRewardCode', issuedRewardCode.value)
+}
+
+function selectRewardCode() {
+  rewardCodeInput.value?.focus()
+  rewardCodeInput.value?.select()
+  rewardCodeInput.value?.setSelectionRange(0, issuedRewardCode.value.length)
 }
 
 function restartGame() {
   currentStage.value = 1
   showConfetti.value = false
+  issuedRewardCode.value = ''
   beginStage()
 }
 
 function goIntro() {
   gameState.value    = 'intro'
   showConfetti.value = false
+  issuedRewardCode.value = ''
 }
 
 function triggerConfetti() {
@@ -700,6 +758,11 @@ function triggerConfetti() {
   letter-spacing: -0.3px;
 }
 .btn:active { transform: scale(.97); }
+.btn:disabled {
+  opacity: 0.55;
+  cursor: default;
+  transform: none;
+}
 
 .btn-primary {
   background: var(--red);
@@ -767,6 +830,7 @@ function triggerConfetti() {
   position: absolute;
   inset: 0;
   background: radial-gradient(ellipse at center, rgba(227,30,36,.04) 0%, transparent 70%);
+  pointer-events: none;
 }
 .coupon-label {
   font-size: 11px;
@@ -806,6 +870,9 @@ function triggerConfetti() {
   white-space: nowrap;
 }
 .coupon-code {
+  width: 100%;
+  position: relative;
+  z-index: 1;
   font-family: 'Black Han Sans', sans-serif;
   font-size: 22px;
   color: var(--text);
@@ -814,8 +881,25 @@ function triggerConfetti() {
   padding: 10px 20px;
   border-radius: 10px;
   border: 1.5px solid var(--border);
+  cursor: pointer;
+  user-select: all;
+  text-align: center;
+  outline: none;
 }
-
+.coupon-copy-btn {
+  width: 100%;
+  position: relative;
+  z-index: 1;
+  margin-top: 8px;
+  padding: 10px 14px;
+  border: 1.5px solid var(--red);
+  border-radius: 10px;
+  background: var(--white);
+  color: var(--red);
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+}
 /* ── TARGET BANNER (reveal 전용) ── */
 .target-banner {
   width: 100%;

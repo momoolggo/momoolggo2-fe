@@ -2,9 +2,7 @@ import axios from 'axios'
 import userService from '@/services/userService'
 import { useUserStore } from '@/stores/userStore'
 import { useMessageModalStore } from '@/stores/messageModalStore'
-
-axios.defaults.baseURL = import.meta.env.VITE_API_BASE_URL;
-axios.defaults.withCredentials = true;
+import router from '@/router'
 
 axios.interceptors.response.use(
   res => res,
@@ -15,20 +13,25 @@ axios.interceptors.response.use(
     if (err.response) {
       const { status, config, data } = err.response
 
-      // /user/reissue 자체가 실패 = RT 만료 → 로그아웃
-      if (config.url === '/user/reissue' && status === 500) {
-        await userStore.signOut()
-        messageModalStore.setMessage('세션이 만료되었습니다. 다시 로그인해주세요.')
+      // reissue 자체가 401 = RT 만료 → 로그인 페이지로 이동
+      if (config.url === '/user/reissue' && status === 401) {
+        const role = userStore.state.role
+        userStore.reset()
+        redirectToSignin(role)
         return Promise.reject(err)
       }
 
-      // 401 + 로그인 상태 = AT 만료 → 재발급 후 원 요청 재시도
-      if (status === 401 && userStore.state.isSignedIn) {
+      // 401 + 미재시도 = AT 만료 → 재발급 후 원 요청 1회 재시도
+      if (status === 401 && !config._retry) {
+        config._retry = true
+        const role = userStore.state.role
         try {
           await userService.reissue()
           userStore.refreshExpiry()
-          return await http.request(err.config)
+          return await axios.request(config)
         } catch (reissueError) {
+          userStore.reset()
+          redirectToSignin(role)
           return Promise.reject(reissueError)
         }
       }
@@ -46,5 +49,12 @@ axios.interceptors.response.use(
     return Promise.reject(err)
   }
 )
+
+function redirectToSignin(role) {
+  if (role === 'OWNER') router.push('/owner/signin')
+  else if (role === 'RIDER') router.push('/rider/signin')
+  else if (role === 'ADMIN') router.push('/admin/signin')
+  else router.push('/customer/signin')
+}
 
 export default axios

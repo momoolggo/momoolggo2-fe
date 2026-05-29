@@ -39,16 +39,29 @@ const selectedCoupon = computed(() =>
 // 쿠폰 할인 금액
 const discountAmount = computed(() => {
   if (!selectedCoupon.value) return 0
-  return Number(selectedCoupon.value.discount || 0)
+  const menuTotal = Number(state.menuTotal || 0)
+  const discount = Number(selectedCoupon.value.discount || 0)
+
+  if (selectedCoupon.value.discountType === 'PERCENT') {
+    return Math.floor(menuTotal * discount / 100)
+  }
+
+  return Math.min(discount, menuTotal)
 })
 
 // 화면에 표시할 최종 결제 금액
 const displayTotalAmount = computed(() => {
-  const total = Number(state.totalAmount || 0) - discountAmount.value
+  const menuTotal = Number(state.menuTotal || 0)
+  const deliveryFee = Number(state.deliveryFee || 0)
+  const total = menuTotal - discountAmount.value + deliveryFee
   return Math.max(total, 0)
 })
 
 const formatPrice = value => `${Number(value || 0).toLocaleString()}원`
+const formatCouponDiscount = coupon => {
+  if (coupon.discountType === 'PERCENT') return `${Number(coupon.discount || 0)}% 할인`
+  return `${Number(coupon.discount || 0).toLocaleString()}원 할인`
+}
 
 const loadTossScript = () => {
   return new Promise((resolve, reject) => {
@@ -316,7 +329,7 @@ await widgets.requestPayment({
               :key="coupon.couponListId"
               :value="coupon.couponListId"
             >
-              {{ coupon.name }} - {{ formatPrice(coupon.discount) }} 할인
+              {{ coupon.name }} - {{ formatCouponDiscount(coupon) }}
             </option>
           </select>
 

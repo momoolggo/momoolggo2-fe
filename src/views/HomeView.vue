@@ -21,11 +21,17 @@ const categories = [
   { label: '피자',       img: '피자'    },
 ]
 
+const getCategoryImage = img => `/image/thumb/${img}.png`
+
+categories.forEach((cat) => {
+  const image = new Image()
+  image.src = getCategoryImage(cat.img)
+})
+
 // 배너
 const banners = [
   { img: '/image/배너.png', route: '/event'    },
   { img: '/image/광고2.png', route: '/whatKind' },
-  { img: '/image/광고3.png', route: '/whatKind'},
 ]
 
 // 현재 배너(인디케이터용)
@@ -106,9 +112,10 @@ function goCategory(label) {
           @click="goCategory(cat.label)"
         >
           <img
-            :src="`/image/${cat.img}.png`"
+            :src="getCategoryImage(cat.img)"
             :alt="cat.label"
-            loading="lazy"
+            loading="eager"
+            fetchpriority="high"
             decoding="async"
             width="85"
             height="85"

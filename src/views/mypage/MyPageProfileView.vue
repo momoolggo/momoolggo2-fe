@@ -97,7 +97,7 @@ const update = async () => {
             class="inp"
             placeholder="변경할 비밀번호 입력"
           />
-          <button class="pw_toggle" @click="state.showPw = !state.showPw">
+          <button type="button" class="pw_toggle" @click="state.showPw = !state.showPw">
             <i :class="state.showPw ? 'bi bi-eye' : 'bi bi-eye-slash'"></i>
           </button>
         </div>
@@ -113,7 +113,7 @@ const update = async () => {
             class="inp"
             placeholder="비밀번호 확인"
           />
-          <button class="pw_toggle" @click="state.showPwConfirm = !state.showPwConfirm">
+          <button type="button" class="pw_toggle" @click="state.showPwConfirm = !state.showPwConfirm">
             <i :class="state.showPwConfirm ? 'bi bi-eye' : 'bi bi-eye-slash'"></i>
           </button>
         </div>

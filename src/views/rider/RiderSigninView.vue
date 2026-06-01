@@ -77,6 +77,7 @@ const recoverAccount = async () => {
         type="text"
         placeholder="아이디"
         class="inp"
+        autocomplete="username"
         @keyup.enter="signin"
       />
 
@@ -86,9 +87,10 @@ const recoverAccount = async () => {
           :type="state.showPw ? 'text' : 'password'"
           placeholder="비밀번호"
           class="inp"
+          autocomplete="current-password"
           @keyup.enter="signin"
         />
-        <button class="pw_toggle" @click="state.showPw = !state.showPw">
+        <button type="button" class="pw_toggle" @click="state.showPw = !state.showPw">
           <i :class="state.showPw ? 'bi bi-eye' : 'bi bi-eye-slash'"></i>
         </button>
       </div>
@@ -145,4 +147,20 @@ const recoverAccount = async () => {
   cursor: pointer;
 }
 .btn_recover:hover { background: #fff4f4; }
+
+@media (max-width: 768px) {
+  .signin_page {
+    min-height: 100dvh;
+    padding: 24px 16px;
+  }
+
+  .signin_card {
+    padding: 24px 20px 32px;
+    gap: 14px;
+    box-shadow: none;
+  }
+
+  .inp { font-size: 16px; }
+  .pw_toggle { min-width: 44px; min-height: 44px; }
+}
 </style>

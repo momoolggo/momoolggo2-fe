@@ -130,15 +130,15 @@ const goToAddStore = () => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 32px 25px;
+  padding: 24px 25px 20px;
   position: sticky;
   top: 20px;
-  gap: 16px;
+  gap: 12px;
 }
 
 /* 로고 */
 .logo-section { text-align: center; }
-.logo { width: 200px; }
+.logo { width: 180px; }
 
 /* 영업 상태 토글 */
 .status-toggle {
@@ -213,17 +213,17 @@ const goToAddStore = () => {
 
 /* 메뉴 */
 .menu-container {
-  flex: 1;
+  flex: 0 1 auto;
   display: flex;
   flex-direction: column;
-  gap: 15px;
+  gap: 10px;
   width: 100%;
-  margin-top: 25px;
+  margin-top: 16px;
 }
 
 .menu-item {
   width: 100%;
-  padding: 12px;
+  padding: 11px;
   border-radius: 12px;
   border: 1px solid #e5e5e5;
   background: #fff;
@@ -263,6 +263,8 @@ const goToAddStore = () => {
   color: #bbb;
   text-align: center;
   line-height: 1.6;
+  margin-top: auto;
+  padding-top: 6px;
 }
 .withdraw-footer-btn {
   background: none;

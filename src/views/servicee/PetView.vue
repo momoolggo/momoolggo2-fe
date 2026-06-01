@@ -1109,7 +1109,7 @@ onUnmounted(() => {
 /* ── PET HEADER ── */
 .pet-header {
   background: linear-gradient(135deg, #FFF0E8, #FFE8F3);
-  padding: 16px 20px 0; text-align: center; position: relative; overflow: hidden;
+  padding: 16px 20px 0; text-align: center; position: relative; overflow: visible;
 }
 .pet-header::before {
   content:''; position:absolute; top:-30px; right:-30px;
@@ -1122,9 +1122,9 @@ onUnmounted(() => {
 .owner-name   { font-size:12px; color:var(--muted); margin-bottom:10px; }
 
 .pet-scene {
-  position:relative; height:175px;
+  position:relative; height:200px;
   display:flex; align-items:flex-end; justify-content:center;
-  border-radius:12px; overflow:hidden; transition:background 0.6s;
+  border-radius:12px; overflow:visible; transition:background 0.6s;
 }
 .pet-ground {
   position:absolute; bottom:0; left:0; right:0; height:38px;

@@ -285,6 +285,7 @@ const handleAddToCart = async () => {
   position: relative;
   width: 100%;
   height: 250px;
+  overflow: hidden;
 }
 
 .cover-img {
@@ -292,6 +293,7 @@ const handleAddToCart = async () => {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: center center;
 }
 
 .back-btn {

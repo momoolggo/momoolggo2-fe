@@ -75,6 +75,7 @@ const recoverAccount = async () => {
         type="text"
         placeholder="아이디"
         class="inp"
+        autocomplete="username"
         @keyup.enter="signin"
       />
 
@@ -84,9 +85,10 @@ const recoverAccount = async () => {
           :type="state.showPw ? 'text' : 'password'"
           placeholder="비밀번호"
           class="inp"
+          autocomplete="current-password"
           @keyup.enter="signin"
         />
-        <button class="pw_toggle" @click="state.showPw = !state.showPw">
+        <button type="button" class="pw_toggle" @click="state.showPw = !state.showPw">
           <i :class="state.showPw ? 'bi bi-eye' : 'bi bi-eye-slash'"></i>
         </button>
       </div>
@@ -121,10 +123,10 @@ const recoverAccount = async () => {
 </template>
 
 <style scoped>
-.signin_page { position: relative; width: 100%; height: 100vh; background: #ffffff; display: flex; align-items: center; justify-content: center; overflow: hidden; }
-.signin_card { width: 100%; max-width: 380px; margin: 0 auto; background: #ffffff; border-radius: 20px; box-shadow: 0 4px 32px rgba(0,0,0,0.10); padding: 10px 45px 40px; display: flex; flex-direction: column; gap: 18px; z-index: 1; }
+.signin_page { position: relative; width: 100%; min-height: 100vh; background: #ffffff; display: flex; align-items: center; justify-content: center; overflow: hidden; padding: 40px 16px; }
+.signin_card { width: 100%; max-width: 380px; margin: 0 auto; background: #ffffff; border-radius: 20px; box-shadow: 0 4px 32px rgba(0,0,0,0.10); padding: 32px 45px 40px; display: flex; flex-direction: column; gap: 18px; z-index: 1; }
 .logo_wrap { text-align: center; }
-.signin_logo { height: 130x; width: 140px; }
+.signin_logo { height: 130px; width: 140px; object-fit: contain; }
 .signin_title { text-align: center; font-size: 20px; font-weight: 700; color: var(--black); }
 .mascot_img { position: absolute; right: -250px; bottom: 380px; width: 1000px; object-fit: contain; pointer-events: none; }
 .back_link { text-align: center; font-size: 13px; }
@@ -145,4 +147,12 @@ const recoverAccount = async () => {
   cursor: pointer;
 }
 .btn_recover:hover { background: #fff4f4; }
+
+@media (max-width: 768px) {
+  .signin_page { padding: 24px 16px; align-items: center; }
+  .signin_card { padding: 24px 20px 32px; gap: 14px; box-shadow: none; max-width: 100%; }
+  .mascot_img { display: none; }
+  .inp { font-size: 16px; touch-action: manipulation; }
+  .pw_toggle { padding: 12px; min-width: 44px; min-height: 44px; }
+}
 </style>

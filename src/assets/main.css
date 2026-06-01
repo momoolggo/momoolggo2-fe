@@ -164,17 +164,24 @@ button {
 }
 
 /* ── 비밀번호 토글 ── */
-.input_wrap { position: relative; }
+.input_wrap { position: relative; display: flex; align-items: center; }
+.input_wrap .inp { padding-right: 48px; flex: 1; }
 .pw_toggle {
   position: absolute;
-  right: 12px;
-  top: 50%;
-  transform: translateY(-50%);
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 44px;
   background: none;
   border: none;
   cursor: pointer;
   font-size: 16px;
   font-style: normal;  /* ← 이거 추가 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  -webkit-tap-highlight-color: transparent;
+  z-index: 1;
 }
 
 /* 브라우저 기본 비밀번호 토글 숨기기 */

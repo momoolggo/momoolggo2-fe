@@ -21,8 +21,8 @@ axios.interceptors.response.use(
         return Promise.reject(err)
       }
 
-      // 로그인/회원가입은 401이 정상 응답(비밀번호 틀림 등)이므로 reissue 시도 제외
-      const skipReissueUrls = ['/user/login', '/user/join']
+      // 로그인/회원가입/라이더 프로필 등록은 reissue 시도 제외
+      const skipReissueUrls = ['/user/login', '/user/join', '/rider/profile']
       // 401 + 미재시도 = AT 만료 → 재발급 후 원 요청 1회 재시도
       if (status === 401 && !config._retry && !skipReissueUrls.includes(config.url)) {
         config._retry = true

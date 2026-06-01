@@ -60,13 +60,14 @@ button {
   padding: 11px 14px;
   border: 1.5px solid var(--border);
   border-radius: var(--radius-md);
-  font-size: 14px;
+  font-size: 16px;
   font-family: inherit;
   outline: none;
   background: var(--bg);
   color: var(--black);
   box-sizing: border-box;
   transition: border-color 0.18s;
+  -webkit-appearance: none;
 }
 .inp:focus {
   border-color: var(--primary);
@@ -181,11 +182,6 @@ input[type="password"]::-ms-clear {
   display: none;   /* Edge */
 }
 
-input[type="password"]::-webkit-credentials-auto-fill-button,
-input[type="password"]::-webkit-textfield-decoration-container {
-  display: none;   /* Chrome */
-  -webkit-appearance: none;
-}
 
 /* ── 로그인/회원가입 하단 링크 ── */
 .auth_link {

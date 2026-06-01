@@ -181,7 +181,7 @@ const signup = async () => {
       <div class="field">
         <label class="label">비밀번호 <span class="required">*</span></label>
         <div class="input_wrap">
-          <input v-model="state.form.userPw" :type="state.showPw ? 'text' : 'password'" class="inp" placeholder="비밀번호를 입력하세요" />
+          <input v-model="state.form.userPw" :type="state.showPw ? 'text' : 'password'" class="inp" placeholder="비밀번호를 입력하세요" autocomplete="new-password" />
           <button class="pw_toggle" @click="state.showPw = !state.showPw">
             <i :class="state.showPw ? 'bi bi-eye' : 'bi bi-eye-slash'"></i>
           </button>
@@ -191,7 +191,7 @@ const signup = async () => {
       <div class="field">
         <label class="label">비밀번호 확인 <span class="required">*</span></label>
         <div class="input_wrap">
-          <input v-model="state.form.userPwConfirm" :type="state.showPwConfirm ? 'text' : 'password'" class="inp" placeholder="비밀번호를 한번 더 입력하세요" />
+          <input v-model="state.form.userPwConfirm" :type="state.showPwConfirm ? 'text' : 'password'" class="inp" placeholder="비밀번호를 한번 더 입력하세요" autocomplete="new-password" />
           <button class="pw_toggle" @click="state.showPwConfirm = !state.showPwConfirm">
             <i :class="state.showPwConfirm ? 'bi bi-eye' : 'bi bi-eye-slash'"></i>
           </button>
@@ -306,7 +306,7 @@ const signup = async () => {
 
 <style scoped>
 .signup_page { min-height: 100vh; background: var(--primary); display: flex; align-items: center; justify-content: center; padding: 40px 16px; }
-.signup_card { background: var(--white); border-radius: var(--radius-lg); padding: 36px 32px; width: 520px; box-shadow: var(--shadow-card); display: flex; flex-direction: column; gap: 14px; }
+.signup_card { background: var(--white); border-radius: var(--radius-lg); padding: 36px 32px; width: 520px; max-width: 100%; box-shadow: var(--shadow-card); display: flex; flex-direction: column; gap: 14px; }
 .logo_wrap { text-align: center; }
 .signup_logo { height: 80px; width: 80px;}
 .signup_title { text-align: center; font-size: 20px; font-weight: 700; color: var(--black); }
@@ -336,4 +336,9 @@ const signup = async () => {
 .badge { font-size: 11px; font-weight: 700; padding: 2px 7px; border-radius: 20px; }
 .required_badge { background: #fff0f0; color: #e84040;}
 .optional_badge { background: #f0f0f0; color: #888;}
+
+@media (max-width: 480px) {
+  .signup_page { padding: 24px 12px; align-items: flex-start; }
+  .signup_card { padding: 24px 16px; width: 100%; box-shadow: none; border-radius: 0; }
+}
 </style>

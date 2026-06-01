@@ -249,7 +249,7 @@ class AdminService {
 
     // 회원 관리
     async getUserList(role = null, page = 0, searchParams = {}) {
-        const params = { page }
+        const params = { page, size: 100 }
         if (role) params.role = role
         if (searchParams.userId) params.userId = searchParams.userId
         if (searchParams.name) params.name = searchParams.name
@@ -336,6 +336,11 @@ class AdminService {
 
     async getOwnerProfile(userNo) {
         const res = await axios.get(`${this.#url}/user/${userNo}/owner-profile`)
+        return res.data
+    }
+
+    async getRiderProfile(userNo) {
+        const res = await axios.get(`${this.#url}/user/${userNo}/rider-profile`)
         return res.data
     }
 

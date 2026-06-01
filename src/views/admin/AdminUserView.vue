@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import AdminSidebar from '@/components/admin/AdminSidebar.vue'
 import AdminHeader from '@/components/admin/AdminHeader.vue'
 import AdminAlertModal from '@/components/admin/AdminAlertModal.vue'
@@ -253,6 +253,18 @@ const openPendingDetail = async (user) => {
       // 상세 추가정보 조회 실패 시 기존 정보만 표시
     }
   }
+
+  if (user.role === 'RIDER') {
+    try {
+      const res = await adminService.getRiderProfile(user.userNo)
+      selectedPendingUser.value = {
+        ...selectedPendingUser.value,
+        ...(res.resultData ?? {}),
+      }
+    } catch {
+      // 상세 추가정보 조회 실패 시 기존 정보만 표시
+    }
+  }
 }
 const closePendingDetail = () => { showPendingDetailModal.value = false; selectedPendingUser.value = null }
 
@@ -266,6 +278,7 @@ const openFile = (url) => {
   window.open(target, '_blank')
 }
 
+watch(currentPage, fetchUserList)
 onMounted(fetchUserList)
 </script>
 
@@ -355,9 +368,6 @@ onMounted(fetchUserList)
                 </tr>
               </template>
               <tr v-if="userList.length === 0"><td :colspan="showEcoColumn ? 7 : 6" class="empty_td">조회된 회원이 없습니다.</td></tr>
-              <tr v-for="i in Math.max(0, 15 - userList.length)" :key="'e'+i" class="empty_row">
-                <td></td><td></td><td></td><td></td><td></td><td></td><td v-if="showEcoColumn"></td>
-              </tr>
             </tbody>
           </table>
         </div>
@@ -393,8 +403,8 @@ onMounted(fetchUserList)
           </table>
         </div>
 
-        <!-- 페이지네이션 -->
-        <div class="pagination">
+        <!-- 페이지네이션 (2페이지 이상일 때만 표시) -->
+        <div v-if="totalPages > 1" class="pagination">
           <button @click="currentPage > 1 && currentPage--">◀</button>
           <button v-for="p in totalPages" :key="p" :class="{ active: currentPage === p }" @click="currentPage = p">{{ p }}</button>
           <button @click="currentPage < totalPages && currentPage++">▶</button>
@@ -532,20 +542,23 @@ onMounted(fetchUserList)
           <!-- 라이더 전용 -->
           <template v-if="selectedPendingUser.role === 'RIDER'">
             <div class="info_row">
-              <span class="info_label">운전 면허증</span>
-              <span class="file_link" @click="openFile(selectedPendingUser.driverLicense)">{{ selectedPendingUser.driverLicense }}</span>
+              <span class="info_label">면허 번호</span>
+              <span class="info_value">{{ selectedPendingUser.licenseNo ?? '-' }}</span>
             </div>
             <div class="info_row">
-              <span class="info_label">본인 확인 (신분증)</span>
-              <span class="file_link" @click="openFile(selectedPendingUser.idCard)">{{ selectedPendingUser.idCard }}</span>
+              <span class="info_label">면허 종류</span>
+              <span class="info_value">{{ selectedPendingUser.licenseType ?? '-' }}</span>
             </div>
             <div class="info_row">
-              <span class="info_label">자동차 보험 증권</span>
-              <span class="file_link" @click="openFile(selectedPendingUser.carInsurance)">{{ selectedPendingUser.carInsurance }}</span>
+              <span class="info_label">배달 수단</span>
+              <span class="info_value">{{ selectedPendingUser.vehicleType ?? '-' }}</span>
             </div>
             <div class="info_row">
-              <span class="info_label">안전 교육 이수증</span>
-              <span class="file_link" @click="openFile(selectedPendingUser.safetyEdu)">{{ selectedPendingUser.safetyEdu }}</span>
+              <span class="info_label">면허증 사진</span>
+              <span v-if="selectedPendingUser.licenseImageUrl" class="file_link" @click="openFile(selectedPendingUser.licenseImageUrl)">
+                {{ selectedPendingUser.licenseImageUrl }}
+              </span>
+              <span v-else class="info_value" style="color:#e53935;font-size:12px;">프로필 미등록 (재가입 필요)</span>
             </div>
           </template>
         </div>

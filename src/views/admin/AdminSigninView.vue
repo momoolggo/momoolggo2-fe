@@ -69,6 +69,10 @@ const signin = async () => {
       <p v-if="state.errorMsg" class="error_msg">{{ state.errorMsg }}</p>
 
       <button class="btn_primary" @click="signin">로그인</button>
+
+      <div class="back_link">
+        <router-link to="/">← 홈으로 돌아가기</router-link>
+      </div>
     </div>
 
     <img src="@/assets/뭐물꼬_마스코트.png" alt="뭐물꼬 마스코트" class="mascot_img" />
@@ -77,9 +81,12 @@ const signin = async () => {
 
 <style scoped>
 .signin_page { position: relative; width: 100%; height: 100vh; background: #ffffff; display: flex; align-items: center; justify-content: center; overflow: hidden; }
-.signin_card { width: 100%; max-width: 380px; background: #ffffff; border-radius: 20px; box-shadow: 0 4px 32px rgba(0,0,0,0.10); padding: 10px 45px 40px; display: flex; flex-direction: column; gap: 18px; z-index: 1; }
+.signin_card { width: 100%; max-width: 380px; margin: 0 auto; background: #ffffff; border-radius: 20px; box-shadow: 0 4px 32px rgba(0,0,0,0.10); padding: 10px 45px 40px; display: flex; flex-direction: column; gap: 18px; z-index: 1; }
 .logo_wrap { text-align: center; }
-.signin_logo { width: 140px; }
-.signin_title { text-align: center; font-size: 20px; font-weight: 700; color: #222; }
+.signin_logo { height: 130px; width: 140px; }
+.signin_title { text-align: center; font-size: 20px; font-weight: 700; color: var(--black); }
 .mascot_img { position: absolute; right: -250px; bottom: 380px; width: 1000px; object-fit: contain; pointer-events: none; }
+.back_link { text-align: center; font-size: 13px; }
+.back_link a { color: var(--gray); text-decoration: none; }
+.back_link a:hover { color: var(--primary); }
 </style>

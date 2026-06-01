@@ -131,6 +131,50 @@ onUnmounted(() => {
   if (licensePreview.value) URL.revokeObjectURL(licensePreview.value)
 })
 
+// 휴대폰 번호 자동 포맷
+const onTelInput = (e) => {
+  const d = e.target.value.replace(/\D/g, '')
+  if (d.length <= 3) state.form.tel = d
+  else if (d.length <= 7) state.form.tel = `${d.slice(0,3)}-${d.slice(3)}`
+  else state.form.tel = `${d.slice(0,3)}-${d.slice(3,7)}-${d.slice(7,11)}`
+}
+
+// 운전면허 번호 자동 포맷 (XX-XX-XXXXXX-XX)
+const onLicenseNoInput = (e) => {
+  const d = e.target.value.replace(/\D/g, '')
+  if (d.length <= 2) state.form.licenseNo = d
+  else if (d.length <= 4) state.form.licenseNo = `${d.slice(0,2)}-${d.slice(2)}`
+  else if (d.length <= 10) state.form.licenseNo = `${d.slice(0,2)}-${d.slice(2,4)}-${d.slice(4)}`
+  else state.form.licenseNo = `${d.slice(0,2)}-${d.slice(2,4)}-${d.slice(4,10)}-${d.slice(10,12)}`
+}
+
+// 드롭박스
+const licenseTypeOpen = ref(false)
+const vehicleTypeOpen = ref(false)
+
+const licenseTypeOptions = [
+  { label: '1종 보통', value: '1종 보통' },
+  { label: '1종 대형', value: '1종 대형' },
+  { label: '2종 보통', value: '2종 보통' },
+  { label: '2종 소형', value: '2종 소형' },
+  { label: '원동기', value: '원동기' },
+]
+const vehicleTypeOptions = [
+  { label: '오토바이', value: 'MOTORBIKE' },
+  { label: '자동차', value: 'CAR' },
+  { label: '자전거', value: 'BICYCLE' },
+  { label: '도보', value: 'WALK' },
+]
+
+const selectedLicenseLabel = computed(() =>
+  licenseTypeOptions.find(o => o.value === state.form.licenseType)?.label ?? '면허 종류를 선택하세요'
+)
+const selectedVehicleLabel = computed(() =>
+  vehicleTypeOptions.find(o => o.value === state.form.vehicleType)?.label ?? '배달 수단을 선택하세요'
+)
+const selectLicenseType = (opt) => { state.form.licenseType = opt.value; licenseTypeOpen.value = false }
+const selectVehicleType = (opt) => { state.form.vehicleType = opt.value; vehicleTypeOpen.value = false }
+
 const checkId = async () => {
   if (!state.form.userId) {
     state.idMsg = '아이디를 입력해 주세요.'
@@ -192,16 +236,21 @@ const signup = async () => {
     }
     // 2. rider 프로필 등록 (PUT /api/rider/profile) — ADR-001 (C) 박제 2단계 흐름 일관. account_*는 마이페이지에서 (A1' 결정).
     // phone = 가입 시점 snapshot (정산 시연 UX 트랙 #9, 2026-05-21, 옵션 A) — admin 배달관리 연결 박제
-    await riderService.putProfile({
-      licenseNo: state.form.licenseNo,
-      licenseType: state.form.licenseType,
-      vehicleType: state.form.vehicleType,
-      accountBank: null,
-      accountNo: null,
-      accountHolder: null,
-      phone: state.form.tel,
-      licenseImageUrl: state.form.licenseImageUrl,
-    })
+    try {
+      await riderService.putProfile({
+        licenseNo: state.form.licenseNo,
+        licenseType: state.form.licenseType,
+        vehicleType: state.form.vehicleType,
+        accountBank: null,
+        accountNo: null,
+        accountHolder: null,
+        phone: state.form.tel,
+        licenseImageUrl: state.form.licenseImageUrl,
+      })
+    } catch (profileErr) {
+      state.errorMsg = '라이더 프로필 등록에 실패했습니다. 잠시 후 다시 시도해주세요. (오류: ' + (profileErr.response?.data?.resultMessage ?? profileErr.message) + ')'
+      return
+    }
     await showAlert('회원가입이 완료되었습니다. 관리자 승인 후 이용 가능합니다. 마이페이지에서 정산 계좌를 등록해주세요.', { title: '회원가입', type: 'success' })
     router.push('/riderservice')
   } catch (err) {
@@ -280,35 +329,42 @@ const signup = async () => {
 
       <div class="field">
         <label class="label">휴대폰 번호 <span class="required">*</span></label>
-        <input v-model="state.form.tel" type="tel" class="inp" placeholder="010-0000-0000" />
+        <input :value="state.form.tel" type="tel" class="inp" placeholder="010-0000-0000" maxlength="13" @input="onTelInput" />
       </div>
 
       <div class="field">
         <label class="label">운전면허 번호 <span class="required">*</span></label>
-        <input v-model="state.form.licenseNo" type="text" class="inp" placeholder="예: 11-22-333333-44" />
+        <input :value="state.form.licenseNo" type="text" class="inp" placeholder="예: 11-22-333333-44" maxlength="15" @input="onLicenseNoInput" />
       </div>
 
       <div class="field">
         <label class="label">운전 면허증 <span class="required">*</span></label>
-        <select v-model="state.form.licenseType" class="inp">
-          <option value="" disabled>면허 종류를 선택하세요</option>
-          <option value="1종 보통">1종 보통</option>
-          <option value="1종 대형">1종 대형</option>
-          <option value="2종 보통">2종 보통</option>
-          <option value="2종 소형">2종 소형</option>
-          <option value="원동기">원동기</option>
-        </select>
+        <div class="dropdown_wrap">
+          <button type="button" class="dropdown_btn" @click="licenseTypeOpen = !licenseTypeOpen">
+            <span :class="{ placeholder: !state.form.licenseType }">{{ selectedLicenseLabel }}</span>
+            <span class="dropdown_arrow">▼</span>
+          </button>
+          <div v-if="licenseTypeOpen" class="dropdown_menu">
+            <button v-for="opt in licenseTypeOptions" :key="opt.value" type="button" class="dropdown_item" @click="selectLicenseType(opt)">
+              {{ opt.label }}
+            </button>
+          </div>
+        </div>
       </div>
 
       <div class="field">
         <label class="label">배달 수단 <span class="required">*</span></label>
-        <select v-model="state.form.vehicleType" class="inp">
-          <option value="" disabled>배달 수단을 선택하세요</option>
-          <option value="MOTORBIKE">오토바이</option>
-          <option value="CAR">자동차</option>
-          <option value="BICYCLE">자전거</option>
-          <option value="WALK">도보</option>
-        </select>
+        <div class="dropdown_wrap">
+          <button type="button" class="dropdown_btn" @click="vehicleTypeOpen = !vehicleTypeOpen">
+            <span :class="{ placeholder: !state.form.vehicleType }">{{ selectedVehicleLabel }}</span>
+            <span class="dropdown_arrow">▼</span>
+          </button>
+          <div v-if="vehicleTypeOpen" class="dropdown_menu">
+            <button v-for="opt in vehicleTypeOptions" :key="opt.value" type="button" class="dropdown_item" @click="selectVehicleType(opt)">
+              {{ opt.label }}
+            </button>
+          </div>
+        </div>
       </div>
 
       <!-- 2026-05-28 트랙 — 면허증 사진 업로드 (가입 *이전* permitAll, owner signup-doc 박제 일관) -->
@@ -468,4 +524,11 @@ const signup = async () => {
 .remove_photo_btn:disabled { opacity: 0.5; cursor: not-allowed; }
 .uploading_overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.5); color: #fff; font-size: 14px; font-weight: 600; display: flex; align-items: center; justify-content: center; }
 .field_hint { font-size: 12px; color: #888; margin-top: 4px; }
+.dropdown_wrap { position: relative; }
+.dropdown_btn { width: 100%; background: var(--white); border: 1.5px solid var(--gray-light, #ddd); border-radius: var(--radius-md, 10px); padding: 12px 16px; font-size: 15px; color: var(--black); cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.dropdown_btn .placeholder { color: #aaa; }
+.dropdown_arrow { font-size: 10px; color: #999; flex-shrink: 0; }
+.dropdown_menu { position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: #fff; border: 1px solid #ddd; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); z-index: 20; overflow: hidden; }
+.dropdown_item { display: block; width: 100%; padding: 12px 16px; font-size: 14px; color: #333; background: none; border: none; text-align: left; cursor: pointer; }
+.dropdown_item:hover { background: #f5f5f5; }
 </style>

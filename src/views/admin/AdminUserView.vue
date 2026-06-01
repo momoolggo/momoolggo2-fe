@@ -346,9 +346,9 @@ onMounted(fetchUserList)
                   <td><span :class="['role_badge', roleBadgeClass(user.role)]">{{ roleLabel(user.role) }}</span></td>
                   <td>{{ formatCreatedAt(user.createdAt) }}</td>
                   <td v-if="showEcoColumn" class="eco_td">
-                    <span v-if="user.role === 'CUSTOMER' && greenLabel(user.green)" class="green_text">
-                      {{ greenLabel(user.green).text }}
-                      <img :src="greenLabel(user.green).img" class="green_icon" />
+                    <span v-if="user.role === 'CUSTOMER'" class="green_text">
+                      {{ greenLabel(user.green ?? 0).text }}
+                      <img :src="greenLabel(user.green ?? 0).img" class="green_icon" />
                     </span>
                     <span v-else class="green_dash">-</span>
                   </td>

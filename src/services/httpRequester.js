@@ -13,16 +13,18 @@ axios.interceptors.response.use(
     if (err.response) {
       const { status, config, data } = err.response
 
-      // reissue 자체가 401 = RT 만료 → 로그인 페이지로 이동
+      // reissue 자체가 401 = RT 만료 → 로그인 페이지로 이동 (로그인 중이었을 때만)
       if (config.url === '/user/reissue' && status === 401) {
         const role = userStore.state.role
         userStore.reset()
-        redirectToSignin(role)
+        if (role) redirectToSignin(role)
         return Promise.reject(err)
       }
 
+      // 로그인/회원가입은 401이 정상 응답(비밀번호 틀림 등)이므로 reissue 시도 제외
+      const skipReissueUrls = ['/user/login', '/user/join']
       // 401 + 미재시도 = AT 만료 → 재발급 후 원 요청 1회 재시도
-      if (status === 401 && !config._retry) {
+      if (status === 401 && !config._retry && !skipReissueUrls.includes(config.url)) {
         config._retry = true
         const role = userStore.state.role
         try {
@@ -31,7 +33,7 @@ axios.interceptors.response.use(
           return await axios.request(config)
         } catch (reissueError) {
           userStore.reset()
-          redirectToSignin(role)
+          if (role) redirectToSignin(role)
           return Promise.reject(reissueError)
         }
       }

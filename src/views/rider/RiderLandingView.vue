@@ -19,7 +19,7 @@ const goSignin = () => router.push('/rider/signin')
 <template>
   <RiderLayout>
   <div class="rider_landing">
-    <p class="page_label">라이더 랜딩</p>
+    
 
     <div class="hero_card">
       <div class="hero_image">
@@ -129,7 +129,7 @@ const goSignin = () => router.push('/rider/signin')
   padding: 28px 24px;
   margin-top: 16px;
 }
-.footer_logo { height: 28px; margin-bottom: 8px; filter: brightness(0) invert(1); }
+.footer_logo { height: 28px; margin-bottom: 8px; }
 .brand_name { font-size: 17px; font-weight: 700; margin-bottom: 4px; }
 .brand_sub { font-size: 12px; color: var(--gray-light); margin-bottom: 16px; }
 

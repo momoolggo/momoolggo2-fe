@@ -182,7 +182,7 @@ const signup = async () => {
         <label class="label">비밀번호 <span class="required">*</span></label>
         <div class="input_wrap">
           <input v-model="state.form.userPw" :type="state.showPw ? 'text' : 'password'" class="inp" placeholder="비밀번호를 입력하세요" autocomplete="new-password" />
-          <button class="pw_toggle" @click="state.showPw = !state.showPw">
+          <button type="button" class="pw_toggle" @click="state.showPw = !state.showPw">
             <i :class="state.showPw ? 'bi bi-eye' : 'bi bi-eye-slash'"></i>
           </button>
         </div>
@@ -192,7 +192,7 @@ const signup = async () => {
         <label class="label">비밀번호 확인 <span class="required">*</span></label>
         <div class="input_wrap">
           <input v-model="state.form.userPwConfirm" :type="state.showPwConfirm ? 'text' : 'password'" class="inp" placeholder="비밀번호를 한번 더 입력하세요" autocomplete="new-password" />
-          <button class="pw_toggle" @click="state.showPwConfirm = !state.showPwConfirm">
+          <button type="button" class="pw_toggle" @click="state.showPwConfirm = !state.showPwConfirm">
             <i :class="state.showPwConfirm ? 'bi bi-eye' : 'bi bi-eye-slash'"></i>
           </button>
         </div>
@@ -337,8 +337,8 @@ const signup = async () => {
 .required_badge { background: #fff0f0; color: #e84040;}
 .optional_badge { background: #f0f0f0; color: #888;}
 
-@media (max-width: 480px) {
-  .signup_page { padding: 24px 12px; align-items: flex-start; }
-  .signup_card { padding: 24px 16px; width: 100%; box-shadow: none; border-radius: 0; }
+@media (max-width: 768px) {
+  .signup_page { padding: 24px 12px; }
+  .signup_card { padding: 24px 16px; width: 100%; max-width: 100%; box-shadow: none; border-radius: 0; }
 }
 </style>

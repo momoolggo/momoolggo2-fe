@@ -50,6 +50,7 @@ const signin = async () => {
         type="text"
         placeholder="아이디"
         class="inp"
+        autocomplete="username"
         @keyup.enter="signin"
       />
 
@@ -59,9 +60,10 @@ const signin = async () => {
           :type="state.showPw ? 'text' : 'password'"
           placeholder="비밀번호"
           class="inp"
+          autocomplete="current-password"
           @keyup.enter="signin"
         />
-        <button class="pw_toggle" @click="state.showPw = !state.showPw">
+        <button type="button" class="pw_toggle" @click="state.showPw = !state.showPw">
           <i :class="state.showPw ? 'bi bi-eye' : 'bi bi-eye-slash'"></i>
         </button>
       </div>

@@ -148,9 +148,11 @@ const recoverAccount = async () => {
 }
 .btn_recover:hover { background: #fff4f4; }
 
-@media (max-width: 480px) {
-  .signin_page { padding: 24px 16px; align-items: flex-start; padding-top: 60px; }
-  .signin_card { padding: 24px 20px 32px; gap: 14px; box-shadow: none; }
+@media (max-width: 768px) {
+  .signin_page { padding: 24px 16px; align-items: center; }
+  .signin_card { padding: 24px 20px 32px; gap: 14px; box-shadow: none; max-width: 100%; }
   .mascot_img { display: none; }
+  .inp { font-size: 16px; touch-action: manipulation; }
+  .pw_toggle { padding: 12px; min-width: 44px; min-height: 44px; }
 }
 </style>

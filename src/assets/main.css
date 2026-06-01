@@ -68,6 +68,7 @@ button {
   box-sizing: border-box;
   transition: border-color 0.18s;
   -webkit-appearance: none;
+  touch-action: manipulation;
 }
 .inp:focus {
   border-color: var(--primary);

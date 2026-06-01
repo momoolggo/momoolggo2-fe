@@ -66,12 +66,12 @@ const categoryLabel = (val) => {
 
 const userTypeLabel = (val) => {
   const map = { CUSTOMER: '고객', OWNER: '사장', RIDER: '라이더' }
-  return map[val] ?? val
+  return map[val?.toUpperCase()] ?? val
 }
 
 const userTypeBadgeClass = (val) => {
   const map = { CUSTOMER: 'badge_customer', OWNER: 'badge_owner', RIDER: 'badge_rider' }
-  return map[val] ?? ''
+  return map[val?.toUpperCase()] ?? ''
 }
 
 const statusLabel = (val) => {
@@ -412,16 +412,13 @@ const deleteFaq = async (faqId) => {
                 @click="openInquiryModal(item)"
               >
                 <td class="inquiry_id_td">{{ formatInquiryId(item) }}</td>
-                <td>{{ categoryLabel(item.category) }}</td>
-                <td class="col_wide content_td">{{ item.content }}</td>
                 <td>
-                  <div class="user_cell">
-                    <span :class="['user_badge', userTypeBadgeClass(item.userType ?? 'CUSTOMER')]">
-                      {{ userTypeLabel(item.userType ?? 'CUSTOMER') }}
-                    </span>
-                    <span class="user_id">{{ item.userName ?? `user${item.userNo}` }}</span>
-                  </div>
+                  <span :class="['role_badge', userTypeBadgeClass(item.userRole ?? item.category ?? 'CUSTOMER')]">
+                    {{ userTypeLabel(item.userRole ?? item.category ?? 'CUSTOMER') }}
+                  </span>
                 </td>
+                <td class="col_wide content_td">{{ item.content }}</td>
+                <td>{{ item.userId ?? item.userNo }}</td>
                 <td>{{ item.createdAt?.slice(0, 10) }}</td>
               </tr>
             </tbody>
@@ -446,10 +443,10 @@ const deleteFaq = async (faqId) => {
           <span>문의 일시: {{ selectedInquiry.createdAt?.slice(0, 16).replace('T', ' ') }}</span>
           <span class="meta_divider">|</span>
           <span>상태: {{ statusLabel(selectedInquiry.state) }}</span>
-          <span :class="['user_badge', userTypeBadgeClass(selectedInquiry.userType ?? 'CUSTOMER')]">
-            {{ userTypeLabel(selectedInquiry.userType ?? 'CUSTOMER') }}
+          <span :class="['role_badge', userTypeBadgeClass(selectedInquiry.userRole ?? selectedInquiry.category ?? 'CUSTOMER')]">
+            {{ userTypeLabel(selectedInquiry.userRole ?? selectedInquiry.category ?? 'CUSTOMER') }}
           </span>
-          <span class="meta_user">{{ selectedInquiry.userName ?? `user${selectedInquiry.userNo}` }} / 주문번호: {{ selectedInquiry.orderNo ?? '-' }}</span>
+          <span class="meta_user">{{ selectedInquiry.userId ?? selectedInquiry.userNo }} / 주문번호: {{ selectedInquiry.orderNo ?? '-' }}</span>
         </div>
 
         <!-- 문의 내용 + 답변 -->
@@ -667,6 +664,10 @@ const deleteFaq = async (faqId) => {
 .clickable_row { cursor: pointer; }
 .clickable_row:hover { background: #fafafa; }
 .inquiry_id_td { font-size: 11px; color: #888; white-space: nowrap; }
+.role_badge { border-radius: 4px; padding: 3px 10px; font-size: 11px; font-weight: 600; color: #fff; white-space: nowrap; }
+.badge_customer { background: #4a90d9; }
+.badge_owner { background: #7150db; }
+.badge_rider { background: #4caf50; }
 .user_cell { display: flex; align-items: center; gap: 6px; justify-content: center; }
 .user_badge { border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 600; color: #fff; white-space: nowrap; }
 .badge_customer { background: #4a90d9; }

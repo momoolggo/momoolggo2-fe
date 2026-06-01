@@ -71,11 +71,13 @@ const nextMonth = () => {
 }
 
 const filteredByMonth = computed(() => {
-  return settlementList.value.filter(item => {
-    const d = new Date(item.periodEnd)
-    return d.getFullYear() === currentYear.value
-        && d.getMonth() + 1 === currentMonth.value
-  })
+  return settlementList.value
+    .filter(item => {
+      const d = new Date(item.periodEnd)
+      return d.getFullYear() === currentYear.value
+          && d.getMonth() + 1 === currentMonth.value
+    })
+    .sort((a, b) => new Date(b.periodEnd) - new Date(a.periodEnd))
 })
 
 const formatMoney = (v) => v != null ? `₩${Number(v).toLocaleString()}` : '-'

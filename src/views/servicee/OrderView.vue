@@ -26,7 +26,6 @@ const state = reactive({
   couponLoading: false,
 })
 
-let widgets = null
 const isWidgetReady = ref(false)
 const isOrdering = ref(false)
 const createdOrderId = ref('')
@@ -75,14 +74,12 @@ const loadTossScript = () => {
   })
 }
 
-const initTossWidget = async amount => {
-  
 const CLIENT_KEY = 'test_ck_AQ92ymxN34yOGwoa2XGyVajRKXvd'
 const CUSTOMER_KEY = 'eK4YFpGSvYQvtfwVK6L3a'
 
 let payment = null
 
-async function initTossPayment() {
+const initTossPayment = async () => {
   await loadTossScript()
 
   const tossPayments = window.TossPayments(CLIENT_KEY)
@@ -91,14 +88,6 @@ async function initTossPayment() {
   })
 }
 
-}
-
-
-// 쿠폰 선택 후 Toss 위젯 결제 금액 동기화
-const syncTossAmount = async amount => {
-  if (!widgets || !isWidgetReady.value) return
-  await widgets.setAmount({ currency: 'KRW', value: Number(amount) })
-}
 
 // 보유 쿠폰 목록 조회
 const loadCoupons = async () => {
@@ -139,9 +128,9 @@ const loadOrderInfo = async () => {
   await loadCoupons()
 
   try {
-    await loadTossScript()
-    await initTossWidget(displayTotalAmount.value)
-  } catch (e) {
+  await initTossPayment()
+  isWidgetReady.value = true
+} catch (e) {
     console.error('토스 결제 위젯 초기화 실패:', e)
     await showAlert('결제 위젯을 불러오지 못했습니다.', { title: '결제 오류', type: 'error' })
   }
@@ -152,9 +141,8 @@ onMounted(loadOrderInfo)
 // 쿠폰을 바꾸면 기존 생성 주문 ID를 버리고 다시 주문 생성
 watch(
   () => state.selectedCouponListId,
-  async () => {
+  () => {
     createdOrderId.value = ''
-    await syncTossAmount(displayTotalAmount.value)
   }
 )
 
@@ -202,8 +190,6 @@ const handleOrder = async () => {
       createdOrderId.value = String(orderData.orderId)
       paymentAmount = Number(orderData.totalAmount)
 
-      // 백엔드가 계산한 최종 결제 금액으로 Toss 금액 동기화
-      await syncTossAmount(paymentAmount)
     }
 
     const orderId = createdOrderId.value
@@ -237,14 +223,18 @@ console.log('Toss 결제 요청 정보:', {
 })
 
 // 4. Toss 결제창 호출
-await widgets.requestPayment({
+await payment.requestPayment({
+  method: 'CARD',
+  amount: {
+    currency: 'KRW',
+    value: paymentAmount,
+  },
   orderId,
   orderName,
   successUrl,
   failUrl,
   customerMobilePhone,
 })
-
   } catch (e) {
     console.error('결제 요청 실패:', e)
     await showAlert('결제 요청에 실패했습니다.', { title: '결제 오류', type: 'error' })

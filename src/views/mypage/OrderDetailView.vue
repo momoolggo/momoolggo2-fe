@@ -256,7 +256,7 @@ const connectOrderStatusSse = () => {
   eventSource.value?.close()
 
   eventSource.value = new EventSource(
-    `http://localhost:8080/api/order/${id}/status/subscribe`,
+    `/api/order/${id}/status/subscribe`,
     { withCredentials: true }
   )
   eventSource.value.addEventListener('delivery-status', async (event) => {

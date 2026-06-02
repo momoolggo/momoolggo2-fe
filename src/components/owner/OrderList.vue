@@ -115,7 +115,7 @@ const connectOrderSse = () => {
   }
 
   eventSource.value = new EventSource(
-    `http://localhost:8080/api/owner/order/subscribe?storeId=${storeInfo.myStoreId}`,
+    `/api/owner/order/subscribe?storeId=${storeInfo.myStoreId}`,
     { withCredentials: true }
   )
 

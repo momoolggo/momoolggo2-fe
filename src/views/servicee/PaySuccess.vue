@@ -26,7 +26,7 @@ onMounted(async () => {
     paymentKey: state.paymentKey,
     orderId: state.orderId,
     amount: state.amount,
-    payState: 1,
+    payState: 2,
     })
 
   // 2. 결제 승인에 필요한 값이 없으면 승인 요청을 보내지 않고 실패 화면으로 이동
@@ -54,7 +54,7 @@ if (!state.paymentKey || !state.orderId || !state.amount) {
         paymentKey: state.paymentKey,
         orderId: String(state.orderId),
         amount: state.amount,
-        payState: 1,
+        payState: 2,
     })
 
     console.log('결제 승인 성공 응답:', result)
@@ -64,8 +64,8 @@ if (!state.paymentKey || !state.orderId || !state.amount) {
         type: 'success',
     })
 
-    // 4. 결제 승인 성공 후 홈으로 이동
-    router.push('/home')
+    // 4. 결제 승인 성공 후 주문내역으로 이동
+    router.push('/mypage/orders')
     } catch (e) {
     // 5. 서버 결제 승인 실패 처리
     console.error('결제 승인 실패:', e)

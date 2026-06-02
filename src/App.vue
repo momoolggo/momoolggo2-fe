@@ -30,13 +30,17 @@ onMounted(() => {
 
 // 로그아웃
 const signout = async () => {
+  const role = userStore.state.role
   await userStore.signOut()
-  router.push('/signin')
+  if (role === 'OWNER') router.push('/owner/signin')
+  else if (role === 'RIDER') router.push('/rider/signin')
+  else if (role === 'ADMIN') router.push('/admin/signin')
+  else router.push('/customer/signin')
 }
 </script>
 
 <template>
-   <div class="app-outer">
+  <div class="app-outer">
     <div class="app-wrapper">
       <TheHeader
         v-if="showHeader"

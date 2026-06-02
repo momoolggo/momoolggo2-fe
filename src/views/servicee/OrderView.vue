@@ -76,27 +76,23 @@ const loadTossScript = () => {
 }
 
 const initTossWidget = async amount => {
-  const CLIENT_KEY = 'test_ck_AQ92ymxN34yOGwoa2XGyVajRKXvd'
-  const CUSTOMER_KEY = 'eK4YFpGSvYQvtfwVK6L3a'
+  
+const CLIENT_KEY = 'test_ck_AQ92ymxN34yOGwoa2XGyVajRKXvd'
+const CUSTOMER_KEY = 'eK4YFpGSvYQvtfwVK6L3a'
+
+let payment = null
+
+async function initTossPayment() {
+  await loadTossScript()
 
   const tossPayments = window.TossPayments(CLIENT_KEY)
-  widgets = tossPayments.widgets({ customerKey: CUSTOMER_KEY })
-
-  await widgets.setAmount({ currency: 'KRW', value: Number(amount) })
-
-  await Promise.all([
-    widgets.renderPaymentMethods({
-      selector: '#payment-method',
-      variantKey: 'DEFAULT',
-    }),
-    widgets.renderAgreement({
-      selector: '#agreement',
-      variantKey: 'AGREEMENT',
-    }),
-  ])
-
-  isWidgetReady.value = true
+  payment = tossPayments.payment({
+    customerKey: CUSTOMER_KEY,
+  })
 }
+
+}
+
 
 // 쿠폰 선택 후 Toss 위젯 결제 금액 동기화
 const syncTossAmount = async amount => {

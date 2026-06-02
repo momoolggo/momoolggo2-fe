@@ -229,13 +229,12 @@ class OwnerService {
     // 정산 계좌 변경
     async updateBankAccount(settlementId, bankAccount) {
         const res = await axios.patch(
-            `http://localhost:8083/api/admin/settlement/${settlementId}/bank-account`,
+            `${this.#url}/settlement/${settlementId}/bank-account`,
             null,
             { params: { bankAccount } }
         )
         return res.data
     }
-
 
 }
 

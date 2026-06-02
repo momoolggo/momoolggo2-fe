@@ -349,19 +349,6 @@ const attRewardSchedule = [
   { day:30, pts:500, emoji:'🎖️', special:true  },
 ]
 
-function doCheckIn() {
-  if (checkedInToday.value) return
-  checkedInToday.value = true
-  streak.value++
-  monthCount.value++
-  attendedDays.add(today.getDate())
-  let pts = 30, reason = '일일 출석 체크'
-  if (streak.value % 7 === 0) { pts = 200; reason = streak.value + '일 연속 출석 보너스!' }
-  else if (streak.value % 10 === 0) { pts = 100; reason = streak.value + '일 누적 출석!' }
-  addPoints(pts, reason)
-  showToast('출석 완료! +' + pts + 'P 획득 🎉')
-}
-
 async function changeCalMonth(d) {
   calMonth.value += d
   if (calMonth.value < 0) { calMonth.value = 11; calYear.value-- }
@@ -1020,13 +1007,6 @@ onUnmounted(() => {
           >{{ day.empty ? '' : day.d }}</div>
         </div>
 
-        <button
-          class="att-checkin-btn"
-          :disabled="checkedInToday"
-          @click="doCheckIn"
-        >
-          {{ checkedInToday ? '오늘 출석 완료 ✅' : '오늘 출석 체크하기 ✅' }}
-        </button>
       </div>
     </div>
   </Transition>
@@ -1547,8 +1527,6 @@ onUnmounted(() => {
 .cal-day.future   { color:var(--border); }
 .cal-day.empty    { opacity:0; pointer-events:none; }
 
-.att-checkin-btn { width:100%; padding:14px; border:none; border-radius:16px; background:linear-gradient(90deg,var(--orange),var(--pink)); color:white; font-family:'Nunito',sans-serif; font-size:15px; font-weight:800; cursor:pointer; transition:opacity 0.2s; }
-.att-checkin-btn:disabled { background:var(--border); color:var(--muted); cursor:not-allowed; }
 
 /* Pet select */
 .pet-select-sheet { background:white; width:100%; max-width:390px; border-radius:24px 24px 0 0; padding:20px; }

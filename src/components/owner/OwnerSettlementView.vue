@@ -390,8 +390,5 @@ onMounted(fetchSettlements)
 .bank-input:focus { border-color: #9b1b1b; }
 .bank-save-btn { padding: 7px 16px; background: #9b1b1b; color: #fff; border: none; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; }
 .bank-save-btn:disabled { background: #ccc; cursor: default; }
-.bank-display-wrap { display: flex; align-items: center; gap: 10px; }
-.bank-edit-btn { padding: 4px 12px; background: #fff; border: 1.5px solid #9b1b1b; color: #9b1b1b; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; }
-.bank-edit-btn:hover { background: #fff4f4; }
 
 </style>

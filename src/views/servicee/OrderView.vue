@@ -230,6 +230,7 @@ const handleOrder = async () => {
       successUrl,
       failUrl,
       customerMobilePhone,
+      windowTarget: 'self',
     })
   } catch (e) {
     console.error('결제 요청 실패:', e)

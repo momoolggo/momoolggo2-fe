@@ -33,6 +33,10 @@ import EventView          from '@/views/servicee/EventView.vue'
 import WhatKindView       from '@/views/servicee/WhatKindView.vue'
 import SearchStoreView    from '@/views/header/SearchStoreView.vue'
 import NearbyView from '@/views/servicee/NearbyView.vue'
+import AboutView from '@/views/footer/AboutView.vue'
+import PrivacyView from '@/views/footer/PrivacyView.vue'
+import TermsView from '@/views/footer/TermsView.vue'
+import NoticeView from '@/views/footer/NoticeView.vue'
 
 // ── 라이더
 import RiderLandingView from '@/views/rider/RiderLandingView.vue'
@@ -60,6 +64,10 @@ const routes = [
   { path: '/', name: 'Landing', component: LandingView },
   { path: '/find-account', name: 'AccountFind', component: AccountFindView, meta: { guestOnly: true } },
   { path: '/recover', name: 'RecoverAccount', component: RecoverAccountView, meta: { guestOnly: true } },
+  { path: '/about', name: 'About', component: AboutView },
+  { path: '/privacy', name: 'Privacy', component: PrivacyView },
+  { path: '/terms', name: 'Terms', component: TermsView },
+  { path: '/notice', name: 'Notice', component: NoticeView },
   { path: '/ownerlanding', name: 'OwnerLanding', component: OwnerLandingView},
   { path: '/storelist', name: 'StoreList', component: StoreListView, meta: { requiresAuth: true, role: 'CUSTOMER' } },
   { path: '/store/:id', name: 'StoreDetail', component: StoreDetailView, meta: { requiresAuth: true, role: 'CUSTOMER' } },
@@ -101,7 +109,7 @@ const routes = [
 { path: '/mypage/cs',      name: 'MyPageCs',      component: MyPageCsView,      meta: { requiresAuth: true, role: 'CUSTOMER' } },
 
 //고객 서비스
-  {path: '/mypage/pet' , name: 'MyPagePet', component: () => import('@/views/servicee/PetView.vue') },
+  {path: '/mypage/pet' , name: 'MyPagePet', component: () => import('@/views/servicee/PetView.vue'), meta: { requiresAuth: true, role: 'CUSTOMER' } },
   // 공용 CS 챗봇 — 자잘 에러 트랙(2026-05-23). 사장/라이더/고객 모두 진입 가능 (role 무관).
   {path: '/chatbot/cs' , name: 'CsChatbot', component: () => import('@/views/servicee/CsChatbotView.vue'), meta: { requiresAuth: true } },
   {path: '/mypage/review/:id', name: 'ReviewDetail', component: () => import('@/views/mypage/ReviewPostView.vue'), meta: { requiresAuth: true} },

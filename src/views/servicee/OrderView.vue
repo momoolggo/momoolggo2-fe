@@ -76,7 +76,7 @@ const loadTossScript = () => {
 }
 
 const initTossWidget = async amount => {
-  const CLIENT_KEY = 'test_gck_docs_Ovk5rk1EwkEbP0W43n07xlzm'
+  const CLIENT_KEY = 'test_ck_AQ92ymxN34yOGwoa2XGyVajRKXvd'
   const CUSTOMER_KEY = 'eK4YFpGSvYQvtfwVK6L3a'
 
   const tossPayments = window.TossPayments(CLIENT_KEY)

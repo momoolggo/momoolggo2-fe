@@ -38,9 +38,12 @@ axios.interceptors.response.use(
         }
       }
 
-      const message = data?.resultMessage || data?.message
-      if (message) {
-        messageModalStore.setMessage(message)
+      // 409는 각 페이지 catch에서 직접 처리 (중복 모달 방지)
+      if (status !== 409) {
+        const message = data?.resultMessage || data?.message
+        if (message) {
+          messageModalStore.setMessage(message)
+        }
       }
     } else if (err.request) {
       messageModalStore.setMessage('서버와 통신할 수 없습니다. 네트워크 상태를 확인해주세요.')

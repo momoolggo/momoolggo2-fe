@@ -25,7 +25,7 @@ const showHeader = computed(() => !noHeaderPages.includes(route.path));
 
 onMounted(() => {
   setAlertRef(globalAlert.value)
-  userStore.checkAuth()
+  // checkAuth는 router.beforeEach에서 처리 — 여기서 중복 호출 제거
 })
 
 // 로그아웃

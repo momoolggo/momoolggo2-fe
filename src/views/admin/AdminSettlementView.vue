@@ -154,7 +154,12 @@ const fetchList = async () => {
     })
     const data = res?.resultData
     
-    settlementList.value = data?.content ?? []
+    const order = { PENDING: 0, HELD: 1, COMPLETED: 2, DONE: 2 }
+    settlementList.value = (data?.content ?? []).sort((a, b) => {
+      const oa = order[a.status] ?? 3
+      const ob = order[b.status] ?? 3
+      return oa !== ob ? oa - ob : new Date(b.periodEnd) - new Date(a.periodEnd)
+    })
     totalPages.value = data?.totalPages ?? (Math.ceil((data?.totalCount ?? 0) / 10) || 1)
   } catch (e) {
     settlementList.value = []

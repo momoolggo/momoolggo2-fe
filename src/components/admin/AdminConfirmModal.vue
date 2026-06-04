@@ -4,15 +4,17 @@ defineEmits(['confirm', 'cancel'])
 </script>
 
 <template>
-  <div v-if="show" class="modal_overlay" @click.self="$emit('cancel')">
-    <div class="confirm_modal">
-      <p class="confirm_msg">{{ message }}</p>
-      <div class="confirm_btns">
-        <button class="btn_cancel" @click="$emit('cancel')">취소</button>
-        <button class="btn_confirm" @click="$emit('confirm')">확인</button>
+  <Teleport to="body">
+    <div v-if="show" class="modal_overlay" @click.self="$emit('cancel')">
+      <div class="confirm_modal">
+        <p class="confirm_msg">{{ message }}</p>
+        <div class="confirm_btns">
+          <button class="btn_cancel" @click="$emit('cancel')">취소</button>
+          <button class="btn_confirm" @click="$emit('confirm')">확인</button>
+        </div>
       </div>
     </div>
-  </div>
+  </Teleport>
 </template>
 
 <style scoped>

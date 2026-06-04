@@ -336,7 +336,7 @@ const handleOrder = async () => {
               내 <strong>친환경 점수</strong>를 높여보세요!
             </p>
           </div>
-          <div class="eco-icon">🌍</div>
+          <img src="@/assets/green.png" alt="green" class="green" />
         </div>
 
         <div class="price-box">
@@ -522,10 +522,10 @@ const handleOrder = async () => {
   margin: 0 0 0 30px;
 }
 
-.eco-icon {
-  font-size: 2.5rem;
-  margin-left: 12px;
-  flex-shrink: 0;
+.green {
+ width: 80px;
+ height: auto;
+ margin-right: 20px;
 }
 
 .price-box {

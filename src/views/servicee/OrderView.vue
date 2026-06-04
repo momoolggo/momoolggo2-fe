@@ -249,7 +249,7 @@ const handleOrder = async () => {
     <div class="order-layout">
       <section class="order-section">
         <div class="store-name-row">
-          <img src="/favicon.png" class="store-icon" />
+          <img src="/favicon.png?v=4" class="store-icon" />
           <span class="store-name">{{ state.storeName }}</span>
         </div>
 

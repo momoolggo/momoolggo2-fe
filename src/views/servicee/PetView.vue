@@ -30,6 +30,10 @@ const goPetChat = () => {
   router.push({ path: '/chatbot/cs', query: { entry: 'MYPET', tone: 'PLAYFUL' } })
 }
 
+const goHome = () => {
+  router.push('/home')
+}
+
 // ── STATE ──────────────────────────────────────────────────────────────
 // 2026-05-25 9건 트랙 #8 — 모든 값 0/빈 시작. onMounted에서 BE getMyPet으로 채움.
 // BE 미구현 필드(meals/points/streak/monthCount): 0 유지 (별 BE 작업 필요 — tech-debt)
@@ -538,7 +542,7 @@ onUnmounted(() => {
 
   <!-- TOP NAV -->
   <div class="top-nav">
-    <div class="app-logo">🍱 뭐물꼬딜리버리</div>
+    <button type="button" class="app-logo" @click="goHome">🍱 뭐물꼬딜리버리</button>
     <div class="top-points" @click="activeView='reward'">
       <span>💰</span>
       <span class="top-pts-val">{{ fmtPts }}</span>
@@ -1077,6 +1081,7 @@ onUnmounted(() => {
   font-family: 'Jua', sans-serif; font-size: 21px;
   background: linear-gradient(90deg, var(--orange), var(--pink));
   -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  border: 0; padding: 0; cursor: pointer;
 }
 .top-points {
   display: flex; align-items: center; gap: 4px; cursor: pointer;

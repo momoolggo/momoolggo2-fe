@@ -141,33 +141,43 @@ const cancelApprove = () => { approveConfirming.value = false }
 
 const confirmApprove = async () => {
   approveConfirming.value = false
+  const userNo = selectedPendingUser.value.userNo
+  pendingList.value = pendingList.value.filter(u => u.userNo !== userNo)
+  closePendingDetail()
   try {
-    await adminService.updateApproval(selectedPendingUser.value.userNo, 'ACTIVE')
-    pendingList.value = pendingList.value.filter(u => u.userNo !== selectedPendingUser.value.userNo)
-    closePendingDetail()
-    await fetchPendingList()
-    await fetchUserList()
-  } catch { showAlert('처리 실패') }
+    await adminService.updateApproval(userNo, 'ACTIVE')
+    fetchPendingList()
+    fetchUserList()
+  } catch {
+    showAlert('처리 실패')
+    fetchPendingList()
+  }
 }
 
 const rejectPendingUser = async () => {
   if (!selectedPendingUser.value) return
   if (!selectedRejectReason.value) { showAlert('반려 사유를 선택해주세요.'); return }
+  rejectOpen.value = false
   rejectConfirming.value = true
 }
 const cancelReject = () => { rejectConfirming.value = false }
 
 const confirmReject = async () => {
   rejectConfirming.value = false
+  const userNo = selectedPendingUser.value.userNo
+  const reason = selectedRejectReason.value
+  pendingList.value = pendingList.value.filter(u => u.userNo !== userNo)
+  rejectOpen.value = false
+  selectedRejectReason.value = ''
+  closePendingDetail()
   try {
-    await adminService.updateApproval(selectedPendingUser.value.userNo, 'REJECTED', selectedRejectReason.value)
-    pendingList.value = pendingList.value.filter(u => u.userNo !== selectedPendingUser.value.userNo)
-    rejectOpen.value = false
-    selectedRejectReason.value = ''
-    closePendingDetail()
-    await fetchPendingList()
-    await fetchUserList()
-  } catch { showAlert('처리 실패') }
+    await adminService.updateApproval(userNo, 'REJECTED', reason)
+    fetchPendingList()
+    fetchUserList()
+  } catch {
+    showAlert('처리 실패')
+    fetchPendingList()
+  }
 }
 
 const handleTabChange = (tab) => {
@@ -608,7 +618,7 @@ onMounted(fetchUserList)
                 <input type="radio" :value="reason" v-model="selectedRejectReason" />
                 {{ reason }}
               </label>
-              <button class="reject_confirm_btn" @click="rejectPendingUser">반려 확인</button>
+              <button class="reject_confirm_btn" @click.stop="rejectPendingUser">반려 확인</button>
             </div>
           </div>
         </div>

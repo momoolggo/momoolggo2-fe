@@ -41,6 +41,7 @@ const saveBankAccount = async () => {
     selectedSettlement.value = { ...selectedSettlement.value, bankAccount: editBankAccount.value.trim() }
     const idx = settlementList.value.findIndex(s => s.settlementId === selectedSettlement.value.settlementId)
     if (idx !== -1) settlementList.value[idx] = { ...settlementList.value[idx], bankAccount: editBankAccount.value.trim() }
+    await showAlert('계좌 정보가 변경되었습니다.', { title: '변경 완료', type: 'success' })
   } catch (e) {
     await showAlert('계좌 변경 실패', { title: '오류', type: 'error' })
   } finally {
@@ -77,7 +78,13 @@ const filteredByMonth = computed(() => {
       return d.getFullYear() === currentYear.value
           && d.getMonth() + 1 === currentMonth.value
     })
-    .sort((a, b) => new Date(b.periodEnd) - new Date(a.periodEnd))
+    .sort((a, b) => {
+      const order = { PENDING: 0, HELD: 1, COMPLETED: 2, DONE: 2 }
+      const oa = order[a.status] ?? 3
+      const ob = order[b.status] ?? 3
+      if (oa !== ob) return oa - ob
+      return new Date(b.periodEnd) - new Date(a.periodEnd)
+    })
 })
 
 const formatMoney = (v) => v != null ? `₩${Number(v).toLocaleString()}` : '-'

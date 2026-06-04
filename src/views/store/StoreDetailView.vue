@@ -39,9 +39,11 @@ const getStoreDetail = async () => {
   const storeId = Number(route.params.id)
   const params = { userNo: userNo.value, storeId: Number(route.params.id) }
   try {
-    const res = await storeService.getStore(storeId)
+    const [res, result] = await Promise.all([
+      storeService.getStore(storeId),
+      storeService.checkFavorite(params),
+    ])
     state.storeInfo = res.resultData
-    const result = await storeService.checkFavorite(params)
     state.isWished = result.resultData || false
   } catch (error) {
     console.error('가게데이터 로드 실패:', error)

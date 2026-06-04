@@ -1,5 +1,5 @@
 <script setup>
-import { reactive, onMounted } from 'vue'
+import { reactive, onMounted, watch, onUnmounted } from 'vue'
 import addressService from '@/services/addressService'
 import NaverMap from '@/components/common/NaverMap.vue'
 import { showAlert, showConfirm } from '@/composables/useAlert'
@@ -29,6 +29,14 @@ const loadList = async () => {
 }
 
 onMounted(loadList)
+
+// 모달 열릴 때 body에 클래스 추가 → 헤더/내비 z-index 전역 CSS로 제압
+watch(() => state.showModal, open => {
+  document.body.classList.toggle('address-modal-open', open)
+})
+onUnmounted(() => {
+  document.body.classList.remove('address-modal-open')
+})
 
 // ── NaverMap에서 주소 선택 시
 const onAddressSelect = ({ address, lat, lng }) => {
@@ -120,7 +128,10 @@ const setDefault = async (addressId) => {
       <p v-if="!state.list.length" class="empty_msg">등록된 주소가 없습니다.</p>
     </div>
 
-    <!-- 모달 -->
+  </div>
+
+  <!-- 모달: body에 텔레포트하여 sticky/fixed 헤더·내비 위에 렌더링 -->
+  <Teleport to="body">
     <div v-if="state.showModal" class="modal_overlay" @click.self="closeModal">
       <div class="modal_box">
         <div class="modal_header">
@@ -154,7 +165,7 @@ const setDefault = async (addressId) => {
         </div>
       </div>
     </div>
-  </div>
+  </Teleport>
 </template>
 
 <style scoped>
@@ -239,7 +250,7 @@ const setDefault = async (addressId) => {
   position: fixed; inset: 0;
   background: rgba(0,0,0,0.4);
   display: flex; align-items: center; justify-content: center;
-  z-index: 100;
+  z-index: 1000;
 }
 .modal_box {
   background: #fff;

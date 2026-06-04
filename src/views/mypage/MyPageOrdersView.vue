@@ -19,7 +19,7 @@ const getPayState = order => order.payState ?? order.pay_state ?? order.paymentS
 // 결제 완료/환불(payState 2/3) 주문만 주문내역에 노출한다.
 const isVisibleOrder = order => {
   const payState = getPayState(order)
-  if (payState === undefined || payState === null || payState === '') return false
+  if (payState === undefined || payState === null || payState === '') return true
 
   return [2, 3].includes(Number(payState))
 }

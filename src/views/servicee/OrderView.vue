@@ -14,7 +14,6 @@ const state = reactive({
   items: [],
   menuTotal: 0,
   deliveryFee: 0,
-  totalAmount: 0,
   request: '',
   riderRequest: '',
   payState: 1,
@@ -26,8 +25,7 @@ const state = reactive({
   couponLoading: false,
 })
 
-let widgets = null
-const isWidgetReady = ref(false)
+const isPaymentReady = ref(false)
 const isOrdering = ref(false)
 const createdOrderId = ref('')
 
@@ -75,34 +73,20 @@ const loadTossScript = () => {
   })
 }
 
-const initTossWidget = async amount => {
-  const CLIENT_KEY = 'test_gck_docs_Ovk5rk1EwkEbP0W43n07xlzm'
-  const CUSTOMER_KEY = 'eK4YFpGSvYQvtfwVK6L3a'
+const CLIENT_KEY = 'test_ck_AQ92ymxN34yOGwoa2XGyVajRKXvd'
+const CUSTOMER_KEY = 'eK4YFpGSvYQvtfwVK6L3a'
+
+let payment = null
+
+const initTossPayment = async () => {
+  await loadTossScript()
 
   const tossPayments = window.TossPayments(CLIENT_KEY)
-  widgets = tossPayments.widgets({ customerKey: CUSTOMER_KEY })
-
-  await widgets.setAmount({ currency: 'KRW', value: Number(amount) })
-
-  await Promise.all([
-    widgets.renderPaymentMethods({
-      selector: '#payment-method',
-      variantKey: 'DEFAULT',
-    }),
-    widgets.renderAgreement({
-      selector: '#agreement',
-      variantKey: 'AGREEMENT',
-    }),
-  ])
-
-  isWidgetReady.value = true
+  payment = tossPayments.payment({
+    customerKey: CUSTOMER_KEY,
+  })
 }
 
-// 쿠폰 선택 후 Toss 위젯 결제 금액 동기화
-const syncTossAmount = async amount => {
-  if (!widgets || !isWidgetReady.value) return
-  await widgets.setAmount({ currency: 'KRW', value: Number(amount) })
-}
 
 // 보유 쿠폰 목록 조회
 const loadCoupons = async () => {
@@ -132,7 +116,6 @@ const loadOrderInfo = async () => {
     state.items = data.items || []
     state.menuTotal = Number(data.menuTotal || 0)
     state.deliveryFee = Number(data.deliveryFee || 0)
-    state.totalAmount = Number(data.totalAmount || 0)
   } catch (e) {
     console.error('주문 정보 로드 실패:', e)
     await showAlert('주문 정보를 불러오지 못했습니다.', { title: '오류', type: 'error' })
@@ -143,8 +126,8 @@ const loadOrderInfo = async () => {
   await loadCoupons()
 
   try {
-    await loadTossScript()
-    await initTossWidget(displayTotalAmount.value)
+    await initTossPayment()
+    isPaymentReady.value = true
   } catch (e) {
     console.error('토스 결제 위젯 초기화 실패:', e)
     await showAlert('결제 위젯을 불러오지 못했습니다.', { title: '결제 오류', type: 'error' })
@@ -156,9 +139,8 @@ onMounted(loadOrderInfo)
 // 쿠폰을 바꾸면 기존 생성 주문 ID를 버리고 다시 주문 생성
 watch(
   () => state.selectedCouponListId,
-  async () => {
+  () => {
     createdOrderId.value = ''
-    await syncTossAmount(displayTotalAmount.value)
   }
 )
 
@@ -177,7 +159,7 @@ const handleOrder = async () => {
     return
   }
 
-  if (!isWidgetReady.value) {
+  if (!payment || !isPaymentReady.value) {
     await showAlert('결제 위젯이 아직 준비되지 않았습니다.', { title: '잠시만요', type: 'info' })
     return
   }
@@ -185,32 +167,28 @@ const handleOrder = async () => {
   isOrdering.value = true
 
   try {
-    let paymentAmount = displayTotalAmount.value
-
     // 1. 주문 저장 후 서버에서 발급된 orderId 사용
-    if (!createdOrderId.value) {
-      const orderPayload = {
-        request: state.request,
-        riderRequest: state.riderRequest,
-        ecoSelected: state.ecoSelected,
-        payState: state.payState,
-      }
-
-      if (state.selectedCouponListId) {
-        orderPayload.couponListId = Number(state.selectedCouponListId)
-      }
-
-      const orderRes = await orderService.placeOrder(orderPayload)
-      const orderData = orderRes.resultData || orderRes
-
-      createdOrderId.value = String(orderData.orderId)
-      paymentAmount = Number(orderData.totalAmount)
-
-      // 백엔드가 계산한 최종 결제 금액으로 Toss 금액 동기화
-      await syncTossAmount(paymentAmount)
+    const orderPayload = {
+      request: state.request,
+      riderRequest: state.riderRequest,
+      ecoSelected: state.ecoSelected,
+      payState: state.payState,
     }
 
+    if (state.selectedCouponListId) {
+      orderPayload.couponListId = Number(state.selectedCouponListId)
+    }
+
+    const orderRes = await orderService.placeOrder(orderPayload)
+    const orderData = orderRes.resultData || orderRes
+
+    createdOrderId.value = String(orderData.orderId)
     const orderId = createdOrderId.value
+    const paymentAmount = Number(orderData.totalAmount)
+    if (!orderId || !Number.isFinite(paymentAmount) || paymentAmount <= 0) {
+      throw new Error('Invalid payment data')
+    }
+
     console.log('주문 저장 성공, orderId:', orderId)
 
     // 2. payState 저장
@@ -230,25 +208,30 @@ const handleOrder = async () => {
     const customerMobilePhone = String(state.tel || '').replace(/\D/g, '')
 
     const successUrl = `${window.location.origin}/payment/success`
-const failUrl = `${window.location.origin}/payment/fail`
+    const failUrl = `${window.location.origin}/payment/fail`
 
-console.log('Toss 결제 요청 정보:', {
-  orderId,
-  orderName,
-  successUrl,
-  failUrl,
-  amount: paymentAmount,
-})
+    console.log('Toss 결제 요청 정보:', {
+      orderId,
+      orderName,
+      successUrl,
+      failUrl,
+      amount: paymentAmount,
+    })
 
-// 4. Toss 결제창 호출
-await widgets.requestPayment({
-  orderId,
-  orderName,
-  successUrl,
-  failUrl,
-  customerMobilePhone,
-})
-
+    // 4. Toss 결제창 호출
+    await payment.requestPayment({
+      method: 'CARD',
+      amount: {
+        currency: 'KRW',
+        value: paymentAmount,
+      },
+      orderId,
+      orderName,
+      successUrl,
+      failUrl,
+      customerMobilePhone,
+      windowTarget: 'self',
+    })
   } catch (e) {
     console.error('결제 요청 실패:', e)
     await showAlert('결제 요청에 실패했습니다.', { title: '결제 오류', type: 'error' })
@@ -310,12 +293,6 @@ await widgets.requestPayment({
       </section>
 
       <section class="order-section">
-        <div class="info-group">
-          <div class="section-label">결제 수단</div>
-          <div id="payment-method"></div>
-          <div id="agreement"></div>
-        </div>
-
         <div class="info-group">
           <div class="section-label">쿠폰 선택</div>
           <select
@@ -385,9 +362,9 @@ await widgets.requestPayment({
           class="order-btn"
           type="button"
           @click="handleOrder"
-          :disabled="!isWidgetReady || isOrdering"
+          :disabled="!isPaymentReady || isOrdering"
         >
-          {{ isWidgetReady ? `${formatPrice(displayTotalAmount)} 결제하기` : '로딩 중...' }}
+          {{ isPaymentReady ? `${formatPrice(displayTotalAmount)} 결제하기` : '로딩 중...' }}
         </button>
       </section>
     </div>
@@ -440,13 +417,6 @@ await widgets.requestPayment({
 
 .info-group {
   margin-bottom: 20px;
-}
-
-.section-label {
-  font-size: 0.85rem;
-  color: #666;
-  font-weight: 600;
-  margin-bottom: 8px;
 }
 
 .input-row {
@@ -610,8 +580,4 @@ await widgets.requestPayment({
   background: #ccc;
 }
 
-#payment-method {
-  margin-left: -8px;
-  margin-right: -8px;
-}
 </style>

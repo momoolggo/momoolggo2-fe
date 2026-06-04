@@ -1,7 +1,7 @@
 import axios from '@/services/httpRequester'
 
 class AdminService {
-    #url = 'http://localhost:8083/api/admin';
+    #url = '/admin';
 
     // 대시보드
     async getDashboard() {

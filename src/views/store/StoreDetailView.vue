@@ -1,5 +1,5 @@
 <script setup>
-import { reactive, onMounted, computed } from 'vue'
+import { reactive, onMounted, computed, ref, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 import MenuCategory from '@/components/store/MenuCategory.vue'
 import StoreInfo from '@/components/store/StoreInfo.vue'
@@ -14,6 +14,7 @@ const route = useRoute()
 const cartStore = useCartStore()
 const userStore = useUserStore()
 const userNo = computed(() => userStore.state.userNo )
+const menuListWrapperRef = ref(null)
 
 const getImageUrl = (path) => {
   if (!path) return null
@@ -31,6 +32,7 @@ const state = reactive({
   isModalOpen: false,
   isWished: false,
   menuSearchText: '',
+  menuSearchMinHeight: 0,
 })
 
 const getStoreDetail = async () => {
@@ -62,8 +64,32 @@ const searchMenu = () => {
     state.menuSearchText = state.menuSearchText.trim()
   }
 
-  const updateMenuSearchText = (event) => {
-    state.menuSearchText = event.target.value
+  const updateMenuSearchText = async (event) => {
+    const nextValue = event.target.value
+    const wasSearching = !!state.menuSearchText.trim()
+    const willSearch = !!nextValue.trim()
+    const scrollTop = window.scrollY
+
+    if (!wasSearching && willSearch && menuListWrapperRef.value) {
+      state.menuSearchMinHeight = menuListWrapperRef.value.offsetHeight
+    }
+
+    state.menuSearchText = nextValue
+
+    if (!willSearch) {
+      state.menuSearchMinHeight = 0
+    }
+
+    await nextTick()
+    window.scrollTo({ top: scrollTop, behavior: 'auto' })
+  }
+
+  const clearMenuSearchText = async () => {
+    const scrollTop = window.scrollY
+    state.menuSearchText = ''
+    state.menuSearchMinHeight = 0
+    await nextTick()
+    window.scrollTo({ top: scrollTop, behavior: 'auto' })
   }
 
   const searchableMenus = computed(() => {
@@ -196,7 +222,12 @@ const handleAddToCart = async () => {
     </nav>
 
   <div class="tab-content-area">
-    <div v-if="state.activeTab === 'menu'" class="menu-list-wrapper">
+    <div
+      v-if="state.activeTab === 'menu'"
+      ref="menuListWrapperRef"
+      class="menu-list-wrapper"
+      :style="state.menuSearchMinHeight ? { minHeight: `${state.menuSearchMinHeight}px` } : null"
+    >
       <form class="menu-search-form" @submit.prevent="searchMenu">
     <label class="menu-search-bar">
       <input
@@ -204,12 +235,11 @@ const handleAddToCart = async () => {
       type="search"
       placeholder="메뉴 검색"
       @input="updateMenuSearchText"
-      @compositionend="updateMenuSearchText"
     />
     <button
       v-if="state.menuSearchText"
       type= "button" class="menu-search-clear"
-      @click="state.menuSearchText = ''">
+      @click="clearMenuSearchText">
       <i class="bi bi-x"></i>
     </button>
 
@@ -285,6 +315,7 @@ const handleAddToCart = async () => {
   position: relative;
   width: 100%;
   height: 250px;
+  overflow: hidden;
 }
 
 .cover-img {
@@ -292,6 +323,7 @@ const handleAddToCart = async () => {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: center center;
 }
 
 .back-btn {

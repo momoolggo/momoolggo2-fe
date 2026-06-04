@@ -136,8 +136,10 @@ const handleReadAllNotifications = async () => {
 
 
 onMounted(() => {
-  loadDefaultAddress()
-  loadCartCount()
+  setTimeout(() => {
+    loadDefaultAddress()
+    loadCartCount()
+  }, 700)
 
   if (isCustomerSignedIn.value) {
     notificationStore.fetchNotifications()
@@ -378,7 +380,7 @@ const isOwner = computed(() => userStore.state.role === 'OWNER')
   z-index: 10000;
   width: 100%;
   max-width: 480px;
-  height: calc(176px + env(safe-area-inset-top));
+  height: calc(180px + env(safe-area-inset-top));
   background: #FEFAEE;
   box-shadow: 0 1px 6px rgba(0, 0, 0, 0.07);
   display: flex;
@@ -389,7 +391,7 @@ const isOwner = computed(() => userStore.state.role === 'OWNER')
 .header_inner {
   width: 100%;
   max-width: 480px;
-  padding: 8px 17px 10px;
+  padding: 8px 16px 10px;
   padding-top: calc(8px + env(safe-area-inset-top));
   box-sizing: border-box;
   display: flex;
@@ -403,7 +405,6 @@ const isOwner = computed(() => userStore.state.role === 'OWNER')
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 62px;
 }
 
 .logo_link {
@@ -412,8 +413,8 @@ const isOwner = computed(() => userStore.state.role === 'OWNER')
 }
 
 .header_logo {
-  margin-top: 6px;
-  width: 120px;
+  margin-top: 10px;
+  width: 110px;
   height: auto;
   object-fit: contain;
   margin-right: 0;
@@ -421,20 +422,20 @@ const isOwner = computed(() => userStore.state.role === 'OWNER')
 
 .top-actions {
   position: absolute;
-  right: 7px;
-  top: 17px;
+  right: 8px;
+  top: 20px;
   display: flex;
   align-items: center;
-  gap: 3px;
+  gap: 2px;
 }
 
 .nav_icon_btn {
   position: relative;
-  width: 34px;
-  height: 34px;
+  width: 32px;
+  height: 32px;
   background: none;
   border: none;
-  font-size: 22px;
+  font-size: 21px;
   color: #333;
   padding: 0;
   cursor: pointer;
@@ -453,7 +454,7 @@ const isOwner = computed(() => userStore.state.role === 'OWNER')
   font-size: 12px;
   font-weight: 700;
   color: #4a4646;
-  padding: 5px;
+  padding: 4px 5px;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -463,7 +464,7 @@ const isOwner = computed(() => userStore.state.role === 'OWNER')
 .nav_text_btn:active { color: #d63031; }
 
 .nav_username {
-  max-width: 46px;
+  max-width: 42px;
   font-size: 12px;
   font-weight: 700;
   color: #d63031;
@@ -475,7 +476,7 @@ const isOwner = computed(() => userStore.state.role === 'OWNER')
 }
 
 .row-address {
-  margin-top: 7px;
+  margin-top: 10px;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -492,13 +493,13 @@ const isOwner = computed(() => userStore.state.role === 'OWNER')
 .row-address:active .address-arrow { color: #d63031; }
 
 .address-pin {
-  font-size: 14px;
+  font-size: 13px;
   color: #d63031;
   flex-shrink: 0;
 }
 
 .address-text {
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 300;
   color: #555;
   font-family: 'Pretendard', 'Noto Sans KR', sans-serif;
@@ -508,21 +509,21 @@ const isOwner = computed(() => userStore.state.role === 'OWNER')
 }
 
 .search-bar {
-  margin-top: 8px;
+  margin-top: 10px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   background: #fff;
   border: 1.5px solid #e0dcd0;
-  border-radius: 24px;
-  padding: 10px 16px;
+  border-radius: 22px;
+  padding: 9px 14px;
   cursor: pointer;
   transition: border-color 0.15s;
 }
 .search-bar:active { border-color: #d63031; }
 
 .search_icon {
-  font-size: 17px;
+  font-size: 15px;
   color: #888;
   border: none;
   background: transparent;
@@ -539,7 +540,6 @@ input[type="search"] {
   outline: none;
   border: none;
   width: 100%;
-  font-size: 16px;
 }
 
 input[type="search"]::-webkit-search-decoration,

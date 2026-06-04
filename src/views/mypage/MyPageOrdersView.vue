@@ -24,17 +24,6 @@ const isVisibleOrder = order => {
   return [2, 3].includes(Number(payState))
 }
 
-onMounted(async () => {
-  try {
-    const result = await orderService.getMaxHistory(userId);
-    if (result.resultData) {
-      totalPages.value = Math.ceil(result.resultData / pageSize);
-    }
-  }
-  catch (error) {
-    console.error("총 페이지 수 로드 실패:", error);
-  }
-})
 // 데이터 로드 함수
 const loadOrders = async (page) => {
   currentPage.value = page;
@@ -63,8 +52,16 @@ const pageNumbers = computed(() => {
   return pages;
 });
 
-onMounted(() => {
-  loadOrders(1); // 첫 페이지 로드
+onMounted(async () => {
+  // 총 페이지 수 + 첫 페이지 주문 목록 병렬 로드
+  await Promise.allSettled([
+    orderService.getMaxHistory(userId).then(result => {
+      if (result?.resultData) {
+        totalPages.value = Math.ceil(result.resultData / pageSize)
+      }
+    }).catch(e => console.error('총 페이지 수 로드 실패:', e)),
+    loadOrders(1),
+  ])
 })
 
 const goToDetail = (id) => {

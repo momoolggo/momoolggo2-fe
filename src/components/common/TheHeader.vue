@@ -48,6 +48,8 @@ const loadDefaultAddress = async () => {
 }
 
 const loadCartCount = async () => {
+  // CartView 자체에서 전체 장바구니를 로드하므로 중복 호출 방지
+  if (route.path === '/cart') return
   if(userStore.state.isSignedIn && userStore.state.userNo) {
     await cartStore.refreshCartCount(userStore.state.userNo)
   }
@@ -57,14 +59,9 @@ const isCustomerSignedIn = computed(() =>
   userStore.state.isSignedIn && userStore.state.role === 'CUSTOMER'
 )
 
-const toggleNotificationDropdown = async () => {
+const toggleNotificationDropdown = () => {
   if (!isCustomerSignedIn.value) return
-
   isNotificationOpen.value = !isNotificationOpen.value
-
-  if (isNotificationOpen.value) {
-    await notificationStore.fetchNotifications()
-  }
 }
 
 const closeNotificationDropdown = () => {
@@ -148,9 +145,11 @@ onMounted(() => {
   }
 })
 
-watch(() => route.path, () => {
-  loadDefaultAddress()
-  loadCartCount()
+// 주소 편집 페이지에서 돌아올 때만 주소 재조회
+watch(() => route.path, (newPath, oldPath) => {
+  if (oldPath === '/mypage/address') {
+    loadDefaultAddress()
+  }
 })
 
 watch(isCustomerSignedIn, signedIn => {
@@ -379,7 +378,7 @@ const isOwner = computed(() => userStore.state.role === 'OWNER')
   z-index: 10000;
   width: 100%;
   max-width: 480px;
-  height: 180px;
+  height: calc(180px + env(safe-area-inset-top));
   background: #FEFAEE;
   box-shadow: 0 1px 6px rgba(0, 0, 0, 0.07);
   display: flex;
@@ -391,6 +390,7 @@ const isOwner = computed(() => userStore.state.role === 'OWNER')
   width: 100%;
   max-width: 480px;
   padding: 8px 16px 10px;
+  padding-top: calc(8px + env(safe-area-inset-top));
   box-sizing: border-box;
   display: flex;
   flex-direction: column;

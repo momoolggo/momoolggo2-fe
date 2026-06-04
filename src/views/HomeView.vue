@@ -23,11 +23,6 @@ const categories = [
 
 const getCategoryImage = img => `/image/thumb/${img}.png`
 
-categories.forEach((cat) => {
-  const image = new Image()
-  image.src = getCategoryImage(cat.img)
-})
-
 // 배너
 const banners = [
   { img: '/image/배너.png', route: '/event'    },
@@ -106,7 +101,7 @@ function goCategory(label) {
     <section class="category-section">
       <div class="category-grid">
         <div
-          v-for="cat in categories"
+          v-for="(cat, i) in categories"
           :key="cat.label"
           class="category-item"
           @click="goCategory(cat.label)"
@@ -116,7 +111,7 @@ function goCategory(label) {
             :alt="cat.label"
             loading="eager"
             fetchpriority="high"
-            decoding="async"
+            decoding="sync"
             width="85"
             height="85"
           />

@@ -185,6 +185,12 @@ button {
   touch-action: manipulation;
 }
 
+/* ── 모달 오버레이 활성 시 헤더·하단 내비 z-index 제압 ── */
+body.address-modal-open header,
+body.address-modal-open .bottom-nav {
+  z-index: 0 !important;
+}
+
 /* 브라우저 기본 비밀번호 토글 숨기기 */
 input[type="password"]::-ms-reveal,
 input[type="password"]::-ms-clear {

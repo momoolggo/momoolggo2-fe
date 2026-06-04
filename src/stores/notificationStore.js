@@ -17,6 +17,7 @@ export const useNotificationStore = defineStore('notification', () => {
     })
 
     const fetchNotifications = async () => {
+        if (isLoading.value) return  // 중복 요청 방지
         isLoading.value = true
 
         try {

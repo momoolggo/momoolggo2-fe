@@ -132,7 +132,7 @@ const pageRange = computed(() => {
     return pages;
 });
 
-onMounted(getStores);
+// watch({ immediate: true })가 초기 조회를 처리하므로 별도 onMounted 불필요
 
 // 페이지 변경
 const changePage = (page) => {

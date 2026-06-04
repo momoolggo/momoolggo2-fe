@@ -21,6 +21,12 @@ class CartService {
         return res.data;
     }
 
+    // 장바구니 옵션 변경
+    async updateCartItemOptions(id, data) {
+        const res = await axios.put(`${this.#url}/items/${id}/options`, data);
+        return res.data;
+    }
+
     // 장바구니 항목 삭제
     async deleteCartItem(cartItemId) {
         const res = await axios.delete(`${this.#url}/items/${cartItemId}`);  // ✅ /items/ 추가

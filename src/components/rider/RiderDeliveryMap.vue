@@ -126,7 +126,7 @@ const stopWatch = watch(
 
 onMounted(async () => {
   try {
-    const res = await axios.get('/map/key')
+    const res = await axios.get('/api/map/key')
     await loadNaverMapSdk(res.data.resultData)
     await nextTick()
     initMap()

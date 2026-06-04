@@ -4,12 +4,14 @@ defineEmits(['close'])
 </script>
 
 <template>
-  <div v-if="show" class="modal_overlay" @click.self="$emit('close')">
-    <div class="alert_modal">
-      <p class="alert_msg">{{ message }}</p>
-      <button class="alert_confirm_btn" @click="$emit('close')">확인</button>
+  <Teleport to="body">
+    <div v-if="show" class="modal_overlay" @click.self="$emit('close')">
+      <div class="alert_modal">
+        <p class="alert_msg">{{ message }}</p>
+        <button class="alert_confirm_btn" @click="$emit('close')">확인</button>
+      </div>
     </div>
-  </div>
+  </Teleport>
 </template>
 
 <style scoped>

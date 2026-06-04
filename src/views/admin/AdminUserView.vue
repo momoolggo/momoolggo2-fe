@@ -133,9 +133,14 @@ const applySuspend = async () => {
   } catch { showAlert('처리 실패') }
 }
 
-const approvePendingUser = async () => {
-  if (!selectedPendingUser.value) return
-  if (!await showConfirm('승인하시겠습니까?')) return
+const approveConfirming = ref(false)
+const rejectConfirming = ref(false)
+
+const approvePendingUser = () => { approveConfirming.value = true }
+const cancelApprove = () => { approveConfirming.value = false }
+
+const confirmApprove = async () => {
+  approveConfirming.value = false
   try {
     await adminService.updateApproval(selectedPendingUser.value.userNo, 'ACTIVE')
     pendingList.value = pendingList.value.filter(u => u.userNo !== selectedPendingUser.value.userNo)
@@ -148,7 +153,12 @@ const approvePendingUser = async () => {
 const rejectPendingUser = async () => {
   if (!selectedPendingUser.value) return
   if (!selectedRejectReason.value) { showAlert('반려 사유를 선택해주세요.'); return }
-  if (!await showConfirm('반려하시겠습니까?')) return
+  rejectConfirming.value = true
+}
+const cancelReject = () => { rejectConfirming.value = false }
+
+const confirmReject = async () => {
+  rejectConfirming.value = false
   try {
     await adminService.updateApproval(selectedPendingUser.value.userNo, 'REJECTED', selectedRejectReason.value)
     pendingList.value = pendingList.value.filter(u => u.userNo !== selectedPendingUser.value.userNo)
@@ -266,7 +276,12 @@ const openPendingDetail = async (user) => {
     }
   }
 }
-const closePendingDetail = () => { showPendingDetailModal.value = false; selectedPendingUser.value = null }
+const closePendingDetail = () => {
+  showPendingDetailModal.value = false
+  selectedPendingUser.value = null
+  approveConfirming.value = false
+  rejectConfirming.value = false
+}
 
 const openFile = (url) => {
   if (!url) return
@@ -563,8 +578,26 @@ onMounted(fetchUserList)
           </template>
         </div>
 
+        <!-- 승인 최종 확인 -->
+        <div v-if="approveConfirming" class="inline_confirm">
+          <p class="inline_confirm_msg">정말 승인하시겠습니까?</p>
+          <div class="inline_confirm_btns">
+            <button class="modal_cancel" @click="cancelApprove">취소</button>
+            <button class="approve_btn_lg" @click="confirmApprove">확인</button>
+          </div>
+        </div>
+
+        <!-- 반려 최종 확인 -->
+        <div v-else-if="rejectConfirming" class="inline_confirm">
+          <p class="inline_confirm_msg">정말 반려하시겠습니까?</p>
+          <div class="inline_confirm_btns">
+            <button class="modal_cancel" @click="cancelReject">취소</button>
+            <button class="reject_btn_lg" style="padding:10px 32px;" @click="confirmReject">확인</button>
+          </div>
+        </div>
+
         <!-- 승인/반려 버튼 -->
-        <div class="pending_btns">
+        <div v-else class="pending_btns">
           <button class="approve_btn_lg" @click="approvePendingUser">승인</button>
           <div class="reject_wrap">
             <button class="reject_btn_lg" @click="rejectOpen = !rejectOpen">
@@ -695,4 +728,7 @@ onMounted(fetchUserList)
 .eco_td { background: #f0faf0; border-color: #c8e6c9 !important; }
 .eco_td .green_text { color: #1b5e20; }
 .eco_td .green_dash { color: #aaa; }
+.inline_confirm { padding: 16px 24px 24px; display: flex; flex-direction: column; align-items: center; gap: 14px; }
+.inline_confirm_msg { font-size: 14px; color: #333; font-weight: 600; margin: 0; }
+.inline_confirm_btns { display: flex; gap: 10px; }
 </style>

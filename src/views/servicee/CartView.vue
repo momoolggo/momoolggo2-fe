@@ -5,6 +5,7 @@ import cartService from '@/services/cartService';
 import { useCartStore } from '@/stores/cartStore';
 import { useUserStore } from '@/stores/userStore';
 import { showAlert, showConfirm } from '@/composables/useAlert'
+import MenuModal from '@/components/store/MenuModal.vue'
 
 const router = useRouter();
 const cartStore = useCartStore();
@@ -15,6 +16,8 @@ const state = reactive({
     storeName: '',
     storeId: null,
     cartItems: [],
+    selectedCartItem: null,
+    isOptionModalOpen: false,
     deliveryTip: 1500,
     loading: true,
 });
@@ -61,7 +64,10 @@ const loadCart = async () => {
 onMounted(loadCart);
 
 const menuTotal = computed(() =>
-    state.cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0)
+    state.cartItems.reduce((sum, item) => {
+        const unitPrice = Number(item.price || 0) + Number(item.optionPrice || 0);
+        return sum + unitPrice * item.quantity;
+    }, 0)
 );
 const totalPrice = computed(() =>
     state.cartItems.length > 0 ? menuTotal.value + state.deliveryTip : 0
@@ -110,6 +116,26 @@ const clearCart = async () => {
     }
 };
 
+const openOptionModal = (item) => {
+    state.selectedCartItem = {
+        ...item,
+        menuName: item.menuName,
+        price: Number(item.price || 0),
+        menuPic: item.menuPic,
+    };
+    state.isOptionModalOpen = true;
+};
+
+const closeOptionModal = () => {
+    state.isOptionModalOpen = false;
+    state.selectedCartItem = null;
+};
+
+const handleOptionUpdated = async () => {
+    await loadCart();
+    await refreshCartBadge();
+};
+
 const goOrder = () => router.push('/order');
 const goStore = () => state.storeId ? router.push(`/store/${state.storeId}`) : router.push('/home');
 </script>
@@ -131,9 +157,14 @@ const goStore = () => state.storeId ? router.push(`/store/${state.storeId}`) : r
             <img :src="getImageUrl(item.menuPic) || '/images/default-menu.png'" class="item-img" />
             <div class="item-info">
               <div class="item-name">{{ item.menuName }}</div>
-              <div class="item-price">가격: {{ item.price.toLocaleString() }}원</div>
+              <div v-if="item.optionSummary" class="item-options">
+                {{ item.optionSummary }}
+              </div>
+              <div class="item-price">
+                가격: {{ (Number(item.price || 0) + Number(item.optionPrice || 0)).toLocaleString() }}원
+              </div>
               <div class="item-controls">
-                <button class="option-btn">옵션변경</button>
+                <button class="option-btn" @click="openOptionModal(item)">옵션변경</button>
                 <div class="quantity-ctrl">
                   <button @click="changeQuantity(item, -1)">−</button>
                   <span>{{ item.quantity }}</span>
@@ -180,6 +211,19 @@ const goStore = () => state.storeId ? router.push(`/store/${state.storeId}`) : r
         </div>
       </template>
     </div>
+
+    <MenuModal
+      v-if="state.selectedCartItem"
+      :menu="state.selectedCartItem"
+      :is-open="state.isOptionModalOpen"
+      :mode="'edit'"
+      :cart-item-id="state.selectedCartItem.id"
+      :initial-option-signature="state.selectedCartItem.optionSignature || ''"
+      :initial-quantity="Number(state.selectedCartItem.quantity || 1)"
+      :min-price="0"
+      @close="closeOptionModal"
+      @option-updated="handleOptionUpdated"
+    />
   </div>
 </template>
 
@@ -237,6 +281,7 @@ const goStore = () => state.storeId ? router.push(`/store/${state.storeId}`) : r
 .item-img { width: 80px; height: 80px; border-radius: 10px; object-fit: cover; }
 .item-info { flex: 1; }
 .item-name { font-weight: 700; margin-bottom: 4px; }
+.item-options { color: #777; font-size: 0.82rem; line-height: 1.35; margin-bottom: 4px; }
 .item-price { color: #888; font-size: 0.9rem; margin-bottom: 8px; }
 
 .item-controls { display: flex; gap: 8px; }

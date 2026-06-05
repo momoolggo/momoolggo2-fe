@@ -248,7 +248,11 @@ const signup = async () => {
         licenseImageUrl: state.form.licenseImageUrl,
       })
     } catch (profileErr) {
-      state.errorMsg = '라이더 프로필 등록에 실패했습니다. 잠시 후 다시 시도해주세요. (오류: ' + (profileErr.response?.data?.resultMessage ?? profileErr.message) + ')'
+      // 가입 흐름 부분 실패 — auth.user는 생성됨, rider.rider 행만 미생성.
+      // 현 시점 보상 트랜잭션 미도입 (Phase 6 Saga 위임 박제). 동일 user_id/email 재가입 차단되므로 관리자 정리 필요.
+      console.error('가입 흐름 부분 실패 — user 행 생성됨, rider profile 등록 fail', profileErr)
+      userStore.reset()
+      state.errorMsg = '회원가입이 완료되었으나 라이더 프로필 등록에 실패했습니다. 동일 아이디/이메일로 재가입이 차단되므로 관리자에게 문의하여 정리 후 다시 시도해주세요. (오류: ' + (profileErr.response?.data?.resultMessage ?? profileErr.message) + ')'
       return
     }
     await showAlert('회원가입이 완료되었습니다. 관리자 승인 후 이용 가능합니다. 마이페이지에서 정산 계좌를 등록해주세요.', { title: '회원가입', type: 'success' })

@@ -15,7 +15,7 @@ const reviewText = ref('')
 const maxTextLength = 500
 const loading = ref(true)
 const previewImage = ref(null)
-const reviewImage = ref(null)
+const selectedFile = ref(null)
 const fileInput = ref(null)
 
 const textCount = computed(() => reviewText.value.length)
@@ -55,11 +55,11 @@ const triggerFileInput = () => {
 const onFileChange = (e) => {
   const file = e.target.files?.[0]
   if (!file) return
+  selectedFile.value = file
 
   const reader = new FileReader()
   reader.onload = (evt) => {
     previewImage.value = evt.target.result
-    reviewImage.value = evt.target.result
   }
   reader.readAsDataURL(file)
 }
@@ -97,8 +97,8 @@ const submitEdit = async () => {
       contents: reviewText.value
     }
 
-    if (reviewImage.value) {
-      params.image = reviewImage.value
+    if (selectedFile.value) {
+      params.image = await userService.uploadReviewPhoto(selectedFile.value)
     }
 
     await userService.updateReview(reviewId, params)

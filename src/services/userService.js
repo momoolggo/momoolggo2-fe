@@ -99,6 +99,17 @@ class UserService {
     return res.data
   }
 
+  async uploadReviewPhoto(file) {
+    const formData = new FormData()
+    formData.append('file', file)
+
+    const res = await axios.post('/review-photo/upload', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+
+    return res.data.resultData
+  }
+
   //리뷰 조회
   async getReviews(params) {
     const res = await axios.get(`${this.#url}/review`, { params })

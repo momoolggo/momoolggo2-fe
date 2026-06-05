@@ -93,6 +93,12 @@ const getNotificationFallbackUrl = type => {
 
 const resolveNotificationTargetUrl = notification => {
   const targetUrl = notification.targetUrl
+  const title = notification.title || ''
+  const content = notification.content || ''
+
+  if (title.includes('리뷰 소명') || content.includes('리뷰 소명')) {
+    return '/mypage/review'
+  }
 
   if (targetUrl?.startsWith('/order/history/')) {
     const orderId = targetUrl.replace('/order/history/', '')

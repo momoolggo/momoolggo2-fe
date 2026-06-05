@@ -12,7 +12,7 @@ const userId = userStore.state.userNo;
 const orders = ref([])          // 화면에 표시될 주문 목록
 const currentPage = ref(1);      // 현재 페이지
 const pageSize = 5;         // 한 페이지당 아이템 수
-const totalPages = ref(5);       // 전체 페이지 수 (백엔드에서 받아와야 함)
+const totalPages = ref(1);       // 전체 페이지 수 (백엔드에서 받아와야 함)
 
 const getPayState = order => order.payState ?? order.pay_state ?? order.paymentState ?? order.payment_state
 
@@ -29,12 +29,16 @@ const loadOrders = async (page) => {
   currentPage.value = page;
   const params = {
     userId: userId,
-    currentPage: currentPage.value,
+    currentPage: currentPage.value - 1,
     size: pageSize,
   };
   try {
     const result = await orderService.getOrderHistory(params);
     orders.value = (result || []).filter(isVisibleOrder);
+    if (orders.value.length === 0 && currentPage.value > 1) {
+      totalPages.value = currentPage.value - 1
+      currentPage.value = totalPages.value
+    }
 
     // 페이지 변경 시 상단으로 스크롤 이동
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -102,7 +106,7 @@ const goToDetail = (id) => {
 
         <button
           class="page-btn next"
-          :disabled="currentPage === totalPages"
+          :disabled="currentPage === totalPages || totalPages === 0"
           @click="loadOrders(currentPage + 1)"
         >
           &gt;

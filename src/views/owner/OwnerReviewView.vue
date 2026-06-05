@@ -61,6 +61,24 @@ const getReviewerName = (review) => {
   return '고객'
 }
 
+const getReviewPhoto = (review) =>
+  review?.reviewPhotoUrl ||
+  review?.imageUrl ||
+  review?.photo ||
+  ''
+
+const toImageUrl = (url) => {
+  if (!url) return ''
+  const value = String(url).trim()
+  if (!value) return ''
+  if (value.startsWith('data:') || value.startsWith('blob') || value.startsWith('http')) return value
+
+  const baseUrl = (import.meta.env.VITE_API_BASE_URL || window.location.origin).replace(/\/api\/?$/, '')
+  const normalizedPath = value.startsWith('/') ? value : `/${value}`
+
+  return `${baseUrl.replace(/\/$/, '')}${normalizedPath}`
+}
+
 const openComment = (review) => {
   commentModal.reviewId = review.reviewId
   commentModal.content = review.replyContent ?? ''
@@ -233,8 +251,8 @@ const submitReport = async () => {
 
         <p class="review_content">{{ review.contents }}</p>
 
-        <div v-if="review.photo" class="review_img_wrap">
-          <img :src="review.photo" class="review_img" />
+        <div v-if="getReviewPhoto(review)" class="review_img_wrap">
+          <img :src="toImageUrl(getReviewPhoto(review))" class="review_img" alt="리뷰 사진" />
         </div>
 
         <div v-if="review.replyContent" class="owner_comment">

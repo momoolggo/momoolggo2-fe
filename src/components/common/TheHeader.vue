@@ -95,8 +95,15 @@ const resolveNotificationTargetUrl = notification => {
   const targetUrl = notification.targetUrl
   const title = notification.title || ''
   const content = notification.content || ''
+  const rawText = JSON.stringify(notification || {})
 
-  if (title.includes('리뷰 소명') || content.includes('리뷰 소명')) {
+  if (
+    title.includes('리뷰 소명') ||
+    content.includes('리뷰 소명') ||
+    rawText.includes('소명') ||
+    rawText.includes('이의제기') ||
+    rawText.includes('APPEAL')
+  ) {
     return '/mypage/review'
   }
 
@@ -381,7 +388,7 @@ const isOwner = computed(() => userStore.state.role === 'OWNER')
 
 /* 고객 헤더 (480px 고정)*/
 .header {
-  position: relative;
+  position: sticky;
   top: 0;
   z-index: 10000;
   width: 100%;

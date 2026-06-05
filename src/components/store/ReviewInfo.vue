@@ -43,11 +43,23 @@ const formatDate = (d) => {
   return `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, '0')}.${String(date.getDate()).padStart(2, '0')}`
 }
 
-const getImageUrl = (path) => {
-  if (!path) return null
-  if (path.startsWith('data:') || path.startsWith('http') || path.startsWith('blob')) return path
-  return `${path}`
+const toImageUrl = (url) => {
+  if (!url) return ''
+  const value = String(url).trim()
+  if (!value) return ''
+  if (value.startsWith('data:') || value.startsWith('blob') || value.startsWith('http')) return value
+
+  const baseUrl = (import.meta.env.VITE_API_BASE_URL || window.location.origin).replace(/\/api\/?$/, '')
+  const normalizedPath = value.startsWith('/') ? value : `/${value}`
+
+  return `${baseUrl.replace(/\/$/, '')}${normalizedPath}`
 }
+
+const getReviewPhoto = (review) =>
+  review?.reviewPhotoUrl ||
+  review?.imageUrl ||
+  review?.photo ||
+  ''
 
 const getReviewerName = (review) => {
   if (review?.userStatus === 'WITHDRAWN' || review?.status === 'WITHDRAWN') return '탈퇴한 회원'
@@ -155,8 +167,8 @@ onUnmounted(() => {
           <p class="rc-text" v-html="review.contents?.replace(/\n/g, '<br>')"></p>
 
           <img
-            v-if="review.photo"
-            :src="getImageUrl(review.photo)"
+            v-if="getReviewPhoto(review)"
+            :src="toImageUrl(getReviewPhoto(review))"
             class="rc-photo"
             alt="리뷰 사진"
           />

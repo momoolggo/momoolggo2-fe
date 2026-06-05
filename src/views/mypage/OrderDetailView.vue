@@ -6,12 +6,22 @@ import { showAlert, showConfirm } from '@/composables/useAlert';
 import { useRoute } from 'vue-router';
 
 const getImageUrl = (path) => {
-  if (!path) return 'https://via.placeholder.com/45'
+  if (!path) return '/image/delivery.png'
   const value = String(path).trim()
   if (value.startsWith('data:')) return value
   if (value.startsWith('http') || value.startsWith('blob')) return value
-  return value.startsWith('/') ? value : `/${value}`
+  const baseUrl = (import.meta.env.VITE_API_BASE_URL || window.location.origin).replace(/\/api\/?$/, '')
+  const normalizedPath = value.startsWith('/') ? value : `/${value}`
+
+  return `${baseUrl.replace(/\/$/, '')}${normalizedPath}`
 }
+
+const getDeliveredPhotoUrl = () =>
+  order.value.deliveredPhotoUrl ||
+  order.value.deliveryPhotoUrl ||
+  order.value.photoUrl ||
+  order.value.imageUrl ||
+  ''
 
 const route = useRoute();
 const id = route.params.id;
@@ -271,8 +281,15 @@ const connectOrderStatusSse = () => {
   }
 })
 
-eventSource.value.onerror = (error) => {
-    console.error('배달 현황 SSE 오류:', error)
+eventSource.value.onerror = () => {
+    const source = eventSource.value
+
+    if (!source) return
+
+    if (source.readyState === EventSource.CLOSED) {
+      eventSource.value = null
+      setTimeout(connectOrderStatusSse, 3000)
+    }
   }
 }
 
@@ -384,8 +401,8 @@ const closeCancelModal = () => {
         <div v-if="currentOrderState === 6" class="delivered-photo-section">
           <h3 class="delivered-photo-title">배달 완료 사진</h3>
           <img
-            v-if="order.deliveredPhotoUrl"
-            :src="getImageUrl(order.deliveredPhotoUrl)"
+            v-if="getDeliveredPhotoUrl()"
+            :src="getImageUrl(getDeliveredPhotoUrl())"
             alt="배달 완료 사진"
             class="delivered-photo"
           />

@@ -370,7 +370,7 @@ const currentCategoryName = computed(() => {
     border: 1px solid #ddd;
     border-radius: 8px;
     background: #fff;
-    font-size: 13px;
+    font-size: 10px;
     color: #666;
     cursor: pointer;
     text-align: center;

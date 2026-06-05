@@ -91,8 +91,16 @@ export const useNotificationStore = defineStore('notification', () => {
             }
         })
 
-        eventSource.value.onerror = error => {
-            console.error('notification sse error:', error)
+        eventSource.value.onerror = () => {
+            const source = eventSource.value
+
+            if (!source) return
+
+            // EventSource는 일시 끊김 때 브라우저가 자동 재연결한다.
+            if (source.readyState === EventSource.CLOSED) {
+                eventSource.value = null
+                setTimeout(connectSse, 3000)
+            }
         }
     }
 

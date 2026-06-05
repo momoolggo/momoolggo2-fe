@@ -156,6 +156,22 @@ const router = createRouter({
   routes,
 })
 
+router.onError((error) => {
+  const message = String(error?.message || '')
+
+  if (
+    message.includes('Failed to fetch dynamically imported module') ||
+    message.includes('Importing a module script failed')
+  ) {
+    const reloadKey = 'mmg:dynamic-import-reload'
+
+    if (!sessionStorage.getItem(reloadKey)) {
+      sessionStorage.setItem(reloadKey, '1')
+      window.location.reload()
+    }
+  }
+})
+
 // ── 라우터 가드
 router.beforeEach(async (to, from, next) => {
   const userStore = useUserStore()

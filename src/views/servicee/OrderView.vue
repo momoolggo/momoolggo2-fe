@@ -2,6 +2,8 @@
 import { reactive, onMounted, ref, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import orderService from '@/services/orderService'
+import addressService from '@/services/addressService'
+import NaverMap from '@/components/common/NaverMap.vue'
 import { showAlert } from '@/composables/useAlert'
 
 const router = useRouter()
@@ -11,6 +13,12 @@ const state = reactive({
   tel: '',
   address: '',
   addressDetail: '',
+  addressId: null,
+  latitude: null,
+  longitude: null,
+  hasDefaultAddress: false,
+  addressSaving: false,
+  addressLoading: false,
   items: [],
   menuTotal: 0,
   deliveryFee: 0,
@@ -59,6 +67,75 @@ const formatPrice = value => `${Number(value || 0).toLocaleString()}원`
 const formatCouponDiscount = coupon => {
   if (coupon.discountType === 'PERCENT') return `${Number(coupon.discount || 0)}% 할인`
   return `${Number(coupon.discount || 0).toLocaleString()}원 할인`
+}
+
+const deliveryAddressText = computed(() => {
+  const parts = [state.address, state.addressDetail].filter(Boolean)
+  return parts.join(' ')
+})
+
+const onAddressSelect = ({ address, lat, lng }) => {
+  state.address = address
+  state.latitude = lat
+  state.longitude = lng
+  createdOrderId.value = ''
+}
+
+const loadDefaultAddress = async () => {
+  state.addressLoading = true
+
+  try {
+    const list = await addressService.findAll()
+    const addresses = Array.isArray(list) ? list : []
+    const defaultAddress = addresses.find(item => item.defaultAd === 1)
+
+    if (!defaultAddress) {
+      state.hasDefaultAddress = false
+      return
+    }
+
+    state.addressId = defaultAddress.addressId
+    state.address = defaultAddress.address || ''
+    state.addressDetail = defaultAddress.addressDetail || ''
+    state.latitude = defaultAddress.latitude ?? null
+    state.longitude = defaultAddress.longitude ?? null
+    state.hasDefaultAddress = true
+  } catch (e) {
+    console.error('주소 목록 조회 실패:', e)
+    state.hasDefaultAddress = false
+  } finally {
+    state.addressLoading = false
+  }
+}
+
+const saveDefaultAddress = async () => {
+  if (state.addressSaving) return
+
+  if (!state.address) {
+    await showAlert('주소를 입력해 주세요.', { title: '입력 필요', type: 'warning' })
+    return
+  }
+
+  state.addressSaving = true
+
+  try {
+    await addressService.save({
+      address: state.address,
+      addressDetail: state.addressDetail,
+      latitude: state.latitude,
+      longitude: state.longitude,
+      defaultAd: 1,
+    })
+
+    state.hasDefaultAddress = true
+    createdOrderId.value = ''
+    await showAlert('배송지가 저장되었습니다.', { title: '저장 완료', type: 'success' })
+  } catch (e) {
+    console.error('주소 저장 실패:', e)
+    await showAlert('배송지 저장에 실패했습니다.', { title: '오류', type: 'error' })
+  } finally {
+    state.addressSaving = false
+  }
 }
 
 const loadTossScript = () => {
@@ -111,8 +188,8 @@ const loadOrderInfo = async () => {
 
     state.storeName = data.storeName
     state.tel = data.tel
-    state.address = data.address
-    state.addressDetail = data.addressDetail
+    state.address = data.address || ''
+    state.addressDetail = data.addressDetail || ''
     state.items = data.items || []
     state.menuTotal = Number(data.menuTotal || 0)
     state.deliveryFee = Number(data.deliveryFee || 0)
@@ -122,6 +199,8 @@ const loadOrderInfo = async () => {
     router.push('/cart')
     return
   }
+
+  await loadDefaultAddress()
 
   await loadCoupons()
 
@@ -154,8 +233,8 @@ watch(
 const handleOrder = async () => {
   if (isOrdering.value) return
 
-  if (!state.address) {
-    await showAlert('배송지를 설정해주세요.', { title: '배송지 필요', type: 'warning' })
+  if (!state.hasDefaultAddress) {
+    await showAlert('배송지를 저장해주세요.', { title: '배송지 필요', type: 'warning' })
     return
   }
 
@@ -255,13 +334,37 @@ const handleOrder = async () => {
 
         <div class="info-group">
           <div class="section-label">배달 정보</div>
-          <div class="input-row">
+          <div v-if="state.hasDefaultAddress" class="input-row">
             <input
-              :value="`${state.address} ${state.addressDetail}`"
+              :value="deliveryAddressText"
               readonly
               class="input-field"
             />
-            <button class="change-btn" type="button">변경</button>
+            <button class="change-btn" type="button" @click="router.push('/mypage/address')">변경</button>
+          </div>
+
+          <div v-else class="address-inline-form">
+            <p class="address-guide">기본 배송지가 없습니다. 배송지를 저장해 주세요.</p>
+            <NaverMap
+              :init-lat="state.latitude"
+              :init-lng="state.longitude"
+              :init-address="state.address"
+              @select="onAddressSelect"
+            />
+            <input
+              v-model="state.addressDetail"
+              type="text"
+              placeholder="상세주소를 입력하세요"
+              class="input-field full"
+            />
+            <button
+              class="address-save-btn"
+              type="button"
+              :disabled="state.addressSaving || !state.address"
+              @click="saveDefaultAddress"
+            >
+              {{ state.addressSaving ? '저장 중...' : '배송지 저장' }}
+            </button>
           </div>
         </div>
 
@@ -362,7 +465,7 @@ const handleOrder = async () => {
           class="order-btn"
           type="button"
           @click="handleOrder"
-          :disabled="!isPaymentReady || isOrdering"
+          :disabled="!isPaymentReady || isOrdering || !state.hasDefaultAddress"
         >
           {{ isPaymentReady ? `${formatPrice(displayTotalAmount)} 결제하기` : '로딩 중...' }}
         </button>
@@ -447,6 +550,35 @@ const handleOrder = async () => {
   font-size: 0.85rem;
   cursor: pointer;
   white-space: nowrap;
+}
+
+.address-inline-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.address-guide {
+  margin: 0;
+  font-size: 0.82rem;
+  color: #a40c0b;
+}
+
+.address-save-btn {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  background: #a40c0b;
+  color: #fff;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.address-save-btn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
 }
 
 .coupon-empty,

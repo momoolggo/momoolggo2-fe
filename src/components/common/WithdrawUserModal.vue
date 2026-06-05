@@ -24,6 +24,7 @@ const riderStore = useRiderStore()
 const state = reactive({
   step: 'notice',
   password: '',
+  errorMsg: '',
   loading: false,
 })
 
@@ -40,6 +41,7 @@ const close = () => {
 
 const goPasswordStep = () => {
   state.step = 'password'
+  state.errorMsg = ''
 }
 
 const resetLocalAuth = () => {
@@ -52,14 +54,12 @@ const submitWithdraw = async () => {
   const userPw = state.password.trim()
 
   if (!userPw) {
-    await showAlert('비밀번호를 입력해 주세요.', {
-      title: '입력 필요',
-      type: 'warning',
-    })
+    state.errorMsg = '비밀번호를 입력해 주세요.'
     return
   }
 
   if (state.loading) return
+  state.errorMsg = ''
   state.loading = true
 
   try {
@@ -74,10 +74,7 @@ const submitWithdraw = async () => {
 
     router.push(signinPath[props.role] || '/')
   } catch (err) {
-    await showAlert(err.response?.data?.resultMessage || '회원 탈퇴에 실패했습니다.', {
-      title: '회원 탈퇴 실패',
-      type: 'error',
-    })
+    state.errorMsg = err.response?.data?.resultMessage || '회원 탈퇴에 실패했습니다.'
   } finally {
     state.loading = false
   }
@@ -121,8 +118,11 @@ const submitWithdraw = async () => {
             class="inp"
             placeholder="비밀번호 입력"
             autocomplete="current-password"
+            :disabled="state.loading"
+            @input="state.errorMsg = ''"
             @keyup.enter="submitWithdraw"
           />
+          <p v-if="state.errorMsg" class="withdraw_error">{{ state.errorMsg }}</p>
 
           <div class="withdraw_actions">
             <button class="btn_cancel" type="button" :disabled="state.loading" @click="close">취소</button>
@@ -188,6 +188,14 @@ const submitWithdraw = async () => {
   line-height: 1.5;
 }
 
+.withdraw_error {
+  margin: 8px 0 0;
+  color: #d93025;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
 .withdraw_actions {
   display: flex;
   gap: 10px;
@@ -217,6 +225,11 @@ const submitWithdraw = async () => {
 .btn_cancel:disabled,
 .btn_danger:disabled {
   opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.inp:disabled {
+  background: #f7f7f7;
   cursor: not-allowed;
 }
 </style>

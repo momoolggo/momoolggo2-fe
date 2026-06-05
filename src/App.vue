@@ -42,7 +42,7 @@ const signout = async () => {
 
 <template>
   <div class="app-outer">
-    <div class="app-wrapper">
+    <div class="app-wrapper" :class="{ 'has-fixed-customer-header': showHeader && userStore.state.role !== 'OWNER' }">
       <TheHeader
         v-if="showHeader"
         :is-signed-in="userStore.state.isSignedIn"
@@ -86,5 +86,9 @@ const signout = async () => {
   position: relative;
   background: #fff;
 
+}
+
+.app-wrapper.has-fixed-customer-header {
+  padding-top: calc(180px + env(safe-area-inset-top));
 }
 </style>

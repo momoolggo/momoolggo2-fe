@@ -89,7 +89,7 @@ defineExpose({ show, confirm })
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 99999;
+  z-index: 100100;
 }
 .alert-box {
   background: #fff;

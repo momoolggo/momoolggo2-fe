@@ -1058,13 +1058,15 @@ onUnmounted(() => {
 
   font-family: 'Nunito', sans-serif;
   background: var(--bg);
-  width: 480px;
-  margin: 0 auto ;
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
   overflow: hidden;
   position: relative;
+  box-sizing: border-box;
 }
 
 .scroll-area { flex: 1; overflow-y: auto; overflow-x: hidden; }

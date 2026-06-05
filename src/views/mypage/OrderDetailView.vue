@@ -7,9 +7,10 @@ import { useRoute } from 'vue-router';
 
 const getImageUrl = (path) => {
   if (!path) return 'https://via.placeholder.com/45'
-  if (path.startsWith('data:')) return path
-  if (path.startsWith('http') || path.startsWith('blob')) return path
-  return `${path}`
+  const value = String(path).trim()
+  if (value.startsWith('data:')) return value
+  if (value.startsWith('http') || value.startsWith('blob')) return value
+  return value.startsWith('/') ? value : `/${value}`
 }
 
 const route = useRoute();
@@ -265,6 +266,9 @@ const connectOrderStatusSse = () => {
 
   applyDeliveryStatus(data)
   await loadOrderStatus()
+  if (currentOrderState.value === 6) {
+    await loadOrderDetail()
+  }
 })
 
 eventSource.value.onerror = (error) => {
@@ -377,9 +381,15 @@ const closeCancelModal = () => {
         </div>
 
         <!-- 자잘 에러 트랙 #9-B (2026-05-23) — 배달 완료 사진 (orderState=6 + deliveredPhotoUrl 있을 때만) -->
-        <div v-if="currentOrderState === 6 && order.deliveredPhotoUrl" class="delivered-photo-section">
+        <div v-if="currentOrderState === 6" class="delivered-photo-section">
           <h3 class="delivered-photo-title">배달 완료 사진</h3>
-          <img :src="getImageUrl(order.deliveredPhotoUrl)" alt="배달 완료 사진" class="delivered-photo" />
+          <img
+            v-if="order.deliveredPhotoUrl"
+            :src="getImageUrl(order.deliveredPhotoUrl)"
+            alt="배달 완료 사진"
+            class="delivered-photo"
+          />
+          <div v-else class="delivered-photo-placeholder">배달 완료 사진이 없습니다.</div>
         </div>
       </div>
 
@@ -701,6 +711,19 @@ const closeCancelModal = () => {
   object-fit: cover;
   border-radius: 8px;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+.delivered-photo-placeholder {
+  width: 100%;
+  max-width: 360px;
+  min-height: 120px;
+  border: 1px dashed #ddd;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #999;
+  font-size: 13px;
+  background: #fafafa;
 }
 
 .delivery-live-text {

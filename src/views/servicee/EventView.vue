@@ -85,7 +85,7 @@
         </div>
 
         <div v-else class="instruction" :class="`phase-${gameState}`">
-          <span v-if="gameState === 'covering'">🫙 컵이 덮이고 있어요...</span>
+          <span v-if="gameState === 'covering'">🥤 컵이 덮이고 있어요...</span>
           <span v-else-if="gameState === 'shuffle'">🔀 눈으로 따라가세요!</span>
           <span v-else-if="gameState === 'pick'">👆 {{ targetFood.emoji }} {{ targetFood.name }}을(를) 찾아라!</span>
           <span v-else-if="gameState === 'result' && lastCorrect">✅ 정답입니다!</span>

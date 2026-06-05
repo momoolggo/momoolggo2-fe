@@ -14,11 +14,54 @@ const rating = ref(0)
 const reviewText = ref('')
 const maxTextLength = 500
 const loading = ref(true)
+const previewImage = ref(null)
+const reviewImage = ref(null)
+const fileInput = ref(null)
 
 const textCount = computed(() => reviewText.value.length)
 
+const getReviewPhoto = (review) =>
+  review?.photo ||
+  review?.image ||
+  review?.reviewPhoto ||
+  review?.reviewImage ||
+  review?.reviewPhotoUrl ||
+  review?.reviewImageUrl ||
+  review?.reviewPic ||
+  review?.reviewPicUrl ||
+  review?.reviewImg ||
+  review?.reviewImgUrl ||
+  review?.imageUrl ||
+  review?.fileUrl ||
+  review?.photoUrl ||
+  ''
+
+const getImageUrl = (path) => {
+  if (!path) return ''
+  const value = String(path).trim()
+  if (!value) return ''
+  if (value.startsWith('data:') || value.startsWith('blob') || value.startsWith('http')) return value
+  return value.startsWith('/') ? value : `/${value}`
+}
+
 const setRating = (idx) => {
   rating.value = idx
+}
+
+const triggerFileInput = () => {
+  fileInput.value?.click()
+}
+
+const onFileChange = (e) => {
+  const file = e.target.files?.[0]
+  if (!file) return
+
+  const reader = new FileReader()
+  reader.onload = (evt) => {
+    previewImage.value = evt.target.result
+    reviewImage.value = evt.target.result
+  }
+  reader.readAsDataURL(file)
 }
 
 // 기존 리뷰 데이터 불러오기
@@ -29,6 +72,7 @@ onMounted(async () => {
     menuName.value = review.menuName || ''
     rating.value = review.rating || 0
     reviewText.value = review.contents || ''
+    previewImage.value = getImageUrl(getReviewPhoto(review))
   } catch (error) {
     console.error('리뷰 불러오기 실패:', error)
     await showAlert('리뷰를 불러올 수 없습니다.', { title: '오류', type: 'error' })
@@ -48,10 +92,16 @@ const submitEdit = async () => {
     return
   }
   try {
-    await userService.updateReview(reviewId, {
+    const params = {
       rating: rating.value,
       contents: reviewText.value
-    })
+    }
+
+    if (reviewImage.value) {
+      params.image = reviewImage.value
+    }
+
+    await userService.updateReview(reviewId, params)
     await showAlert('리뷰가 수정되었습니다!', { title: '수정 완료', type: 'success' })
     router.push('/mypage/review')
   } catch (error) {
@@ -75,6 +125,10 @@ const submitEdit = async () => {
               <span class="store-name">{{ storeName }}</span>
               <span class="menu-name">{{ menuName }}</span>
             </div>
+            <button class="btn-camera" @click="triggerFileInput">
+              <img src="https://cdn-icons-png.flaticon.com/512/685/685655.png" alt="camera" />
+            </button>
+            <input ref="fileInput" type="file" accept="image/*" style="display:none" @change="onFileChange" />
           </div>
 
           <div class="rating-area">
@@ -89,6 +143,21 @@ const submitEdit = async () => {
           </div>
 
           <div class="divider"></div>
+
+          <div class="image-area" @click="triggerFileInput">
+            <div class="image-bg">
+              <img
+                v-if="previewImage"
+                :src="previewImage"
+                alt="review food"
+                class="preview-img"
+              />
+              <div v-else class="image-placeholder">
+                <img src="https://cdn-icons-png.flaticon.com/512/685/685655.png" alt="add photo" class="placeholder-icon"/>
+                <span>사진 추가</span>
+              </div>
+            </div>
+          </div>
 
           <div class="text-input-area">
             <textarea
@@ -182,6 +251,52 @@ const submitEdit = async () => {
   height: 1px;
   background: #f2f2f2;
   margin-bottom: 14px;
+}
+.btn-camera {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+}
+.btn-camera img {
+  width: 22px;
+  height: 22px;
+  opacity: 0.45;
+}
+.image-area {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 14px;
+  cursor: pointer;
+}
+.image-bg {
+  width: 100%;
+  max-width: 280px;
+  height: 160px;
+  background-color: #f0f0f0;
+  border-radius: 14px;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.preview-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.image-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  color: #bbb;
+  font-size: 13px;
+}
+.placeholder-icon {
+  width: 36px;
+  height: 36px;
+  opacity: 0.3;
 }
 .text-input-area {
   position: relative;

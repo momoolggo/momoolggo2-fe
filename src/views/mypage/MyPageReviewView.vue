@@ -29,6 +29,30 @@ const pageNumbers = computed(() => {
   return pages
 })
 
+const getReviewPhoto = (review) =>
+  review?.photo ||
+  review?.image ||
+  review?.reviewPhoto ||
+  review?.reviewImage ||
+  review?.reviewPhotoUrl ||
+  review?.reviewImageUrl ||
+  review?.reviewPic ||
+  review?.reviewPicUrl ||
+  review?.reviewImg ||
+  review?.reviewImgUrl ||
+  review?.imageUrl ||
+  review?.fileUrl ||
+  review?.photoUrl ||
+  ''
+
+const getImageUrl = (path) => {
+  if (!path) return ''
+  const value = String(path).trim()
+  if (!value) return ''
+  if (value.startsWith('data:') || value.startsWith('blob') || value.startsWith('http')) return value
+  return value.startsWith('/') ? value : `/${value}`
+}
+
 const editReview = (reviewId) => {
   router.push(`/mypage/review/edit/${reviewId}`)
 }
@@ -79,6 +103,13 @@ const deleteReview = async (reviewId) => {
           </div>
 
           <p class="review-text">{{ review.contents }}</p>
+
+          <img
+            v-if="getReviewPhoto(review)"
+            :src="getImageUrl(getReviewPhoto(review))"
+            class="review-photo"
+            alt="리뷰 사진"
+          />
 
           <div class="hashtags" v-if="review.tags">
             <span v-for="tag in review.tags" :key="tag" class="hashtag">#{{ tag }}</span>
@@ -248,6 +279,15 @@ const deleteReview = async (reviewId) => {
   color: #333;
   line-height: 1.5;
   margin-bottom: 8px;
+}
+
+.review-photo {
+  width: 88px;
+  height: 88px;
+  object-fit: cover;
+  border-radius: 12px;
+  margin-bottom: 8px;
+  display: block;
 }
 
 .hashtags {

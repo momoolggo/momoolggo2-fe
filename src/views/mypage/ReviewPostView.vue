@@ -13,6 +13,7 @@ const rating = ref(0)
 const reviewText = ref('')
 const maxTextLength = 500
 const previewImage = ref(null)
+const reviewImage = ref('')
 const fileInput = ref(null)
 
 const textCount = computed(() => reviewText.value.length)
@@ -40,6 +41,7 @@ const onFileChange = (e) => {
   const reader = new FileReader()
   reader.onload = (evt) => {
     previewImage.value = evt.target.result
+    reviewImage.value = evt.target.result
   }
   reader.readAsDataURL(file)
 }
@@ -58,7 +60,7 @@ const submitReview = async() => {
       orderId: Number(route.params.id),
       rating: rating.value,
       text: reviewText.value,
-      image: '',
+      image: reviewImage.value,
     }
     await userService.postReview(params);
     await showAlert('리뷰가 등록되었습니다!', { title: '등록 완료', type: 'success' })

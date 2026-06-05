@@ -99,21 +99,34 @@ const navigateToTarget = async () => {
   const goingToStore = ['ASSIGNED', 'ARRIVED_AT_STORE', 'AWAITING_PICKUP'].includes(status)
   const lat = goingToStore ? current.value.pickupLat : current.value.deliveryLat
   const lng = goingToStore ? current.value.pickupLng : current.value.deliveryLng
+  const addr = goingToStore ? current.value.pickupAddress : current.value.deliveryAddress
   const name = goingToStore ? '가게(픽업지)' : '배달지'
-  if (!lat || !lng) {
-    await showAlert('목적지 좌표가 없습니다.', { title: '좌표 없음', type: 'warning' })
-    return
-  }
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+
   // 2026-05-25 정정 — 네이버 지도 앱 "네비게이션 즉시 시작" URI (nmap://navigation).
   // 모바일: 앱이 네비 모드로 진입. PC fallback: 네이버 모바일 지도 길찾기 (PC는 네비 앱 없음).
-  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
-  if (isMobile) {
-    // nmap://navigation = 네비게이션 즉시 시작 (nmap://route는 길찾기 페이지만)
-    window.location.href = `nmap://navigation?dlat=${lat}&dlng=${lng}&dname=${encodeURIComponent(name)}&appname=com.momoolggo.rider`
-  } else {
-    const url = `https://m.map.naver.com/route.naver?menu=route&pathType=1&fromName=현재위치&toName=${encodeURIComponent(name)}&toX=${lng}&toY=${lat}`
-    window.open(url, '_blank', 'noopener')
+  if (lat && lng) {
+    if (isMobile) {
+      window.location.href = `nmap://navigation?dlat=${lat}&dlng=${lng}&dname=${encodeURIComponent(name)}&appname=com.momoolggo.rider`
+    } else {
+      const url = `https://m.map.naver.com/route.naver?menu=route&pathType=1&fromName=현재위치&toName=${encodeURIComponent(name)}&toX=${lng}&toY=${lat}`
+      window.open(url, '_blank', 'noopener')
+    }
+    return
   }
+
+  // 좌표 NULL fallback — 주소 텍스트로 네이버 길찾기 검색 (delivery 테이블 좌표 NULL 케이스).
+  if (addr) {
+    const query = encodeURIComponent(addr)
+    if (isMobile) {
+      window.location.href = `nmap://search?query=${query}&appname=com.momoolggo.rider`
+    } else {
+      window.open(`https://map.naver.com/p/search/${query}`, '_blank', 'noopener')
+    }
+    return
+  }
+
+  await showAlert('목적지 좌표와 주소가 모두 없습니다.', { title: '목적지 없음', type: 'warning' })
 }
 </script>
 
@@ -129,7 +142,7 @@ const navigateToTarget = async () => {
       </div>
 
       <RiderDeliveryMap
-        v-if="current.pickupLat && current.pickupLng && current.deliveryLat && current.deliveryLng"
+        v-if="(current.pickupLat && current.pickupLng) || (current.deliveryLat && current.deliveryLng)"
         :pickup-lat="current.pickupLat"
         :pickup-lng="current.pickupLng"
         :delivery-lat="current.deliveryLat"

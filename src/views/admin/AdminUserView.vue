@@ -454,7 +454,7 @@ onMounted(fetchUserList)
             <span class="info_label">분류</span>
             <span :class="['role_badge', roleBadgeClass(selectedUser.role)]">{{ roleLabel(selectedUser.role) }}</span>
           </div>
-          <div class="info_row">
+          <div class="info_row" v-if="selectedUser.role === 'CUSTOMER'">
             <span class="info_label">주소</span>
             <span class="info_value" v-if="!addressLoading">
               {{ selectedUser.address ?? '-' }}

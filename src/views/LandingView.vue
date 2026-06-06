@@ -350,9 +350,10 @@ const goOrder = () => {
 .footer_copy { margin-top: 24px; font-size: 12px; opacity: 0.5; }
 
 /* ════════════════════════════════
-   모바일 반응형
+   모바일 반응형 — 2026-06-06 정정: 2000px → 768px
+   (이전 2000px 오타로 거의 모든 모니터가 모바일 스타일 강제 적용됨)
 ════════════════════════════════ */
-@media (max-width: 2000px) {
+@media (max-width: 768px) {
 
   /* 네비바 모바일 */
   .navbar_inner { padding: 0 16px; }

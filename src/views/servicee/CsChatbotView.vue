@@ -76,6 +76,8 @@ const send = async () => {
   }
   sending.value = true
   input.value = ''
+  // 2026-06-06 — textarea 높이 리셋 (auto-resize)
+  setTimeout(autoResizeInput, 0)
   state.messages.push({
     messageId: `tmp-${Date.now()}`,
     role: 'USER',
@@ -138,6 +140,16 @@ const goStore = (storeId) => {
   router.push(`/store/${storeId}`)
 }
 
+// 2026-06-06 — textarea auto-resize (모바일 채팅 입력 편의)
+const inputRef = ref(null)
+const autoResizeInput = () => {
+  const el = inputRef.value
+  if (!el) return
+  el.style.height = 'auto'
+  const max = 120 // 약 5줄
+  el.style.height = Math.min(el.scrollHeight, max) + 'px'
+}
+
 const onKeydown = (e) => {
   if (e.key === 'Enter' && !e.shiftKey) {
     e.preventDefault()
@@ -166,22 +178,21 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="cs-chat">
-    <header class="cs-head">
+    <!-- 2026-06-06 — 펫 박스 별도 영역 제거하고 헤더 안에 통합 (메시지 영역 +60px 확보) -->
+    <header class="cs-head" :class="{ 'cs-head--pet': isPetChat && petInfo }">
       <button class="back-btn" @click="closeSession">←</button>
-      <h1 class="title">{{ isPetChat ? '나의 펫' : '고객센터' }}</h1>
+      <template v-if="isPetChat && petInfo">
+        <div class="head-pet-emoji">{{ petEmoji }}</div>
+        <div class="head-pet-info">
+          <span class="head-pet-name">{{ petInfo.name }}</span>
+          <span class="head-pet-meta">Lv.{{ petInfo.level }} · 친밀도 {{ petInfo.intimacy }}</span>
+        </div>
+      </template>
+      <h1 v-else class="title">{{ isPetChat ? '나의 펫' : '고객센터' }}</h1>
       <span class="status-badge" :class="`status-${state.status.toLowerCase()}`">
-        {{ state.status === 'ESCALATED' ? '상담원 연결 중' : state.status === 'CLOSED' ? '종료됨' : (isPetChat ? '펫 챗봇' : '챗봇') }}
+        {{ state.status === 'ESCALATED' ? '상담원 연결 중' : state.status === 'CLOSED' ? '종료됨' : (isPetChat ? '펫' : '챗봇') }}
       </span>
     </header>
-
-    <!-- 2026-05-25 9건 트랙 #8 — 펫 캐릭터 박스 (MYPET 진입 시만) -->
-    <div v-if="isPetChat && petInfo" class="pet-character-box">
-      <div class="pet-character-emoji">{{ petEmoji }}</div>
-      <div class="pet-character-info">
-        <div class="pet-character-name">{{ petInfo.name }}</div>
-        <div class="pet-character-meta">Lv.{{ petInfo.level }} · 친밀도 {{ petInfo.intimacy }}</div>
-      </div>
-    </div>
 
     <div class="messages" ref="messageListRef">
       <p v-if="starting" class="hint">세션을 시작하는 중...</p>
@@ -240,12 +251,14 @@ onBeforeUnmount(() => {
 
     <div class="input-row">
       <textarea
+        ref="inputRef"
         v-model="input"
         class="input-box"
-        rows="2"
+        rows="1"
         placeholder="무엇이 궁금하세요?"
         :disabled="sending || state.status === 'CLOSED' || starting"
         @keydown="onKeydown"
+        @input="autoResizeInput"
       />
       <button class="send-btn" :disabled="sending || !input.trim() || state.status === 'CLOSED' || starting" @click="send">
         {{ sending ? '...' : '전송' }}
@@ -299,40 +312,42 @@ onBeforeUnmount(() => {
 .status-escalated { background: #ffb000; color: #333; }
 .status-closed { background: #888; color: #fff; }
 
-/* 2026-05-25 9건 트랙 #8 — 펫 캐릭터 박스 */
-.pet-character-box {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 14px 18px;
-  background: linear-gradient(135deg, #FFF5EE, #FFE8D8);
-  border-bottom: 1px solid #f0c8a8;
+/* 2026-06-06 — 펫 박스를 헤더 인라인으로 통합 (메시지 영역 확보) */
+.cs-head--pet {
+  gap: 10px;
+  padding: 8px 12px;
 }
-.pet-character-emoji {
-  font-size: 48px;
+.head-pet-emoji {
+  font-size: 32px;
   line-height: 1;
-  display: inline-block;        /* transform 적용 위해 필수 */
+  display: inline-block;
   transform-origin: center bottom;
-  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.15));
+  filter: drop-shadow(0 1px 2px rgba(0,0,0,0.2));
   animation: petBob 1.6s ease-in-out infinite;
 }
 @keyframes petBob {
   0%, 100% { transform: translateY(0); }
-  50%      { transform: translateY(-4px); }
+  50%      { transform: translateY(-3px); }
 }
-.pet-character-info {
+.head-pet-info {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  flex: 1;
+  min-width: 0;
+  gap: 1px;
+  line-height: 1.25;
 }
-.pet-character-name {
-  font-size: 17px;
-  font-weight: 800;
-  color: #333;
+.head-pet-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: #fff;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
-.pet-character-meta {
-  font-size: 12px;
-  color: #888;
+.head-pet-meta {
+  font-size: 11px;
+  color: rgba(255,255,255,0.85);
 }
 .bubble-pet-emoji {
   font-size: 28px;
@@ -458,6 +473,10 @@ onBeforeUnmount(() => {
   font-size: 14px;
   font-family: inherit;
   outline: none;
+  min-height: 40px;
+  max-height: 120px;
+  line-height: 1.4;
+  overflow-y: auto;
 }
 .input-box:focus { border-color: #A40C0B; }
 .send-btn {

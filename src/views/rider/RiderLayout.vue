@@ -115,7 +115,7 @@ const goSignup = () => router.push('/rider/signup')
   width: 100%;
   max-width: 420px;
   min-height: 100dvh;
-  position: relative;
+  position: relative;     /* 2026-06-06 — drawer/backdrop의 absolute 기준점 */
   background: var(--bg);
   overflow-x: hidden;
 }

@@ -32,6 +32,49 @@ const pageTitle = computed(() => {
 const openDrawer = () => { drawerOpen.value = true }
 const closeDrawer = () => { drawerOpen.value = false }
 
+// 2026-06-06 — 사이드바 드래그 닫기 (오른쪽 swipe).
+// drawer는 우측에서 슬라이드 인 → 오른쪽으로 드래그하면 닫힘.
+// 80px 이상 이동 또는 빠른 속도 swipe면 close. 미만이면 원위치.
+const drawerRef = ref(null)
+const dragStartX = ref(0)
+const dragCurrentX = ref(0)
+const dragging = ref(false)
+const DRAG_CLOSE_THRESHOLD = 80
+
+const getClientX = (e) => e.touches ? e.touches[0].clientX : e.clientX
+const getChangedClientX = (e) => e.changedTouches ? e.changedTouches[0].clientX : e.clientX
+
+const onDragStart = (e) => {
+  if (!drawerOpen.value) return
+  dragStartX.value = getClientX(e)
+  dragCurrentX.value = 0
+  dragging.value = true
+  if (drawerRef.value) {
+    drawerRef.value.style.transition = 'none'
+  }
+}
+const onDragMove = (e) => {
+  if (!dragging.value) return
+  const dx = getClientX(e) - dragStartX.value
+  // 오른쪽으로만 드래그 허용 (왼쪽은 0으로 클램프)
+  dragCurrentX.value = Math.max(0, dx)
+  if (drawerRef.value) {
+    drawerRef.value.style.transform = `translateX(${dragCurrentX.value}px)`
+  }
+}
+const onDragEnd = (e) => {
+  if (!dragging.value) return
+  const dx = getChangedClientX(e) - dragStartX.value
+  dragging.value = false
+  if (drawerRef.value) {
+    drawerRef.value.style.transition = ''
+    drawerRef.value.style.transform = ''
+  }
+  if (dx >= DRAG_CLOSE_THRESHOLD) {
+    closeDrawer()
+  }
+}
+
 // 사이드바 열림 시점에 활성 배달 + 본인 status 최신화 (A-3 Y 결정).
 watch(drawerOpen, async (open) => {
   if (!open) return
@@ -101,8 +144,23 @@ const signout = async () => {
   </transition>
 
   <transition name="slide">
-    <aside v-if="drawerOpen" class="drawer" role="dialog" aria-label="라이더 메뉴">
+    <aside
+      v-if="drawerOpen"
+      ref="drawerRef"
+      class="drawer"
+      role="dialog"
+      aria-label="라이더 메뉴"
+      @touchstart.passive="onDragStart"
+      @touchmove.passive="onDragMove"
+      @touchend.passive="onDragEnd"
+      @touchcancel.passive="onDragEnd"
+      @mousedown="onDragStart"
+      @mousemove="onDragMove"
+      @mouseup="onDragEnd"
+      @mouseleave="onDragEnd"
+    >
       <div class="drawer-head">
+        <div class="drawer-grip" aria-hidden="true"></div>
         <div class="user-name">{{ userStore.state.name }} 라이더</div>
         <button class="close-btn" @click="closeDrawer" aria-label="닫기">✕</button>
       </div>
@@ -185,24 +243,28 @@ const signout = async () => {
   margin: 0;
 }
 
+/* 2026-06-06 — 라이더 모바일 frame(.rider-frame, 420px) 안에 갇히도록 absolute로 변경.
+   fixed면 데스크탑 viewport 끝으로 튀어나가서 라이더 화면 밖에 떠 보임. */
 .drawer-backdrop {
-  position: fixed;
+  position: absolute;
   inset: 0;
   background: rgba(0,0,0,0.4);
   z-index: 200;
 }
 .drawer {
-  position: fixed;
+  position: absolute;
   top: 0;
   right: 0;
   width: 280px;
   max-width: 80%;
-  height: 100dvh;
+  height: 100%;
   background: white;
   z-index: 201;
   display: flex;
   flex-direction: column;
   box-shadow: -2px 0 8px rgba(0,0,0,0.15);
+  touch-action: pan-y;     /* 수직 스크롤은 허용, 수평은 drag 핸들러로 처리 */
+  user-select: none;       /* 드래그 중 텍스트 선택 방지 */
 }
 .drawer-head {
   display: flex;
@@ -211,6 +273,23 @@ const signout = async () => {
   padding: 16px;
   background: #A40C0B;
   color: white;
+  position: relative;
+  cursor: grab;
+}
+.drawer-head:active {
+  cursor: grabbing;
+}
+/* 드래그 인디케이터 (사용자가 드래그 가능함을 시각적으로 안내) */
+.drawer-grip {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 4px;
+  height: 28px;
+  background: rgba(255,255,255,0.4);
+  border-radius: 2px;
+  pointer-events: none;
 }
 .user-name {
   font-weight: 600;

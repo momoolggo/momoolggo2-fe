@@ -88,7 +88,11 @@ const send = async () => {
     const res = await chatbotService.sendMessage(state.sessionId, content)
     // server-side echo + assistant 응답으로 마지막 tmp 교체
     state.messages.pop()
-    state.messages.push(res.userMessage, res.assistantMessage)
+    state.messages.push(res.userMessage, {
+      ...res.assistantMessage,
+      // 2026-06-06 멘토 피드백 #1+#2 — Gemini 추천 키워드로 BE가 가게 카드 검색 후 첨부
+      menuCards: res.menuCards || [],
+    })
     state.status = res.sessionStatus
     await scrollToBottom()
   } catch (e) {
@@ -126,6 +130,12 @@ const closeSession = async () => {
   } finally {
     router.back()
   }
+}
+
+// 2026-06-06 멘토 피드백 #1+#2 — 카드 클릭 시 가게 상세로 이동
+const goStore = (storeId) => {
+  if (!storeId) return
+  router.push(`/store/${storeId}`)
 }
 
 const onKeydown = (e) => {
@@ -176,22 +186,50 @@ onBeforeUnmount(() => {
     <div class="messages" ref="messageListRef">
       <p v-if="starting" class="hint">세션을 시작하는 중...</p>
       <template v-else>
-        <div
-          v-for="m in state.messages"
-          :key="m.messageId"
-          class="message-row"
-          :class="m.role === 'USER' ? 'user' : 'assistant'"
-        >
-          <div v-if="isPetChat && m.role !== 'USER'" class="bubble-pet-emoji">{{ petEmoji }}</div>
-          <div class="bubble">{{ m.content }}</div>
-        </div>
+        <template v-for="m in state.messages" :key="m.messageId">
+          <div
+            class="message-row"
+            :class="m.role === 'USER' ? 'user' : 'assistant'"
+          >
+            <div v-if="isPetChat && m.role !== 'USER'" class="bubble-pet-emoji">{{ petEmoji }}</div>
+            <div class="bubble">{{ m.content }}</div>
+          </div>
+          <!-- 2026-06-06 멘토 피드백 #1+#2 — 메뉴 추천 카드 (ASSISTANT 응답 + menuCards 첨부 시) -->
+          <div v-if="m.menuCards && m.menuCards.length" class="menu-cards">
+            <button
+              v-for="card in m.menuCards"
+              :key="card.storeId"
+              class="menu-card"
+              @click="goStore(card.storeId)"
+              type="button"
+            >
+              <img
+                v-if="card.storePic"
+                :src="card.storePic.startsWith('http') ? card.storePic : `/api${card.storePic}`"
+                :alt="card.storeName"
+                class="menu-card-img"
+                @error="(e) => e.target.style.display='none'"
+              />
+              <div class="menu-card-body">
+                <div class="menu-card-name">{{ card.storeName }}</div>
+                <div class="menu-card-meta">
+                  <span v-if="card.ratingAvg">★ {{ (card.ratingAvg / 10).toFixed(1) }}</span>
+                  <span v-if="card.ratingCount"> · 리뷰 {{ card.ratingCount }}</span>
+                  <span v-if="card.minPrice"> · 최소 {{ card.minPrice.toLocaleString() }}원</span>
+                </div>
+                <div class="menu-card-tag">#{{ card.matchedKeyword }}</div>
+              </div>
+            </button>
+          </div>
+        </template>
       </template>
     </div>
 
     <div class="actions">
-      <!-- MYPET 챗봇은 상담원 연결 불필요 (CS 한정) -->
+      <!-- 2026-06-06 멘토 피드백 정정: 펫 챗봇에서도 상담원 연결 허용
+           (이전: !isPetChat 조건으로 펫 챗봇 버튼 숨김 → 텍스트로 요청하면 펫이 "저한테 말씀하세요" 응답하는 문제) -->
       <button
-        v-if="state.status === 'ACTIVE' && !isPetChat"
+        v-if="state.status === 'ACTIVE'"
         class="action-btn escalate-btn"
         @click="escalate"
         :disabled="sending"
@@ -327,6 +365,63 @@ onBeforeUnmount(() => {
 }
 .message-row.user .bubble { background: #A40C0B; color: #fff; border-bottom-right-radius: 4px; }
 .message-row.assistant .bubble { background: #fff; color: #222; border: 1px solid #eee; border-bottom-left-radius: 4px; }
+
+/* 2026-06-06 멘토 피드백 #1+#2 — 메뉴 추천 카드 */
+.menu-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 4px 0 4px 28px;
+}
+.menu-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px;
+  background: #fff;
+  border: 1px solid #f0d0d0;
+  border-radius: 12px;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.15s;
+}
+.menu-card:hover {
+  border-color: #A40C0B;
+  background: #fff8f8;
+  transform: translateY(-1px);
+}
+.menu-card-img {
+  width: 56px;
+  height: 56px;
+  object-fit: cover;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+.menu-card-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.menu-card-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: #222;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.menu-card-meta {
+  font-size: 11px;
+  color: #888;
+}
+.menu-card-tag {
+  font-size: 11px;
+  color: #A40C0B;
+  font-weight: 600;
+  margin-top: 2px;
+}
 
 .actions {
   padding: 0 16px 8px;

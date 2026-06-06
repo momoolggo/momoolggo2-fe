@@ -186,13 +186,13 @@ const signout = async () => {
 }
 
 .drawer-backdrop {
-  position: absolute;
+  position: fixed;
   inset: 0;
   background: rgba(0,0,0,0.4);
   z-index: 200;
 }
 .drawer {
-  position: absolute;
+  position: fixed;
   top: 0;
   right: 0;
   width: 280px;
@@ -313,7 +313,7 @@ const signout = async () => {
 }
 
 .modal-backdrop {
-  position: absolute;
+  position: fixed;
   inset: 0;
   background: rgba(0,0,0,0.5);
   display: flex;

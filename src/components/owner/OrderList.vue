@@ -3,8 +3,11 @@ import { ref, onMounted, onBeforeUnmount, inject, watch } from 'vue';
 import { useStore } from '@/stores/useStore';
 import ownerService from '@/services/ownerService';
 import OrderDetailModal from '@/components/owner/OrderDetailModal.vue';
+import { useNotificationSound } from '@/composables/useNotificationSound';
 
 const storeInfo = useStore();
+// 2026-06-06 — 새 주문 도착 시 알림음 (페이지 진입 시 무음 priming → 이후 new-order 즉시 재생)
+const { play: playNotificationSound } = useNotificationSound();
 const orders = ref([]);
 const modalOpen = ref(false);
 const selectedOrder = ref(null);
@@ -128,6 +131,7 @@ const connectOrderSse = () => {
   console.log('new order', data)
 
   newOrderId.value = data.orderId
+  playNotificationSound()
   const ecoText = data.ecoSelected ? '\n🌿 친환경 선택 (수저 미제공)' : ''
   showToast(`새 주문이 들어왔습니다.${ecoText}`)
 

@@ -4,10 +4,13 @@ import deliveryService from '@/services/deliveryService'
 import RiderDeliveryMap from '@/components/rider/RiderDeliveryMap.vue'
 import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { showAlert } from '@/composables/useAlert'
+import { useNotificationSound } from '@/composables/useNotificationSound'
 
 const deliveryStore = useDeliveryStore()
 const selected = ref(null) // 선택된 배달 (상세 모달)
 const eventSource = ref(null)
+// 2026-06-06 — 새 배차 도착 시 알림음 (페이지 진입 시 무음 priming → 이후 order-assigned 즉시 재생)
+const { play: playNotificationSound } = useNotificationSound()
 
 // 라이더 풀에서 본인 잡기 — WAITING_ASSIGN → ASSIGNED. code-reviewer 결함 1번 정정 (2026-05-19).
 // accept는 ASSIGNED → ARRIVED_AT_STORE (가게 도착)이라 풀 잡기에 부적합.
@@ -36,6 +39,7 @@ onMounted(() => {
         deliveryStore.state.waiting.unshift(row)
       }
       selected.value = row
+      playNotificationSound()
     },
     (deliveryNo) => {
       deliveryStore.state.waiting = deliveryStore.state.waiting.filter(

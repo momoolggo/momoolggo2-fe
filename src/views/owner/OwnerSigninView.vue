@@ -92,7 +92,7 @@ const recoverAccount = async () => {
       <input
         v-model="state.form.userId"
         type="text"
-        placeholder="아이디"
+        placeholder="아이디 (예: kkkkk)"
         class="inp"
         autocomplete="username"
         @keyup.enter="signin"
@@ -102,7 +102,7 @@ const recoverAccount = async () => {
         <input
           v-model="state.form.userPw"
           :type="state.showPw ? 'text' : 'password'"
-          placeholder="비밀번호"
+          placeholder="비밀번호 (예: 1111)"
           class="inp"
           autocomplete="current-password"
           @keyup.enter="signin"

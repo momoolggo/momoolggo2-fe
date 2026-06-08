@@ -64,7 +64,7 @@ const goOrder = () => {
       <div class="section_inner">
         <div class="section_img_wrap">
           <div class="section_img_placeholder owner_img">
-            <span>🏪</span>
+            <img src="@/assets/owner_img.jpg" alt="사장님 서비스" class="section_img" />
           </div>
         </div>
         <div class="section_text">
@@ -84,7 +84,7 @@ const goOrder = () => {
       <div class="section_inner">
         <div class="section_img_wrap">
           <div class="section_img_placeholder rider_img">
-            <span>🛵</span>
+            <img src="@/assets/rider_img.jpg" alt="라이더 서비스" class="section_img" />
           </div>
         </div>
         <div class="section_text">
@@ -290,6 +290,13 @@ const goOrder = () => {
   align-items: center;
   justify-content: center;
   font-size: 80px;
+  overflow: hidden;
+}
+.section_img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 .owner_img { background: linear-gradient(135deg, #fff3f0, #ffe0d8); }
 .rider_img { background: linear-gradient(135deg, #fff8f0, #ffe8cc); }

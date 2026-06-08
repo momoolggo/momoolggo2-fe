@@ -333,7 +333,7 @@ const handleOrder = async () => {
         </div>
 
         <div class="info-group">
-          <div class="section-label">배달 정보</div>
+          <div class="section-label">배달 주소</div>
           <div v-if="state.hasDefaultAddress" class="input-row">
             <input
               :value="deliveryAddressText"
@@ -520,6 +520,14 @@ const handleOrder = async () => {
 
 .info-group {
   margin-bottom: 20px;
+}
+
+.section-label {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color:dimgrey;
+  margin-bottom: 8px;
+  letter-spacing: 0.03em;
 }
 
 .input-row {
